@@ -10,7 +10,12 @@ option(CAPSTONE_X86_SUPPORT "Enable x86 capstone" ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 
-add_library(${PROJECT_NAME} STATIC library.cpp)
+add_library(${PROJECT_NAME} STATIC
+        Entry.cpp
+
+        Logger.cpp
+        ExceptionHandler.cpp
+)
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
