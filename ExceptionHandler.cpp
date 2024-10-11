@@ -8,7 +8,7 @@
 #include <Windows.h>
 
 
-std::optional<const std::exception &> RbxStu::ExceptionHandler::GetCxxException() {
+std::optional<std::exception> RbxStu::ExceptionHandler::GetCxxException() {
     try {
         std::rethrow_exception(std::current_exception());
     } catch (const std::exception &e) {

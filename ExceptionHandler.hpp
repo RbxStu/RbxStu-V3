@@ -4,11 +4,11 @@
 
 #pragma once
 #include <optional>
-#include <winnt.h>
+#include <Windows.h>
 
 namespace RbxStu {
     class ExceptionHandler {
-        static std::optional<const std::exception &> GetCxxException();
+        static std::optional<std::exception> GetCxxException();
 
         static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
 
