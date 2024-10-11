@@ -9,8 +9,6 @@
 #include <mutex>
 #include <shared_mutex>
 
-#include "StudioOffsets.h"
-
 struct lua_TValue;
 
 class RbxStuOffsets final

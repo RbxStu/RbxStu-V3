@@ -30,7 +30,7 @@ add_library(Luau.Config STATIC)
 add_library(Luau.Analysis STATIC)
 add_library(Luau.EqSat STATIC)
 add_library(Luau.CodeGen STATIC)
-add_library(Luau.VM SHARED)
+add_library(Luau.VM STATIC)
 add_library(isocline STATIC)
 
 if(LUAU_BUILD_CLI)

@@ -2,6 +2,7 @@
 // Created by Dottik on 11/10/2024.
 //
 
+
 #include "ExceptionHandler.hpp"
 
 #include <cstdio>
@@ -13,17 +14,15 @@ std::optional<std::exception> RbxStu::ExceptionHandler::GetCxxException() {
         std::rethrow_exception(std::current_exception());
     } catch (const std::exception &e) {
         return e;
+    } catch (...) {
+        return {};
     }
-
-    return {};
 }
 
 long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
     printf("-- RbxStu V3 Structured Exception Handler -- Begin\n");
 
-    const auto currentCxxException = RbxStu::ExceptionHandler::GetCxxException();
-
-    if (currentCxxException.has_value())
+    if (const auto currentCxxException = RbxStu::ExceptionHandler::GetCxxException(); currentCxxException.has_value())
         printf("C++ exception was found as a current exception: '%s'\n", currentCxxException.value().what());
     else
         printf("No C++ exception was found as a current exception\n");
