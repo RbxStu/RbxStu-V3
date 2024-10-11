@@ -1,0 +1,7 @@
+cmake-*/
+.idea/shelf/
+.idea/workspace.xml
+/cmake-*
+.idea/editor.xml
+/build-*
+/build

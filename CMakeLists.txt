@@ -1,0 +1,81 @@
+cmake_minimum_required(VERSION 3.29.6)
+project(RbxStuV3)
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+
+add_definitions(-DLUAI_GCMETRICS)   # Force GC metrics on Luau.
+
+option(CAPSTONE_X86_SUPPORT "Enable x86 capstone" ON)
+
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_CXX_STANDARD 23)
+
+add_library(${PROJECT_NAME} STATIC library.cpp)
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
+# Dependencies
+
+
+# Curl For People
+# FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+#         GIT_TAG 3b15fa82ea74739b574d705fea44959b58142eb8)
+# FetchContent_MakeAvailable(cpr)
+
+#rcmp
+# FetchContent_Declare(rcmp GIT_REPOSITORY https://github.com/Smertig/rcmp.git
+#         GIT_TAG f5f75ae00a57c67fe41f79fd59c4b7f6997b999e)
+# FetchContent_MakeAvailable(rcmp)
+
+# cpr
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/cpr")
+
+# Luau
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Luau")
+
+# minhook
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Minhook")
+
+# IXWebSocket
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/IXWebSocket")
+
+# cryptopp
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/cryptopp-cmake")
+
+# capstone
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Capstone")
+
+find_package(lz4 CONFIG REQUIRED)
+find_package(OpenSSL CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
+
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC
+        # minhook
+        minhook
+        # Curl For People
+        cpr::cpr
+
+        # Luau
+        Luau.Compiler
+        Luau.Ast
+        Luau.Analysis
+        Luau.VM
+        Luau.VM.Internals
+        Luau.EqSat
+        Luau.CodeGen
+
+
+        ixwebsocket
+
+        lz4::lz4
+
+        cryptopp::cryptopp
+
+        capstone
+
+        nlohmann_json::nlohmann_json
+
+        Dbghelp.lib
+)
+
