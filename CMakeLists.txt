@@ -10,7 +10,7 @@ option(CAPSTONE_X86_SUPPORT "Enable x86 capstone" ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 
-add_library(${PROJECT_NAME} STATIC
+add_library(${PROJECT_NAME} SHARED
         Entry.cpp
 
         Logger.cpp
