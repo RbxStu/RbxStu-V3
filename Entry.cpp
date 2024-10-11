@@ -3,6 +3,7 @@
 //
 #include <cstdlib>
 #include <cstdio>
+#include <StudioOffsets.h>
 
 #include <Windows.h>
 
@@ -10,6 +11,9 @@
 
 void Entry() {
     RbxStu::ExceptionHandler::InstallHandler();
+
+    auto offsets = RbxStuOffsets::GetSingleton();
+    offsets->SetOffset(RbxStuOffsets::OffsetKey::luau_execute, reinterpret_cast<void*>(0x1587));
 
     printf(R"(
  *******   **               ********   **           **      **  ****

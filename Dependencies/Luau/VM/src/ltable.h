@@ -32,4 +32,4 @@ LUAI_FUNC void luaH_clear(Table* tt);
 
 #define luaH_setslot(L, t, slot, key) (invalidateTMcache(t), (slot == luaO_nilobject ? luaH_newkey(L, t, key) : cast_to(TValue*, slot)))
 
-#define luaH_dummynode (*reinterpret_cast<LuaNode*>(RbxStuOffsets::GetSingleton()->GetOffset("luaH_dummynode")))
+#define luaH_dummynode (*reinterpret_cast<LuaNode*>(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::_luaH_dummynode)))
