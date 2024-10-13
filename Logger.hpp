@@ -73,6 +73,7 @@ namespace RbxStu {
     DefineSectionName(MainThread, "RbxStuV3::MainThread");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
     DefineSectionName(StructuredExceptionHandler, "RbxStuV3::StructuredExceptionHandler");
+    DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");
 
 #undef DefineSectionName
 }; // namespace RbxStu

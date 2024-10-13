@@ -4,6 +4,7 @@
 
 #pragma once
 #include <memory>
+#include <vector>
 
 namespace RbxStu::Analysis {
     class Disassembler {
@@ -14,6 +15,8 @@ namespace RbxStu::Analysis {
 
     public:
         bool IsInitialized();
+
+        const void *GetFunctionStart(const void *call);
 
         static std::shared_ptr<Disassembler> GetSingleton();
     };

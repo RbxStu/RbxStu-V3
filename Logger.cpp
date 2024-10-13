@@ -77,25 +77,25 @@ void RbxStu::Logger::Initialize(const bool bInstantFlush) {
 void RbxStu::Logger::PrintDebug(std::string_view sectionName, std::string_view msg, std::string_view line) {
 #if RBXSTU_ENABLE_DEBUG_LOGS
     std::lock_guard lock{mutex};
-    this->m_szMessageBuffer.append(std::format("[DEBUG/{}:{}] {}", sectionName, line, msg));
+    this->m_szMessageBuffer.append(std::format("[DEBUG/{} -> {}] {}", sectionName, line, msg));
     this->FlushIfFull(RbxStu::LogType::Debug);
 #endif // #if RBXSTU_ENABLE_DEBUG_LOGS
 }
 
 void RbxStu::Logger::PrintInformation(std::string_view sectionName, std::string_view msg, std::string_view line) {
     std::lock_guard lock{mutex};
-    this->m_szMessageBuffer.append(std::format("[INFO/{}:{}] {}", sectionName, line, msg));
+    this->m_szMessageBuffer.append(std::format("[INFO/{} -> {}] {}", sectionName, line, msg));
     this->FlushIfFull(RbxStu::LogType::Information);
 }
 
 void RbxStu::Logger::PrintWarning(std::string_view sectionName, std::string_view msg, std::string_view line) {
     std::lock_guard lock{mutex};
-    this->m_szMessageBuffer.append(std::format("[WARN/{}:{}] {}", sectionName, line, msg));
+    this->m_szMessageBuffer.append(std::format("[WARN/{} -> {}] {}", sectionName, line, msg));
     this->FlushIfFull(RbxStu::LogType::Warning);
 }
 
 void RbxStu::Logger::PrintError(std::string_view sectionName, std::string_view msg, std::string_view line) {
     std::lock_guard lock{mutex};
-    this->m_szMessageBuffer.append(std::format("[ERROR/{}:{}] {}", sectionName, line, msg));
+    this->m_szMessageBuffer.append(std::format("[ERROR/{} -> {}] {}", sectionName, line, msg));
     this->FlushIfFull(RbxStu::LogType::Error);
 }

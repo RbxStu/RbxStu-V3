@@ -10,25 +10,31 @@ option(CAPSTONE_X86_SUPPORT "Enable x86 capstone" ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 
-add_compile_options(
-        /GA
-        /bigobj
-        /O2
-        /Gr
-        /GS
-        /cgthreads8
-        /arch:AVX2
-)
-add_link_options(
-        /LTCG
-        /INCREMENTAL
-        /DEBUG
-        /DYNAMICBASE
-        /HIGHENTROPYVA
-        /GUARD:CF
-        /PDB:RbxStuV3.pdb
-        /VERBOSE
-)
+string(TOLOWER ${CMAKE_BUILD_TYPE} build_type)
+
+if (build_type STREQUAL release)
+    message("Build is in Release Mode; Adding custom Compiler options and Linker options.")
+    add_compile_options(
+            /GA
+            /bigobj
+            /O2
+            /Gr
+            /GS
+            /cgthreads8
+            /arch:AVX2
+    )
+
+    add_link_options(
+            /LTCG
+            /INCREMENTAL
+            /DEBUG
+            /DYNAMICBASE
+            /HIGHENTROPYVA
+            /GUARD:CF
+            /PDB:RbxStuV3.pdb
+            /VERBOSE
+    )
+endif ()
 
 add_library(${PROJECT_NAME} SHARED
         Entry.cpp

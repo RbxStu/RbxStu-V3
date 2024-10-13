@@ -20,6 +20,16 @@ bool RbxStu::Analysis::Disassembler::IsInitialized() {
     return this->m_bIsInitialized;
 }
 
+const void *RbxStu::Analysis::Disassembler::GetFunctionStart(const void *call) {
+    auto pointerCast = static_cast<const unsigned char *>(call);
+
+    // Addresses grown downward.
+
+    while (pointerCast-- && *pointerCast != 0xCC && *(pointerCast - 1) != 0xCC);
+
+    return pointerCast;
+}
+
 std::shared_ptr<RbxStu::Analysis::Disassembler> RbxStu::Analysis::Disassembler::GetSingleton() {
     if (RbxStu::Analysis::Disassembler::pInstance == nullptr)
         RbxStu::Analysis::Disassembler::pInstance = std::make_shared<RbxStu::Analysis::Disassembler>();
