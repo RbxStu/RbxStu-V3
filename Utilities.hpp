@@ -9,6 +9,10 @@
 #include <memory>
 #include <regex>
 #include <sha.h>
+#include <future>
+#include <map>
+#include <vector>
+#include <libhat/Scanner.hpp>
 
 #include <sstream>
 
@@ -139,6 +143,28 @@ namespace RbxStu {
 
             if (!isExpectedClass)
                 luaL_argerror(L, index, std::format("Expected to be {}", expectedClassname).c_str());
+        }
+
+        template<typename T>
+        static std::map<T, hat::scan_result> ScanMany(
+            std::map<T, hat::signature> signatures,
+            const bool parallelScan) {
+            std::vector<std::future<std::pair<T, hat::scan_result> > > futures{};
+
+            for (const auto sig: signatures) {
+                futures.emplace_back(std::async(parallelScan ? std::launch::async : std::launch::deferred, [sig]() {
+                    return std::make_pair(sig.first, hat::find_pattern(sig.second, ".text"));
+                }));
+            }
+
+            std::map<T, hat::scan_result> results = {};
+            for (auto &future: futures) {
+                future.wait();
+                auto result = future.get();
+                results.emplace(result);
+            }
+
+            return results;
         }
     };
 } // RbxStu

@@ -12,13 +12,13 @@ namespace RbxStu::Analysis {
         static std::shared_ptr<RTTI> pInstance;
         std::atomic_bool m_bIsInitialized;
 
-    public:
-        bool IsInitialized();
-
         void Initialize();
 
-        std::optional<std::shared_ptr<RTTIScanner::RTTI> > GetRuntimeTypeInformation(std::string_view name);
-
+    public:
         static std::shared_ptr<RTTI> GetSingleton();
+
+        bool IsInitialized();
+
+        std::optional<std::shared_ptr<RTTIScanner::RTTI> > GetRuntimeTypeInformation(std::string_view name);
     };
 };

@@ -6,6 +6,8 @@
 #include <StudioOffsets.h>
 
 #include <Windows.h>
+#include <Analysis/Disassembler.hpp>
+#include <Analysis/RTTI.hpp>
 #include <libhat/Scanner.hpp>
 
 #include "ExceptionHandler.hpp"
@@ -14,6 +16,7 @@
 #include "Utilities.hpp"
 
 #include <RTTIHook/RTTIScanner.h>
+#include <Scanners/Luau.hpp>
 
 void Entry() {
     AllocConsole();
@@ -48,10 +51,15 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::Disassembler...");
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::AOBScanner...");
+    RbxStu::Analysis::Disassembler::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::RTTI...");
+    RbxStu::Analysis::RTTI::GetSingleton();
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Bootstrapping RbxStu V3!");
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for Luau...");
+    RbxStu::Scanners::Luau::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

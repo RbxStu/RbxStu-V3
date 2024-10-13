@@ -4,6 +4,7 @@
 
 #include "Utilities.hpp"
 
+#include <future>
 #include <mutex>
 #include <regex>
 

@@ -8,7 +8,13 @@
 namespace RbxStu::Scanners {
     class Luau {
         static std::shared_ptr<RbxStu::Scanners::Luau> pInstance;
+        std::atomic_bool m_bIsInitialized;
+
+        void Initialize();
+
     public:
         static std::shared_ptr<RbxStu::Scanners::Luau> GetSingleton();
+
+        bool IsInitialized();
     };
 } // RbxStu::Scanners
