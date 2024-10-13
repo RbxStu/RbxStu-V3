@@ -83,19 +83,22 @@ static const std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
 
 std::mutex RbxStuScannersLuauGetSingleton;
 
-bool RbxStu::Scanners::Luau::IsInitialized() {
+bool RbxStu::Scanners::Luau::IsInitialized()
+{
     return this->m_bIsInitialized;
 }
 
-void RbxStu::Scanners::Luau::Initialize() {
+void RbxStu::Scanners::Luau::Initialize()
+{
     if (this->m_bIsInitialized) return;
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau, "Scanning...");
 
-    auto foundSignatures = std::map<std::string_view, const void *>();
+    auto foundSignatures = std::map<std::string_view, const void*>();
 
     const auto scanningBegin = std::chrono::high_resolution_clock::now();
-    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true)) {
+    for (const auto& [enumKey, address] : RbxStu::Utilities::ScanMany(SignatureMap, true))
+    {
         auto name = OffsetKeyToString(enumKey);
         SetOffset(enumKey, address.get());
         foundSignatures.emplace(
@@ -107,7 +110,8 @@ void RbxStu::Scanners::Luau::Initialize() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
               std::format("Scan completed in {}ms!", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::
                   high_resolution_clock::now() - scanningBegin).count()));
-    for (const auto &[funcName, funcAddress]: foundSignatures) {
+    for (const auto& [funcName, funcAddress] : foundSignatures)
+    {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
                   std::format("- {} --> {}", funcName, funcAddress));
     }
@@ -115,11 +119,13 @@ void RbxStu::Scanners::Luau::Initialize() {
     this->m_bIsInitialized = true;
 }
 
-std::shared_ptr<RbxStu::Scanners::Luau> RbxStu::Scanners::Luau::GetSingleton() {
+std::shared_ptr<RbxStu::Scanners::Luau> RbxStu::Scanners::Luau::GetSingleton()
+{
     if (nullptr == RbxStu::Scanners::Luau::pInstance)
         RbxStu::Scanners::Luau::pInstance = std::make_shared<RbxStu::Scanners::Luau>();
 
-    if (!RbxStu::Scanners::Luau::pInstance->IsInitialized()) {
+    if (!RbxStu::Scanners::Luau::pInstance->IsInitialized())
+    {
         std::scoped_lock lock{RbxStuScannersLuauGetSingleton};
         if (RbxStu::Scanners::Luau::pInstance->IsInitialized())
             return RbxStu::Scanners::Luau::pInstance;

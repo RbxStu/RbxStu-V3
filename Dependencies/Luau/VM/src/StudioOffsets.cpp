@@ -9,11 +9,13 @@
 std::shared_ptr<RbxStuOffsets> RbxStuOffsets::ptr;
 std::shared_mutex RbxStuOffsets::__rbxstuoffsets__sharedmutex__;
 
-__declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::OffsetKey offsetKey) {
-    switch (offsetKey) {
-        case RbxStuOffsets::OffsetKey::luau_execute:
-            return "luau_execute";
-        case RbxStuOffsets::OffsetKey::pseudo2addr:
+__declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::OffsetKey offsetKey)
+{
+    switch (offsetKey)
+    {
+    case RbxStuOffsets::OffsetKey::luau_execute:
+        return "luau_execute";
+    case RbxStuOffsets::OffsetKey::pseudo2addr:
             return "pseudo2addr";
         case RbxStuOffsets::OffsetKey::task_defer:
             return "RBX::ScriptContext::task_defer";
@@ -54,14 +56,16 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
     return "unknown";
 };
 
-__declspec(dllexport) std::shared_ptr<RbxStuOffsets> RbxStuOffsets::GetSingleton() {
+__declspec(dllexport) std::shared_ptr<RbxStuOffsets> RbxStuOffsets::GetSingleton()
+{
     std::lock_guard lock{__rbxstuoffsets__sharedmutex__};
     if (ptr == nullptr)
         ptr = std::make_shared<RbxStuOffsets>();
     return ptr;
 }
 
-__declspec(dllexport) void *RbxStuOffsets::GetOffset(OffsetKey key) {
+__declspec(dllexport) void* RbxStuOffsets::GetOffset(OffsetKey key)
+{
     auto it = this->offsets.find(key);
     if (it != this->offsets.end())
         return it->second;
@@ -69,6 +73,7 @@ __declspec(dllexport) void *RbxStuOffsets::GetOffset(OffsetKey key) {
     throw std::runtime_error(std::format("{} is not valid offset key", static_cast<int>(key)));
 }
 
-__declspec(dllexport) void SetOffset(RbxStuOffsets::OffsetKey key, void *func) {
+__declspec(dllexport) void SetOffset(RbxStuOffsets::OffsetKey key, void* func)
+{
     RbxStuOffsets::GetSingleton()->offsets[key] = func;
 }
