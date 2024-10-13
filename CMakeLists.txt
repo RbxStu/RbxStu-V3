@@ -56,6 +56,9 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/TaskSchedulerOrchestrator.hpp
         Scheduling/Job.cpp
         Scheduling/Job.hpp
+        Scanners/Luau.cpp
+        Scanners/Rbx.cpp
+        Scanners/RbxReflection.cpp
 
 )
 
