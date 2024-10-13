@@ -40,26 +40,31 @@ add_library(${PROJECT_NAME} SHARED
         Entry.cpp
         ExceptionHandler.cpp
         Logger.cpp
+        Utilities.cpp
 
+        # RbxStu V3 Settings for DLL building.
         Settings.hpp
 
+        # ROBLOX Type definitions.
         Roblox/TypeDefinitions.hpp
-        Utilities.cpp
-        Utilities.hpp
 
         # RbxStu V3/Events
         Events/Connection.hpp
         Events/Event.hpp
+
+        # RbxStu V3/Scheduling
         Scheduling/TaskScheduler.cpp
-        Scheduling/TaskScheduler.hpp
         Scheduling/TaskSchedulerOrchestrator.cpp
-        Scheduling/TaskSchedulerOrchestrator.hpp
         Scheduling/Job.cpp
-        Scheduling/Job.hpp
+
+        # RbxStu V3/Scanners
         Scanners/Luau.cpp
         Scanners/Rbx.cpp
         Scanners/RbxReflection.cpp
 
+        # RbxStu V3/Scanners
+        Analysis/Disassembler.cpp
+        Analysis/RTTI.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
