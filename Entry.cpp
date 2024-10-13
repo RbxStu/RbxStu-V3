@@ -60,6 +60,16 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for Luau...");
     RbxStu::Scanners::Luau::GetSingleton();
+
+    void* threadAccessError = RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::threadAccessError);
+
+    DWORD oldProtect;
+    VirtualProtect(threadAccessError, 1, PAGE_EXECUTE_READWRITE, &oldProtect);
+    byte replacementBytes[] = { 0xC3 };
+    memcpy(threadAccessError, replacementBytes, 1);
+    VirtualProtect(threadAccessError, 1, oldProtect, &oldProtect);
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "Patched RBX::Security::threadAccessError to return immediately");
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

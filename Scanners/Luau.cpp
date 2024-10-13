@@ -78,7 +78,13 @@ static const std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
             "4C 8B C0 48 8D 15 ? ? ? ? 49 8B CF E8 ? ? ? ? E9 01 0E 00 00 41 8D 45 ? 3C 03 0F 87 A8 0D 00 00 48 8B "
             "69 ? 48 89 6C 24 ? 48 8B 45 ? 48 39 45 48 72 12").value()
     },
-
+    {
+        RbxStuOffsets::OffsetKey::threadAccessError,
+        hat::parse_signature(
+            "48 89 5C 24 ? 57 48 83 EC ? 48 85 D2 48 8D 1D ? ? ? ? 49 8B F8 48 0F 45 DA E8 ? ? ? ? 48 8D 4C 24 ? "
+            "4C 8B C3 48 85 FF 74 26 4C 8B CF 48 89 44 24 ? 48 8D 15 ? ? ? ? E8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8D 4C 24 ? E8 ? ? ? ?"
+        ).value()
+    }
 };
 
 std::mutex RbxStuScannersLuauGetSingleton;

@@ -35,7 +35,8 @@ public:
         _luaH_dummynode,
         lua_pushvalue,
         luaH_new,
-        luau_load
+        luau_load,
+        threadAccessError
     };
 
     std::map<OffsetKey, void *> offsets;
