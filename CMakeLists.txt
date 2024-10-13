@@ -47,14 +47,6 @@ add_library(${PROJECT_NAME} SHARED
         Utilities.cpp
         Utilities.hpp
 
-        # RbxStu V3/Analysis
-        Analysis/Disassembler.cpp
-        Analysis/Disassembler.hpp
-        Analysis/Scanner.cpp
-        Analysis/Scanner.hpp
-        Analysis/RTTI.cpp
-        Analysis/RTTI.hpp
-
         # RbxStu V3/Events
         Events/Connection.hpp
         Events/Event.hpp
