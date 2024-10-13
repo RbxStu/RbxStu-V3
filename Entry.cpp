@@ -12,9 +12,6 @@
 #include "Logger.hpp"
 #include "Settings.hpp"
 #include "Utilities.hpp"
-#include "Analysis/Disassembler.hpp"
-#include "Analysis/RTTI.hpp"
-#include "Analysis/AOBScanner.hpp"
 
 #include <RTTIHook/RTTIScanner.h>
 
@@ -51,13 +48,10 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::Disassembler...");
-    RbxStu::Analysis::Disassembler::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::AOBScanner...");
-    RbxStu::Analysis::AOBScanner::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::RTTI...");
-    RbxStu::Analysis::RTTI::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {
