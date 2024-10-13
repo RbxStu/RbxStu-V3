@@ -3,8 +3,3 @@
 //
 
 #include "Job.hpp"
-
-namespace RbxStu {
-namespace Scheduling {
-} // Scheduling
-} // RbxStu

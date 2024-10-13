@@ -3,6 +3,3 @@
 //
 
 #include "TaskScheduler.hpp"
-
-namespace RbxStu {
-} // RbxStu

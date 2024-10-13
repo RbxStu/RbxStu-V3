@@ -3,8 +3,3 @@
 //
 
 #include "TaskSchedulerOrchestrator.hpp"
-
-namespace RbxStu {
-namespace Scheduling {
-} // Scheduling
-} // RbxStu
