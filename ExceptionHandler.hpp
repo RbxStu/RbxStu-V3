@@ -9,13 +9,9 @@
 
 namespace RbxStu {
     class ExceptionHandler {
-        static std::optional<std::exception> GetCxxException();
-
         static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
 
     public:
-        static std::vector<void *> GetCallStack();
-
         static void InstallHandler();
     };
 };
