@@ -71,6 +71,8 @@ namespace RbxStu {
     /// @brief Defines a section for use in the logger
 #define DefineSectionName(varName, sectionName) constexpr auto varName = sectionName
     DefineSectionName(MainThread, "RbxStuV3::MainThread");
+    DefineSectionName(Analysis_RTTI, "RbxStuV3::Analysis::RTTI");
+    DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
     DefineSectionName(StructuredExceptionHandler, "RbxStuV3::StructuredExceptionHandler");
     DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");

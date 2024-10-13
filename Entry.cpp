@@ -6,6 +6,7 @@
 #include <StudioOffsets.h>
 
 #include <Windows.h>
+#include <libhat/Scanner.hpp>
 
 #include "ExceptionHandler.hpp"
 #include "Logger.hpp"
@@ -13,7 +14,9 @@
 #include "Utilities.hpp"
 #include "Analysis/Disassembler.hpp"
 #include "Analysis/RTTI.hpp"
-#include "Analysis/Scanner.hpp"
+#include "Analysis/AOBScanner.hpp"
+
+#include <RTTIHook/RTTIScanner.h>
 
 void Entry() {
     AllocConsole();
@@ -46,13 +49,15 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Utilities...");
     RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
 
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::Disassembler...");
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
+              "-- Initializing RbxStu::Analysis::Disassembler...");
     RbxStu::Analysis::Disassembler::GetSingleton();
 
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::Scanner...");
-    RbxStu::Analysis::Scanner::GetSingleton();
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::AOBScanner...");
+    RbxStu::Analysis::AOBScanner::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::RTTI...");
+    RbxStu::Analysis::RTTI::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

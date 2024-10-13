@@ -6,8 +6,8 @@
 #include <memory>
 
 namespace RbxStu::Analysis {
-    class Scanner {
-        static std::shared_ptr<RbxStu::Analysis::Scanner> pInstance;
+    class AOBScanner final {
+        static std::shared_ptr<RbxStu::Analysis::AOBScanner> pInstance;
         std::atomic_bool m_bIsInitialized;
 
     public:
@@ -15,6 +15,6 @@ namespace RbxStu::Analysis {
 
         void Initialize();
 
-        static std::shared_ptr<RbxStu::Analysis::Scanner> GetSingleton();
+        static std::shared_ptr<RbxStu::Analysis::AOBScanner> GetSingleton();
     };
 } // RbxStu
