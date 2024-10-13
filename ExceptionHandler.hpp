@@ -4,6 +4,7 @@
 
 #pragma once
 #include <optional>
+#include <vector>
 #include <Windows.h>
 
 namespace RbxStu {
@@ -13,6 +14,8 @@ namespace RbxStu {
         static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
 
     public:
+        static std::vector<void *> GetCallStack();
+
         static void InstallHandler();
     };
 };

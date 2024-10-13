@@ -8,12 +8,16 @@
 #include <Windows.h>
 
 #include "ExceptionHandler.hpp"
+#include "Logger.hpp"
+#include "Utilities.hpp"
+#include "Analysis/Disassembler.hpp"
 
 void Entry() {
-    RbxStu::ExceptionHandler::InstallHandler();
+    AllocConsole();
+    RbxStu::Logger::GetSingleton()->Initialize(true);
 
+    RbxStu::ExceptionHandler::InstallHandler();
     const auto offsets = RbxStuOffsets::GetSingleton();
-    offsets->SetOffset(RbxStuOffsets::OffsetKey::luau_execute, reinterpret_cast<void*>(0x1587));
 
     printf(R"(
  *******   **               ********   **           **      **  ****
@@ -25,6 +29,16 @@ void Entry() {
 /**   //**/******  ** //** ********   //** //******   //**    / ****
 //     // /////   //   // ////////     //   //////     //      ////
 )");
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
+              "Initializing RbxStu V3 -- The Roblox Studio Modification Tool");
+
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Utilities...");
+    RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Disassembler...");
+    RbxStu::Disassembler::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {
@@ -38,8 +52,6 @@ BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID
             if (lpvReserved != nullptr) {
                 break; // do not do cleanup if process termination scenario
             }
-
-            FreeLibrary(GetModuleHandleA("Luau.VM.dll"));
             break;
         default:
             break;

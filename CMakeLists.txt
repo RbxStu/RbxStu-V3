@@ -10,11 +10,55 @@ option(CAPSTONE_X86_SUPPORT "Enable x86 capstone" ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 23)
 
+add_compile_options(
+        /GA
+        /bigobj
+        /O2
+        /Gr
+        /GS
+        /cgthreads8
+        /arch:AVX2
+)
+add_link_options(
+        /LTCG
+        /INCREMENTAL
+        /DEBUG
+        /DYNAMICBASE
+        /HIGHENTROPYVA
+        /GUARD:CF
+        /PDB:RbxStuV3.pdb
+        /VERBOSE
+)
+
 add_library(${PROJECT_NAME} SHARED
         Entry.cpp
-
-        Logger.cpp
         ExceptionHandler.cpp
+        Logger.cpp
+
+        Settings.hpp
+
+        Roblox/TypeDefinitions.hpp
+        Utilities.cpp
+        Utilities.hpp
+
+        # RbxStu V3/Analysis
+        Analysis/Disassembler.cpp
+        Analysis/Disassembler.hpp
+        Analysis/Scanner.cpp
+        Analysis/Scanner.hpp
+        Analysis/RTTI.cpp
+        Analysis/RTTI.hpp
+
+        # RbxStu V3/Events
+        Events/Connection.hpp
+        Events/Event.hpp
+        Scheduling/TaskScheduler.cpp
+        Scheduling/TaskScheduler.hpp
+        Scheduling/TaskSchedulerOrchestrator.cpp
+        Scheduling/TaskSchedulerOrchestrator.hpp
+        Scheduling/Job.cpp
+        Scheduling/Job.hpp
+
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -31,6 +75,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/
 # FetchContent_Declare(rcmp GIT_REPOSITORY https://github.com/Smertig/rcmp.git
 #         GIT_TAG f5f75ae00a57c67fe41f79fd59c4b7f6997b999e)
 # FetchContent_MakeAvailable(rcmp)
+
+# libhat
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/libhat")
 
 # cpr
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/cpr")
@@ -56,6 +103,9 @@ find_package(nlohmann_json CONFIG REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
+        # libhat -- https://github.com/BasedInc/libhat
+        libhat
+
         # minhook
         minhook
         # Curl For People

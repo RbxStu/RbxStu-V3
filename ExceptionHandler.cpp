@@ -5,8 +5,10 @@
 
 #include "ExceptionHandler.hpp"
 
-#include <cstdio>
+#include <print>
 #include <Windows.h>
+
+#include "Logger.hpp"
 
 
 std::optional<std::exception> RbxStu::ExceptionHandler::GetCxxException() {
@@ -20,17 +22,37 @@ std::optional<std::exception> RbxStu::ExceptionHandler::GetCxxException() {
 }
 
 long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
-    printf("-- RbxStu V3 Structured Exception Handler -- Begin\n");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 Structured Exception Handler -- Begin");
 
-    if (const auto currentCxxException = RbxStu::ExceptionHandler::GetCxxException(); currentCxxException.has_value())
-        printf("C++ exception was found as a current exception: '%s'\n", currentCxxException.value().what());
-    else
-        printf("No C++ exception was found as a current exception\n");
+    if (const auto currentCxxException = RbxStu::ExceptionHandler::GetCxxException(); currentCxxException.has_value()) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+                  std::format( "C++ exception was found as a current exception: '{}'",
+                      currentCxxException.value().what()));
+    } else {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+                  "No C++ exception found (unusual)");
+    }
 
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+              "-- Obtaining callstack...");
 
-    printf("-- RbxStu V3 Structured Exception Handler -- End\n");
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+              "-- Walking Stack...");
 
+    for (const auto callstack = RbxStu::ExceptionHandler::GetCallStack(); auto call: callstack) {
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler, std::format("{}", call));
+    }
+
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 Structured Exception Handler -- End");
     return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+std::vector<void *> RbxStu::ExceptionHandler::GetCallStack() {
+    void *stack[256] = {};
+    const unsigned short frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
+    return std::vector<void *>{stack, stack + frameCount};
 }
 
 void RbxStu::ExceptionHandler::InstallHandler() {
