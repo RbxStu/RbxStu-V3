@@ -13,6 +13,8 @@
 #include <libhat/Scanner.hpp>
 #include <libhat/Signature.hpp>
 
+#include <StudioOffsets.h>
+
 std::shared_ptr<RbxStu::Scanners::Luau> RbxStu::Scanners::Luau::pInstance;
 
 static const std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
@@ -97,10 +99,15 @@ void RbxStu::Scanners::Luau::Initialize() {
     const auto scanningBegin = std::chrono::high_resolution_clock::now();
     for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true)) {
         auto name = OffsetKeyToString(enumKey);
-        SetOffset(enumKey, address.get());
-        foundSignatures.emplace(
-            name, address.get()
-        );
+        if (address.has_result()) {
+            foundSignatures.emplace(
+                name, address.get()
+            );
+            SetOffset(enumKey, address.get());
+        } else {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::Scanners_Luau,
+                      std::format( "Failed to find Luau C function '{}'!", name));
+        }
     }
 
 
@@ -111,6 +118,39 @@ void RbxStu::Scanners::Luau::Initialize() {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
                   std::format("- {} --> {}", funcName, funcAddress));
     }
+
+    lua_State *luaState = luaL_newstate();
+    try {
+        auto lua_pushvalue = static_cast<void *(__fastcall *)(lua_State *L, int32_t lua_index)>(
+            RbxStuOffsets::GetSingleton()->GetOffset(
+                RbxStuOffsets::OffsetKey::lua_pushvalue));
+        auto luaH_new = static_cast<void *(__fastcall *)(void *L, int32_t narray, int32_t nhash)>(
+            RbxStuOffsets::GetSingleton()->GetOffset(
+                RbxStuOffsets::OffsetKey::luaH_new));
+
+#undef luaO_nilobject
+        SetOffset(RbxStuOffsets::OffsetKey::luaO_nilobject,
+                  lua_pushvalue(luaState, 1));
+
+        auto table = luaH_new(luaState, 0, 0);
+        SetOffset(RbxStuOffsets::OffsetKey::_luaH_dummynode,
+                  reinterpret_cast<void *>(static_cast<Table *>(table)->node));
+
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
+                  std::format("- luaO_nilobject: {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
+                      ::luaO_nilobject)));
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
+                  std::format("- luaH_dummyNode: {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
+                      ::_luaH_dummynode)));
+    } catch (const std::exception &ex) {
+        RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_Luau,
+                  std::format(
+                      "failed to retrieve luaO_nilObject and luaH_dummyNode -> '{}'; Were lua_pushvalue or luaH_new not found during the scanning stage?"
+                      , ex.what()));
+    }
+
+    lua_close(luaState);
+
 
     this->m_bIsInitialized = true;
 }

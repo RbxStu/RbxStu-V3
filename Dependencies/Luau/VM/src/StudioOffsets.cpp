@@ -66,7 +66,8 @@ __declspec(dllexport) void *RbxStuOffsets::GetOffset(OffsetKey key) {
     if (it != this->offsets.end())
         return it->second;
 
-    throw std::runtime_error(std::format("{} is not valid offset key", static_cast<int>(key)));
+    // printf("[[DEBUG]] invalid key into offset map -> %d (%s); returning nullptr!\n", key, OffsetKeyToString(key).data());
+    return nullptr;
 }
 
 __declspec(dllexport) void SetOffset(RbxStuOffsets::OffsetKey key, void *func) {

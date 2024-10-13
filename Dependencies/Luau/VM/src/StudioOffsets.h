@@ -38,7 +38,7 @@ public:
         luau_load
     };
 
-    std::map<OffsetKey, void *> offsets;
+    std::map<OffsetKey, void *> offsets{};
 
 
     __declspec(dllexport) static std::shared_ptr<RbxStuOffsets> GetSingleton();
