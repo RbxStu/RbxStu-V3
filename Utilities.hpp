@@ -35,6 +35,7 @@ namespace RbxStu {
 
         std::string FromLuaErrorMessageToCErrorMessage(const std::string &luauMessage) const;
 
+        static std::string WcharToString(const wchar_t* wideStr);
         static std::string ToLower(std::string target);
 
         __forceinline static bool IsWine() {

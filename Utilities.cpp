@@ -46,6 +46,23 @@ std::string RbxStu::Utilities::FromLuaErrorMessageToCErrorMessage(const std::str
     return luauMessage;
 }
 
+std::string RbxStu::Utilities::WcharToString(const wchar_t* wideStr)
+{
+    int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, nullptr, 0, nullptr, nullptr);
+    if (sizeNeeded == 0)
+    {
+        return "CONVERSION FAILED";
+    }
+
+    std::string result(sizeNeeded, 0);
+
+    WideCharToMultiByte(CP_UTF8, 0, wideStr, -1, &result[0], sizeNeeded, nullptr, nullptr);
+    result.pop_back();
+
+    return result;
+}
+
+
 std::string RbxStu::Utilities::ToLower(std::string target) {
     for (auto &x: target) {
         x = std::tolower(x); // NOLINT(*-narrowing-conversions)

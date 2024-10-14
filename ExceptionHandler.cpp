@@ -6,12 +6,48 @@
 #include "ExceptionHandler.hpp"
 
 #include <print>
+#include <Psapi.h>
 #include <Windows.h>
 #include <unordered_set>
+#include <Utilities.hpp>
 
 #include "Logger.hpp"
 #include "Settings.hpp"
 #include "Analysis/Disassembler.hpp"
+
+std::optional<std::pair<std::string, void*>> RbxStu::ExceptionHandler::LookupAddress(const void* address)
+{
+    HMODULE processModules[1024];
+    HANDLE ourProcessHandle = GetCurrentProcess();
+    DWORD Needed;
+
+    if (EnumProcessModules(ourProcessHandle, processModules, sizeof(processModules), &Needed))
+    {
+        for (unsigned int i = 0; i < Needed / sizeof(HMODULE); i++)
+        {
+            MODULEINFO moduleInfo;
+            if (GetModuleInformation(ourProcessHandle, processModules[i], &moduleInfo, sizeof(moduleInfo)))
+            {
+                void* moduleBase = moduleInfo.lpBaseOfDll;
+                size_t moduleSize = moduleInfo.SizeOfImage;
+                if (address >= static_cast<BYTE*>(moduleBase) && address < static_cast<BYTE*>(moduleBase) + moduleSize)
+                {
+                    WCHAR moduleName[MAX_PATH];
+                    if (GetModuleFileNameExW(ourProcessHandle, processModules[i], moduleName, sizeof(moduleName) / sizeof(WCHAR)))
+                    {
+                        std::filesystem::path fullPath(moduleName);
+                        std::wstring fileName = fullPath.filename();
+                        std::string moduleNameConverted = RbxStu::Utilities::WcharToString(fileName.c_str());
+
+                        return std::pair<std::string, void*>({ moduleNameConverted, moduleBase });
+                    }
+                }
+            }
+        }
+    }
+
+    return {};
+}
 
 
 long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
@@ -50,19 +86,14 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
     for (auto call: callstack) {
         const auto functionStart = disassembler->GetFunctionStart(call);
-        auto belongsTo = "Unknown Origin";
+        std::string belongsTo = "Unknown Origin";
 
-        auto targetModuleBaseAddress = 0x0ull;
-        if (std::abs(reinterpret_cast<std::intptr_t>(call) -
-                     reinterpret_cast<std::intptr_t>(static_cast<void *>(GetModuleHandleA(
-                         "RobloxStudioBeta.exe")))) < 0x10000) {
-            belongsTo = "Roblox Studio";
-            targetModuleBaseAddress = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("RobloxStudioBeta.exe"));
-        } else if (std::abs(reinterpret_cast<std::intptr_t>(call) -
-                            reinterpret_cast<std::intptr_t>(static_cast<void *>(GetModuleHandleA(
-                                RBXSTU_DLL_NAME)))) < 0x10000) {
-            belongsTo = "RbxStu V3";
-            targetModuleBaseAddress = reinterpret_cast<std::uintptr_t>(GetModuleHandleA(RBXSTU_DLL_NAME));
+        void* targetModuleBaseAddress = nullptr;
+        auto lookupResults = RbxStu::ExceptionHandler::LookupAddress(call);
+        if (lookupResults.has_value())
+        {
+            belongsTo = lookupResults.value().first;
+            targetModuleBaseAddress = lookupResults.value().second;
         }
 
         auto message = std::format("-> sub_{:X}() + {}, belonging to {}",
@@ -74,7 +105,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
                                            functionStart))),
                                    belongsTo);
 
-        if (strcmp(belongsTo, "Unknown Origin") == 0) {
+        if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
                       std::format("{}; Cannot trace back to any module :(", message));
         } else {
@@ -87,7 +118,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
                       std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(reinterpret_cast<
                           std::uintptr_t>(call) -
-                          targetModuleBaseAddress + base)));
+                          reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
         }
     }
 
