@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="RbxStu V3 Code Scope" pattern="(!file[RbxStuV3]:Dependencies/*&amp;&amp;!file[RbxStuV3]:cmake-build-builddebug/*&amp;&amp;!file[RbxStuV3]:cmake-build-release/*&amp;&amp;!file:.git//*&amp;&amp;!file[RbxStuV3]:.idea//*&amp;&amp;!file[RbxStuV3]:cmake-build-builddebug//*&amp;&amp;!file[RbxStuV3]:cmake-build-release//*&amp;&amp;!file[RbxStuV3]:Dependencies//*||file[RbxStuV3]:*||file[RbxStuV3]:Events//*||file[RbxStuV3]:Roblox//*||file[RbxStuV3]:Scanners//*||file[RbxStuV3]:Scheduling//*||file[RbxStuV3]:Analysis//*)&amp;&amp;!ext:*/" />
+</component>
