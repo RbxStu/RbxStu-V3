@@ -184,5 +184,27 @@ namespace RbxStu
 
             return results;
         }
+
+        __forceinline static std::string GetCurrentDllName()
+        {
+            char modulePath[MAX_PATH];
+            HMODULE hModule = nullptr;
+
+            if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<LPCSTR>(&GetCurrentDllName), &hModule) != 0)
+            {
+                if (GetModuleFileNameA(hModule, modulePath, sizeof(modulePath)) != 0)
+                {
+                    std::string fullPath = modulePath;
+                    size_t lastSlash = fullPath.find_last_of("\\/");
+                    if (lastSlash != std::string::npos)
+                    {
+                        return fullPath.substr(lastSlash + 1);
+                    }
+                    return fullPath;
+                }
+            }
+
+            return "";
+        }
     };
 } // RbxStu

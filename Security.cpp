@@ -3,7 +3,6 @@
 //
 
 #include "Security.hpp"
-#include <Dependencies/libhat/include/libhat.hpp> // Include libhat for PE parsing
 
 std::shared_ptr<RbxStu::Security> RbxStu::Security::pInstance;
 
@@ -39,7 +38,7 @@ std::string RbxStu::Security::HashBytes(const byte* data, const size_t length)
     return output;
 }
 
-std::string RbxStu::Security::GetHashedMemory()
+const char* RbxStu::Security::GetHashedMemory() const
 {
     return this->originalHashedMemory;
 }
@@ -50,9 +49,13 @@ std::string RbxStu::Security::GetHashedMemory()
     {
         auto moduleHash = RbxStu::Security::HashModuleSections(lpBaseOfDll, SizeOfImage);
 
-        if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory().c_str()) != 0)
-        {
-            MessageBoxA(nullptr, "Bad boy", "You were caught by Hyperion V6", MB_OK);
+        if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory()) != 0)
+        {;
+            std::thread([]
+            {
+                MessageBoxA(nullptr, oxorany_converted("Bad Boy"), oxorany_converted("You were caught by Hyperion V6"), MB_OK);
+            }).detach();
+            Sleep(5000);
             TerminateProcess(GetCurrentProcess(), 0);
         }
 
@@ -65,15 +68,15 @@ std::string RbxStu::Security::HashModuleSections(LPVOID lpBaseOfDll, DWORD SizeO
     try
     {
 
-        auto process = hat::process::get_module(RBXSTU_DLL_NAME);
+        auto process = hat::process::get_module(RbxStu::Utilities::GetCurrentDllName());
         if (!process.has_value())
         {
-            throw std::runtime_error("Failed to fetch our DLL");
+            throw std::runtime_error(oxorany_converted("Failed to fetch our DLL"));
         }
 
         std::string combinedHash;
 
-        for (const auto& section : { ".text", ".rdata" })
+        for (const auto& section : { oxorany_converted(".text"), oxorany_converted(".rdata") })
         {
             auto sectionData = process->get_section_data(section);
             auto sectionHash = HashBytes(reinterpret_cast<const byte*>(sectionData.data()), sectionData.size());
@@ -85,7 +88,7 @@ std::string RbxStu::Security::HashModuleSections(LPVOID lpBaseOfDll, DWORD SizeO
     }
     catch (const std::exception& ex)
     {
-        MessageBoxA(nullptr, ex.what(), "Error in parsing PE sections", MB_OK);
+        MessageBoxA(nullptr, ex.what(), oxorany_converted("Error in parsing PE sections"), MB_OK);
         TerminateProcess(GetCurrentProcess(), 0);
     }
 
@@ -96,7 +99,7 @@ void RbxStu::Security::Initialize()
 {
     if (this->m_bIsInitialized) return;
 
-    const auto ourModule = GetModuleHandleA(RBXSTU_DLL_NAME);
+    const auto ourModule = GetModuleHandleA(RbxStu::Utilities::GetCurrentDllName().c_str());
     if (ourModule == nullptr)
     {
         MessageBoxA(nullptr, "Couldn't find our module for security!", "Error", MB_OK);
@@ -112,7 +115,7 @@ void RbxStu::Security::Initialize()
 
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
-    this->originalHashedMemory = moduleHash;
+    this->originalHashedMemory = _strdup(moduleHash.c_str());
     RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName, std::format("Our module hashed is: {}", moduleHash));
 
     std::thread memCheckLoopThead(MemCheckLoop, moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
