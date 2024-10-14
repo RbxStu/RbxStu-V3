@@ -82,15 +82,13 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
                                          reinterpret_cast<void **>(&this->m_JobHooks[vftable]->original));
         if (this->m_JobHooks[vftable]->original != nullptr) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
-                      std::format("Established 0x{:X} --> 0x{:X}\n",
-                          reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::
-                              __Hook__GenericJobStep),
+                      std::format("Established 0x{:x} --> 0x{:x}",
+                          reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep),
                           reinterpret_cast<uintptr_t>(this->m_JobHooks[vftable]->original)));
             pointerList.push_back(jobStepPointer);
         } else if (hookAttempt == MH_STATUS::MH_ERROR_NOT_EXECUTABLE) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
-                      std::format("Memory is not executable --> 0x{:X}\n", reinterpret_cast<uintptr_t>(jobStepPointer)
-                      ));
+                      std::format("Memory is not executable --> 0x{:x}", reinterpret_cast<uintptr_t>(jobStepPointer)));
         }
 
         classes[demangled] = found;
