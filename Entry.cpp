@@ -19,6 +19,8 @@
 #include <Scanners/Rbx.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
+#include "Security.hpp"
+
 void Entry() {
     AllocConsole();
     RbxStu::Logger::GetSingleton()->Initialize(true);
@@ -47,6 +49,9 @@ void Entry() {
               std::format("-- RbxStu @ {}", reinterpret_cast<void *>(GetModuleHandleA(
                   RBXSTU_DLL_NAME))));
 
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Security...");
+    RbxStu::Security::GetSingleton();
+
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Utilities...");
     RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
 
@@ -67,6 +72,7 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
     RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
+
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {
