@@ -10,6 +10,7 @@
 namespace RbxStu::Analysis {
     class RTTI final {
         static std::shared_ptr<RTTI> pInstance;
+        std::shared_ptr<RTTIScanner> pRTTIScanner;
         std::atomic_bool m_bIsInitialized;
 
         void Initialize();
@@ -20,5 +21,7 @@ namespace RbxStu::Analysis {
         bool IsInitialized();
 
         std::optional<std::shared_ptr<RTTIScanner::RTTI> > GetRuntimeTypeInformation(std::string_view name);
+
+        std::vector<std::shared_ptr<RTTIScanner::RTTI> > GetAllRTTI();
     };
 };

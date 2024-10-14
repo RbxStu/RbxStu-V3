@@ -17,6 +17,7 @@
 
 #include <Scanners/Luau.hpp>
 #include <Scanners/Rbx.hpp>
+#include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 void Entry() {
     AllocConsole();
@@ -63,6 +64,20 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for ROBLOX...");
     RbxStu::Scanners::RBX::GetSingleton();
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
+    RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
+    /*
+        std::shared_ptr<RTTIScanner::RTTI> dataModelJob = nullptr;
+        for (const auto &pair: RTTIScanner::classRTTI) {
+            if (strcmp(pair.second->pTypeDescriptor->name, ".?AVDataModelJob@RBX@@") == 0) {
+                auto rtti = pair.second;
+                printf("Found VFT %s -> %p", rtti->demangleName(".?AVDataModelJob@RBX@@").c_str(),
+                       rtti->pVirtualFunctionTable);
+                dataModelJob = rtti;
+            }
+        }
+    */
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

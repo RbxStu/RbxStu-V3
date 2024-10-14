@@ -76,6 +76,8 @@ namespace RbxStu {
     DefineSectionName(Analysis_RTTI, "RbxStuV3::Analysis::RTTI");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
 
+    DefineSectionName(Scheduling_TaskSchedulerOrchestrator, "RbxStuV3::Scheduling::TaskSchedulerOrchestrator");
+
     DefineSectionName(Scanners_Luau, "RbxStuV3::Scanners::Luau");
     DefineSectionName(Scanners_RBXReflection, "RbxStuV3::Scanners::RBXReflection");
     DefineSectionName(Scanners_RBX, "RbxStuV3::Scanners::RBX");

@@ -10,8 +10,6 @@ namespace RbxStu::Scheduling {
     public:
         virtual ~Job() = default;
 
-        virtual void Execute(RbxStu::Scheduling::TaskScheduler &scheduler);
-
-        virtual void ParallelExecute(RbxStu::Scheduling::TaskScheduler &scheduler);
+        virtual void Step(RbxStu::Scheduling::TaskScheduler &scheduler);
     };
 } // RbxStu::Scheduling

@@ -176,7 +176,7 @@ public:
     /// </summary>
     /// <param name="name">: name of the class to get RTTI of</param>
     /// <returns>a pointer to class RTTI on success, otherwise nullptr</returns>
-    static RTTI *getClassRTTI(std::string name) {
+    static RTTI *getClassRTTI(const std::string &name) {
         auto iter = RTTIScanner::classRTTI.find(name);
         return iter != RTTIScanner::classRTTI.end() ? RTTIScanner::classRTTI[name].get() : nullptr;
     }

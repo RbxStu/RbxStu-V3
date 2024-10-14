@@ -21,14 +21,19 @@ void RbxStu::Analysis::RTTI::Initialize() {
     if (this->IsInitialized()) return;
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Analysis_RTTI, "-- Scanning for RTTI...");
-    RTTIScanner scanner{};
-    scanner.scan();
+    this->pRTTIScanner = std::make_shared<RTTIScanner>();
+
+    this->pRTTIScanner->scan();
+    this->pRTTIScanner->scan();
+    this->pRTTIScanner->scan();
+    this->pRTTIScanner->scan();
+    this->pRTTIScanner->scan();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Analysis_RTTI,
               std::format("-- RTTI scan completed, found {} RTTI objects in PE.", RTTIScanner::classRTTI.size()));
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Analysis_RTTI,
-              std::format("-- Results saved to memory.", RTTIScanner::classRTTI.size()));
+              "-- Results saved to memory.");
 
 
     this->m_bIsInitialized = true;

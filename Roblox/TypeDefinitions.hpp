@@ -14,6 +14,22 @@ namespace RbxStu::Concepts {
 }
 
 namespace RBX {
+    struct DataModelJobVFTable {
+        void (*Destroy)(void *job);
+
+        void (*unknown_subroutine_0)(void *job);
+
+        void (*unknown_subroutine_1)(void *job);
+
+        void (*guard_check_)(void *job);
+
+        bool (*isJobEnabled)(void *job);
+
+        std::int64_t (*getMaxStackSize)(void *job);
+
+        bool (*step)(void *job);
+    };
+
     struct Instance;
 
     struct Vector3 {
