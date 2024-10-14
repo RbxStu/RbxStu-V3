@@ -54,23 +54,9 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- Begin");
 
-    std::optional<std::exception> currentCxxException;
-    try {
-        std::rethrow_exception(std::current_exception());
-    } catch (const std::exception &e) {
-        currentCxxException = e;
-    } catch (...) {
-        currentCxxException = {};
-    }
-
-    if (currentCxxException.has_value()) {
-        RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-                  std::format( "C++ exception was found as a current exception: '{}'",
-                      currentCxxException.value().what()));
-    } else {
-        RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-                  "No C++ exception found (unusual)");
-    }
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+               std::format("C++ exception code: '0x{:X}'",
+                           pExceptionPointers->ExceptionRecord->ExceptionCode));
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               "-- Obtaining callstack...");
