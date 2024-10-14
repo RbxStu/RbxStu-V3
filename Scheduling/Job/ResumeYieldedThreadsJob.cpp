@@ -4,6 +4,8 @@
 
 #include "ResumeYieldedThreadsJob.hpp"
 
+#include <Scheduling/TaskSchedulerOrchestrator.hpp>
+
 #include "Roblox/DataModel.hpp"
 
 namespace RbxStu::Scheduling {
@@ -11,6 +13,9 @@ namespace RbxStu::Scheduling {
 
     bool ResumeYieldedThreadsJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
+        // We can only resume threads when we are WaitingHybridScriptsJob
+        if (jobKind != RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob) return false;
+
         const auto DataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         // There are threads waiting to be resumed.

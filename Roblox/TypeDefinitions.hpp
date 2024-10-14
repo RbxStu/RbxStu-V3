@@ -39,7 +39,7 @@ namespace RBX {
 
         std::int64_t (*getMaxStackSize)(void *job);
 
-        bool (*step)(void *job);
+        bool (*step)(void *job, RBX::TaskScheduler::Job::Stats *stats);
     };
 
     struct Instance;

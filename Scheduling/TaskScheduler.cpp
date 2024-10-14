@@ -13,7 +13,8 @@ void RbxStu::Scheduling::TaskScheduler::Step(const RbxStu::Scheduling::JobKind j
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
     for (const auto &job: this->m_jobList) {
         // Step all jobs that wish to run.
-        if (job->ShouldStep(jobType, robloxJob, jobStats))
+        if (job->ShouldStep(jobType, robloxJob, jobStats)) {
             job->Step(robloxJob, jobStats, this);
+        }
     }
 }

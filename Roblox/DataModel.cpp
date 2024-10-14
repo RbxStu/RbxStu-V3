@@ -21,7 +21,7 @@ namespace RbxStu::Roblox {
 
         const auto realDataModel = *reinterpret_cast<RBX::DataModel **>(
             *reinterpret_cast<uintptr_t *>(reinterpret_cast<uintptr_t>(robloxJob) + 0xB8) + 0x18);
-        return std::make_unique<RbxStu::Roblox::DataModel>(realDataModel);
+        return std::move(std::make_unique<RbxStu::Roblox::DataModel>(realDataModel));
     }
 
     RBX::DataModelType DataModel::GetDataModelType() const {

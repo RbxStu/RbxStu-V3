@@ -27,6 +27,10 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
 
     MH_Initialize();
 
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_TaskSchedulerOrchestrator,
+              "-- Creating RbxStu::Scheduling::TaskScheduler...");
+    this->m_taskScheduler = std::make_shared<RbxStu::Scheduling::TaskScheduler>();
+
     std::map<std::string_view, RbxStu::Scheduling::JobKind> targets{
         {".?AVDebuggerConnectionJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::DebuggerConnection},
         {".?AVModelMeshJob@RBX@@", RbxStu::Scheduling::JobKind::ModelMeshJob},
@@ -97,7 +101,6 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
 
     for (const auto &pointer: pointerList)
         MH_EnableHook(pointer);
-
 
     this->m_bIsInitialized = true;
 }
