@@ -19,7 +19,6 @@ public:
     enum class OffsetKey : uint8_t {
         luau_execute,
         pseudo2addr,
-        task_defer,
         luaE_newthread,
         lua_newthread,
         FromLuaState,
@@ -27,8 +26,6 @@ public:
         luaD_throw,
         luaD_rawrununprotected,
         luaC_step,
-        fireproximityprompt,
-        pushinstance,
         luaV_gettable,
         luaV_settable,
         luaO_nilobject,

@@ -17,8 +17,6 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
         return "luau_execute";
     case RbxStuOffsets::OffsetKey::pseudo2addr:
             return "pseudo2addr";
-        case RbxStuOffsets::OffsetKey::task_defer:
-            return "RBX::ScriptContext::task_defer";
         case RbxStuOffsets::OffsetKey::luaE_newthread:
             return "luaE_newthread";
         case RbxStuOffsets::OffsetKey::lua_newthread:
@@ -33,10 +31,6 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
             return "luaD_rawrununprotected";
         case RbxStuOffsets::OffsetKey::luaC_step:
             return "luaC_step";
-        case RbxStuOffsets::OffsetKey::fireproximityprompt:
-            return "RBX::ProximityPrompt::fireproximityprompt";
-        case RbxStuOffsets::OffsetKey::pushinstance:
-            return "RBX::Instance::pushInstance";
         case RbxStuOffsets::OffsetKey::luaV_gettable:
             return "luaV_gettable";
         case RbxStuOffsets::OffsetKey::luaV_settable:
