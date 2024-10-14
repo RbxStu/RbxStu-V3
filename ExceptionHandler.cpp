@@ -36,8 +36,8 @@ std::optional<std::pair<std::string, void*>> RbxStu::ExceptionHandler::LookupAdd
                     if (GetModuleFileNameExW(ourProcessHandle, processModules[i], moduleName,
                                              sizeof(moduleName) / sizeof(WCHAR)))
                     {
-                        std::filesystem::path fullPath(moduleName);
-                        std::wstring fileName = fullPath.filename();
+                        const std::filesystem::path fullPath(moduleName);
+                        const std::wstring fileName = fullPath.filename();
                         std::string moduleNameConverted = RbxStu::Utilities::WcharToString(fileName.c_str());
 
                         return std::pair<std::string, void*>({moduleNameConverted, moduleBase});
