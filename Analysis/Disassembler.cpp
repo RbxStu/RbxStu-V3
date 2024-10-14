@@ -189,25 +189,15 @@ std::optional<const void *>
 RbxStu::Analysis::Disassembler::TranslateRelativeLeaIntoRuntimeAddress(const cs_insn &insn) {
     if (!this->IsInitialized()) return {}; // Not initialized.
 
-    if (strcmp(insn.mnemonic, "lea") != 0) {
-        // Not lea.
-        return {};
-    }
-    auto insnOpAsString = std::string(insn.op_str);
-    if (insnOpAsString.find("rip") == std::string::npos) {
-        // Not relative
-        return {};
-    }
+    if (insn.id != x86_insn::X86_INS_LEA) return {};
 
-    // stRIP null-byte. (SEE WHAT I DID THERE????)
-    const auto ripOff = insnOpAsString.find("rip + 0x") + sizeof("rip + 0x") - 1;
+    if (insn.detail->x86.operands[1].type != x86_op_type::X86_OP_MEM) return {};
 
-    insnOpAsString = insnOpAsString.substr(ripOff, insnOpAsString.size() - ripOff);
-    insnOpAsString = insnOpAsString.substr(0, insnOpAsString.size() - 1); // Strip last ']'
+    if (insn.detail->x86.operands[1].mem.base != X86_REG_RIP) return {};
 
-    char *endChar;
+    const auto disposition = insn.detail->x86.operands[1].mem.disp;
 
-    return reinterpret_cast<void *>(insn.address + insn.size + strtoull(insnOpAsString.c_str(), &endChar, 16));
+    return reinterpret_cast<void *>(disposition + insn.address + insn.size);
 }
 
 std::shared_ptr<RbxStu::Analysis::Disassembler> RbxStu::Analysis::Disassembler::GetSingleton() {
