@@ -83,7 +83,8 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
         if (this->m_JobHooks[vftable]->original != nullptr) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
                       std::format("Established 0x{:x} --> 0x{:x}",
-                          reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep),
+                          reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::
+                              __Hook__GenericJobStep),
                           reinterpret_cast<uintptr_t>(this->m_JobHooks[vftable]->original)));
             pointerList.push_back(jobStepPointer);
         } else if (hookAttempt == MH_STATUS::MH_ERROR_NOT_EXECUTABLE) {
@@ -111,6 +112,7 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
         if (scheduler->ShouldStep(jobOriginal->jobKind, self, timeMetrics))
             scheduler->Step(jobOriginal->jobKind, self, timeMetrics);
     }
+    printf("Stepping %p", self);
 
 
     return jobOriginal->original(self, timeMetrics);
