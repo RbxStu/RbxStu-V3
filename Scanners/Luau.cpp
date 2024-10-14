@@ -137,10 +137,10 @@ void RbxStu::Scanners::Luau::Initialize() {
                   reinterpret_cast<void *>(static_cast<Table *>(table)->node));
 
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
-                  std::format("- luaO_nilobject: {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
+                  std::format("- luaO_nilobject --> {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
                       ::luaO_nilobject)));
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
-                  std::format("- luaH_dummyNode: {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
+                  std::format("- luaH_dummyNode --> {}", RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey
                       ::_luaH_dummynode)));
     } catch (const std::exception &ex) {
         RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_Luau,
