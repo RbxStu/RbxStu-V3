@@ -104,16 +104,11 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
 
 bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
     void **self, RBX::TaskScheduler::Job::Stats *timeMetrics) {
-    auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
-    auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
+    const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
+    const auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
         RBX::DataModelJobVFTable **>(self)]; // VFtable.
 
-    for (const auto &scheduler: orchestrator->m_taskSchedulers) {
-        if (scheduler->ShouldStep(jobOriginal->jobKind, self, timeMetrics))
-            scheduler->Step(jobOriginal->jobKind, self, timeMetrics);
-    }
-    printf("Stepping %p", self);
-
+    orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 
     return jobOriginal->original(self, timeMetrics);
 }
@@ -143,16 +138,6 @@ RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton() {
     return RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
 }
 
-void RbxStu::Scheduling::TaskSchedulerOrchestrator::RemoveScheduler(
-    const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler) {
-    for (auto begin = this->m_taskSchedulers.begin(); begin != this->m_taskSchedulers.end();) {
-        if (*begin == scheduler) {
-            begin = this->m_taskSchedulers.erase(begin);
-        }
-    }
-}
-
-void RbxStu::Scheduling::TaskSchedulerOrchestrator::InjectScheduler(
-    const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler) {
-    this->m_taskSchedulers.push_back(scheduler);
+std::shared_ptr<RbxStu::Scheduling::TaskScheduler> RbxStu::Scheduling::TaskSchedulerOrchestrator::GetTaskScheduler() {
+    return this->m_taskScheduler;
 }

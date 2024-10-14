@@ -47,7 +47,7 @@ namespace RbxStu::Scheduling {
 
         static std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator> pInstance;
 
-        std::vector<std::shared_ptr<RbxStu::Scheduling::TaskScheduler> > m_taskSchedulers;
+        std::shared_ptr<RbxStu::Scheduling::TaskScheduler> m_taskScheduler;
 
         std::map<std::string_view, RBX::DataModelJobVFTable **> jobVirtualFunctionTableMap;
 
@@ -65,8 +65,6 @@ namespace RbxStu::Scheduling {
 
         static std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator> GetSingleton();
 
-        void RemoveScheduler(const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler);
-
-        void InjectScheduler(const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler);
+        std::shared_ptr<RbxStu::Scheduling::TaskScheduler> GetTaskScheduler();;
     };
 } // RbxStu::Scheduling

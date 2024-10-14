@@ -45,8 +45,10 @@ add_library(${PROJECT_NAME} SHARED
         # RbxStu V3 Settings for DLL building.
         Settings.hpp
 
-        # ROBLOX Type definitions.
+        # RbxStu V3/ROBLOX
         Roblox/TypeDefinitions.hpp
+        Roblox/DataModel.cpp
+        Roblox/DataModel.hpp
 
         # RbxStu V3/Events
         Events/Connection.hpp
@@ -55,6 +57,9 @@ add_library(${PROJECT_NAME} SHARED
         # RbxStu V3/Scheduling
         Scheduling/TaskScheduler.cpp
         Scheduling/TaskSchedulerOrchestrator.cpp
+
+        Scheduling/Job/ResumeYieldedThreadsJob.cpp
+
         Scheduling/Job.cpp
 
         # RbxStu V3/Scanners
@@ -65,11 +70,6 @@ add_library(${PROJECT_NAME} SHARED
         Analysis/Disassembler.cpp
         Analysis/RTTI.cpp
         Security.cpp
-        Security.hpp
-        Scheduling/TaskSchedulers/StandaloneTaskScheduler.cpp
-        Scheduling/TaskSchedulers/StandaloneTaskScheduler.hpp
-        Scheduling/Job/ResumeYieldedThreadsJob.cpp
-        Scheduling/Job/ResumeYieldedThreadsJob.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

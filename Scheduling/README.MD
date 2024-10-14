@@ -6,14 +6,8 @@ execution of Jobs on top of the ROBLOX scheduler.
 - `RbxStu::Scheduling::TaskSchedulerOrchestrator` A custom wrapper to orchestrate multiple
   `RbxStu::Scheduling::TaskScheduler` instances. This is due to the fact ROBLOX studio executes several `DataModel`
   objects in parallel, and we must support them all.
-- `RbxStu::Scheduling::TaskScheduler` An abstract, custom TaskScheduler to execute tasks in synchronization with ROBLOX
-  studio.
-  ALWAYS in synchronization with ROBLOX Studio.
-    - `RbxStu::Scheduling::StandaloneTaskScheduler`
-    - `RbxStu::Scheduling::EditTaskScheduler`
-    - `RbxStu::Scheduling::ClientTaskScheduler`
-    - `RbxStu::Scheduling::ServerTaskScheduler`
-
+- `RbxStu::Scheduling::TaskScheduler` A custom TaskScheduler to execute tasks in synchronization with ROBLOX
+  studio. ALWAYS in synchronization with ROBLOX Studio.
 - `RbxStu::Scheduling::Job` A custom Job base, represents a task executable by an `RbxStu::Scheduling::TaskScheduler`
   instance. Jobs should prevent saving any state unless explicitly required.
 

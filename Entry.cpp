@@ -20,7 +20,6 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Security.hpp"
-#include "Scheduling/TaskSchedulers/StandaloneTaskScheduler.hpp"
 
 void Entry() {
     AllocConsole();
@@ -73,10 +72,6 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
     auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
-
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskScheduler (Standalone)...");
-    orchestrator->InjectScheduler(std::make_shared<RbxStu::Scheduling::StandaloneTaskScheduler>());
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

@@ -461,7 +461,7 @@ namespace RBX {
         // RBX::ProtectedString instnace.
 
 
-        auto sharedDeref = *reinterpret_cast<void **>(sharedString);
+        auto sharedDeref = *static_cast<void **>(sharedString);
         return reinterpret_cast<const char *>(reinterpret_cast<std::uintptr_t>(sharedDeref) + 0x10);
     }
 

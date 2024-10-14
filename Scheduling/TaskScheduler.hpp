@@ -13,15 +13,13 @@ namespace RbxStu::Scheduling {
 }
 
 namespace RbxStu::Scheduling {
-    class TaskScheduler abstract {
-    protected:
+    class TaskScheduler final {
         std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > m_jobList;
 
     public:
-        virtual ~TaskScheduler() = default;
+        void AddJob(std::shared_ptr<RbxStu::Scheduling::Job> job);
 
-        virtual bool ShouldStep(RbxStu::Scheduling::JobKind type, void *job, RBX::TaskScheduler::Job::Stats *jobStats);
-
-        virtual void Step(RbxStu::Scheduling::JobKind jobType, void *robloxJob, RBX::TaskScheduler::Job::Stats *jobStats);
+        void Step(RbxStu::Scheduling::JobKind jobType, void *robloxJob,
+                  RBX::TaskScheduler::Job::Stats *jobStats);
     };
 } // RbxStu::Scheduling
