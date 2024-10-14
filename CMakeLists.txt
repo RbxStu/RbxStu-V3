@@ -60,7 +60,6 @@ add_library(${PROJECT_NAME} SHARED
         # RbxStu V3/Scanners
         Scanners/Luau.cpp
         Scanners/Rbx.cpp
-        Scanners/RbxReflection.cpp
 
         # RbxStu V3/Scanners
         Analysis/Disassembler.cpp
