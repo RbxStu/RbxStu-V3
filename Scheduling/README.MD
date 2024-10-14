@@ -12,7 +12,7 @@ execution of Jobs on top of the ROBLOX scheduler.
     - `RbxStu::Scheduling::StandaloneTaskScheduler`
     - `RbxStu::Scheduling::EditTaskScheduler`
     - `RbxStu::Scheduling::ClientTaskScheduler`
-    - `RbxStu::Scheduling::ServeraskScheduler`
+    - `RbxStu::Scheduling::ServerTaskScheduler`
 
 - `RbxStu::Scheduling::Job` A custom Job base, represents a task executable by an `RbxStu::Scheduling::TaskScheduler`
   instance. Jobs should prevent saving any state unless explicitly required.
