@@ -68,6 +68,8 @@ add_library(${PROJECT_NAME} SHARED
         Security.hpp
         Scheduling/TaskSchedulers/StandaloneTaskScheduler.cpp
         Scheduling/TaskSchedulers/StandaloneTaskScheduler.hpp
+        Scheduling/Job/ResumeYieldedThreadsJob.cpp
+        Scheduling/Job/ResumeYieldedThreadsJob.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

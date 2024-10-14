@@ -11,6 +11,8 @@ namespace RbxStu::Scheduling {
     public:
         ~StandaloneTaskScheduler() override;
 
+        bool ShouldStep(RbxStu::Scheduling::JobKind type, void *job, RBX::TaskScheduler::Job::Stats *jobStats) override;
+
         void Step(RbxStu::Scheduling::JobKind type, void *job, RBX::TaskScheduler::Job::Stats *jobStats) override;
     };
 } // RbxStu::Scheduling
