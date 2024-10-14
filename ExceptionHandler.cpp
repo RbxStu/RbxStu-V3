@@ -33,13 +33,14 @@ std::optional<std::pair<std::string, void*>> RbxStu::ExceptionHandler::LookupAdd
                 if (address >= static_cast<BYTE*>(moduleBase) && address < static_cast<BYTE*>(moduleBase) + moduleSize)
                 {
                     WCHAR moduleName[MAX_PATH];
-                    if (GetModuleFileNameExW(ourProcessHandle, processModules[i], moduleName, sizeof(moduleName) / sizeof(WCHAR)))
+                    if (GetModuleFileNameExW(ourProcessHandle, processModules[i], moduleName,
+                                             sizeof(moduleName) / sizeof(WCHAR)))
                     {
                         std::filesystem::path fullPath(moduleName);
                         std::wstring fileName = fullPath.filename();
                         std::string moduleNameConverted = RbxStu::Utilities::WcharToString(fileName.c_str());
 
-                        return std::pair<std::string, void*>({ moduleNameConverted, moduleBase });
+                        return std::pair<std::string, void*>({moduleNameConverted, moduleBase});
                     }
                 }
             }
@@ -50,13 +51,14 @@ std::optional<std::pair<std::string, void*>> RbxStu::ExceptionHandler::LookupAdd
 }
 
 
-long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
+long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS* pExceptionPointers)
+{
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- Begin");
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-               std::format("C++ exception code: '0x{:X}'",
-                           pExceptionPointers->ExceptionRecord->ExceptionCode));
+              std::format("C++ exception code: '0x{:X}'",
+                  pExceptionPointers->ExceptionRecord->ExceptionCode));
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               "-- Obtaining callstack...");
@@ -66,11 +68,12 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
     const auto disassembler = RbxStu::Analysis::Disassembler::GetSingleton();
 
-    void *stack[256];
+    void* stack[256];
     const auto frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
-    const auto callstack = std::vector<void *>(stack, stack + frameCount);
+    const auto callstack = std::vector<void*>(stack, stack + frameCount);
 
-    for (auto call: callstack) {
+    for (auto call : callstack)
+    {
         const auto functionStart = disassembler->GetFunctionStart(call);
         std::string belongsTo = "Unknown Origin";
 
@@ -84,17 +87,20 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
         auto message = std::format("-> sub_{:X}() + {}, belonging to {}",
                                    reinterpret_cast<std::intptr_t>(functionStart),
-                                   reinterpret_cast<void *>(max(
+                                   reinterpret_cast<void*>(max(
                                        reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
                                        ::intptr_t>(call),
                                        reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
                                            functionStart))),
                                    belongsTo);
 
-        if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0) {
+        if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0)
+        {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
                       std::format("{}; Cannot trace back to any module :(", message));
-        } else {
+        }
+        else
+        {
 #if RBXSTU_REBASE_STACKTRACE_ON_SEH
             const auto base = 0x180000000;
 #else
@@ -113,19 +119,23 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               "-- Analysing the Stack Trace for common exception patterns...");
 
-    std::unordered_set<void *> nestedCalls{};
+    std::unordered_set<void*> nestedCalls{};
     nestedCalls.reserve(frameCount / 2);
-    for (const auto call: callstack) {
+    for (const auto call : callstack)
+    {
         const auto functionStart = disassembler->GetFunctionStart(call);
         auto count = 0;
 
-        for (const auto callAgain: callstack) {
-            if (callAgain == call) {
+        for (const auto callAgain : callstack)
+        {
+            if (callAgain == call)
+            {
                 count++;
             }
         }
 
-        if (count > 3 && !nestedCalls.contains(call)) {
+        if (count > 3 && !nestedCalls.contains(call))
+        {
             nestedCalls.insert(call);
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
                       std::format(
@@ -149,11 +159,13 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void RbxStu::ExceptionHandler::InstallHandler() {
+void RbxStu::ExceptionHandler::InstallHandler()
+{
     // insert SEH into exception chain
 
     if (const auto previousHandler = SetUnhandledExceptionFilter(RbxStu::ExceptionHandler::UnhandledSEH);
-        RbxStu::ExceptionHandler::UnhandledSEH == previousHandler) {
+        RbxStu::ExceptionHandler::UnhandledSEH == previousHandler)
+    {
         RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
                   "Attempted to the top level SEH, but the top level SEH was ALREADY our exception handler! Did you by mistake call RbxStu::ExceptionHandler::InstallHandler twice?");
     }

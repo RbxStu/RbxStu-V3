@@ -8,9 +8,11 @@
 #include <vector>
 #include <Windows.h>
 
-namespace RbxStu {
-    class ExceptionHandler {
-        static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
+namespace RbxStu
+{
+    class ExceptionHandler
+    {
+        static long UnhandledSEH(EXCEPTION_POINTERS* pExceptionPointers);
         static std::optional<std::pair<std::string, void*>> LookupAddress(const void* address);
 
     public:

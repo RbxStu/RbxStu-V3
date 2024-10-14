@@ -10,22 +10,26 @@
 
 std::shared_ptr<RbxStu::Utilities> RbxStu::Utilities::pInstance;
 
-void RbxStu::Utilities::Initialize() {
+void RbxStu::Utilities::Initialize()
+{
     this->m_luaErrorStringRegex =
-            std::regex(R"(.*"\]:(\d)*: )", std::regex::optimize | std::regex::icase);
+        std::regex(R"(.*"\]:(\d)*: )", std::regex::optimize | std::regex::icase);
 }
 
-bool RbxStu::Utilities::IsInitialized() {
+bool RbxStu::Utilities::IsInitialized()
+{
     return this->m_bIsInitialized;
 }
 
 std::mutex RbxStuUtilsInitialize;
 
-std::shared_ptr<RbxStu::Utilities> RbxStu::Utilities::GetSingleton() {
+std::shared_ptr<RbxStu::Utilities> RbxStu::Utilities::GetSingleton()
+{
     if (RbxStu::Utilities::pInstance == nullptr)
         RbxStu::Utilities::pInstance = std::make_shared<RbxStu::Utilities>();
 
-    if (!RbxStu::Utilities::pInstance->IsInitialized()) {
+    if (!RbxStu::Utilities::pInstance->IsInitialized())
+    {
         std::scoped_lock lock(RbxStuUtilsInitialize);
         // Locking is fairly expensive...
         if (RbxStu::Utilities::pInstance->IsInitialized())
@@ -36,8 +40,10 @@ std::shared_ptr<RbxStu::Utilities> RbxStu::Utilities::GetSingleton() {
     return RbxStu::Utilities::pInstance;
 }
 
-std::string RbxStu::Utilities::FromLuaErrorMessageToCErrorMessage(const std::string &luauMessage) const {
-    if (std::regex_search(luauMessage.begin(), luauMessage.end(), this->m_luaErrorStringRegex)) {
+std::string RbxStu::Utilities::FromLuaErrorMessageToCErrorMessage(const std::string& luauMessage) const
+{
+    if (std::regex_search(luauMessage.begin(), luauMessage.end(), this->m_luaErrorStringRegex))
+    {
         const auto fixed = std::regex_replace(luauMessage, this->m_luaErrorStringRegex, "");
 
         return fixed;
@@ -63,8 +69,10 @@ std::string RbxStu::Utilities::WcharToString(const wchar_t* wideStr)
 }
 
 
-std::string RbxStu::Utilities::ToLower(std::string target) {
-    for (auto &x: target) {
+std::string RbxStu::Utilities::ToLower(std::string target)
+{
+    for (auto& x : target)
+    {
         x = std::tolower(x); // NOLINT(*-narrowing-conversions)
     }
 
