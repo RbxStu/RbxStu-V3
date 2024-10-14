@@ -27,21 +27,19 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
 
     MH_Initialize();
 
-    std::vector<std::string_view> targets{
-        ".?AVDebuggerConnectionJob@Studio@RBX@@",
-        ".?AVModelMeshJob@RBX@@",
-        ".?AVGcJob@ScriptContextFacets@RBX@@",
-        ".?AVWaitingHybridScriptsJob@ScriptContextFacets@RBX@@",
-        ".?AVHeartbeatTask@RBX@@",
-        ".?AVPhysicsJob@RBX@@",
-        ".?AVRenderJob@Studio@RBX@@",
-        ".?AUPathUpdateJob@NavigationService@RBX@@",
-        ".?AUNavigationJob@NavigationService@RBX@@",
-        ".?AVScraperJob@TextScraper@RBX@@",
-        ".?AVGenericDataModelJob@RBX@@",
-        ".?AVGenericJob@DataModel@RBX@@",
-        ".?AVHttpRbxApiJob@RBX@@",
-        ".?AVPhysicsStepJob@RBX@@",
+    std::map<std::string_view, RbxStu::Scheduling::JobKind> targets{
+        {".?AVDebuggerConnectionJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::DebuggerConnection},
+        {".?AVModelMeshJob@RBX@@", RbxStu::Scheduling::JobKind::ModelMeshJob},
+        {".?AVGcJob@ScriptContextFacets@RBX@@", RbxStu::Scheduling::JobKind::LuauGarbageCollection},
+        {".?AVWaitingHybridScriptsJob@ScriptContextFacets@RBX@@", RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob},
+        {".?AVHeartbeatTask@RBX@@", RbxStu::Scheduling::JobKind::Heartbeat},
+        {".?AVPhysicsJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsJob},
+        {".?AVRenderJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::RenderJob},
+        {".?AUPathUpdateJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::PathUpdateJob},
+        {".?AUNavigationJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::NavigationJob},
+        {".?AVGenericDataModelJob@RBX@@", RbxStu::Scheduling::JobKind::Generic_UnknownJob},
+        {".?AVHttpRbxApiJob@RBX@@", RbxStu::Scheduling::JobKind::HttpRbxApi},
+        {".?AVPhysicsStepJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsStepJob},
     };
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_TaskSchedulerOrchestrator,
@@ -49,16 +47,17 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
 
     std::map<std::string_view, std::shared_ptr<RTTIScanner::RTTI> > classes{};
 
-    for (const auto &rttiName: targets) {
+    std::vector<void *> pointerList{};
+    for (const auto &[jobTypeDescriptorName, jobKind]: targets) {
         std::shared_ptr<RTTIScanner::RTTI> found = nullptr;
-        auto demangled = RTTIScanner::RTTI::demangleName(rttiName.data());
-        for (const auto &target: RTTIScanner::classRTTI) {
-            auto name = target.second->pTypeDescriptor->name;
-
-            if (strcmp(name, rttiName.data()) == 0) {
+        auto demangled = RTTIScanner::RTTI::demangleName(jobTypeDescriptorName.data());
+        r_RBX_DataModelJob_Step jobStepPointer = nullptr;
+        for (const auto &[_, rtti]: RTTIScanner::classRTTI) {
+            if (const auto name = rtti->pTypeDescriptor->name; strcmp(name, jobTypeDescriptorName.data()) == 0) {
                 RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_TaskSchedulerOrchestrator,
-                          std::format("Found Step for {} @ {}", demangled, target.second->pVirtualFunctionTable [6]));
-                found = target.second;
+                          std::format("Found Step for {} @ {}", demangled, rtti->pVirtualFunctionTable [6]));
+                found = rtti;
+                jobStepPointer = static_cast<r_RBX_DataModelJob_Step>(rtti->pVirtualFunctionTable[6]);
                 break;
             }
         }
@@ -68,10 +67,50 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
                       std::format("-- Failed to find VFT for {}", demangled));
             continue;
         }
+
+        auto vftable = reinterpret_cast<RBX::DataModelJobVFTable *>(found->
+            pVirtualFunctionTable);
+
+        this->m_JobHooks[vftable] = std::make_shared<
+            RbxStu::Scheduling::TaskSchedulerOrchestrator::DataModelJobStepHookMetadata>();
+
+        this->m_JobHooks[vftable]->hookedJobName = demangled;
+        this->m_JobHooks[vftable]->jobKind = jobKind;
+
+        auto hookAttempt = MH_CreateHook(jobStepPointer,
+                                         RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep,
+                                         reinterpret_cast<void **>(&this->m_JobHooks[vftable]->original));
+        if (this->m_JobHooks[vftable]->original != nullptr) {
+            printf("stablished %p->%p\n",
+                   RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep,
+                   this->m_JobHooks[vftable]->original);
+            pointerList.push_back(jobStepPointer);
+        } else if (hookAttempt == MH_STATUS::MH_ERROR_NOT_EXECUTABLE) {
+            printf("Mem is not executable -> %p\n", jobStepPointer);
+        }
+
         classes[demangled] = found;
     }
 
+    for (const auto &pointer: pointerList)
+        MH_EnableHook(pointer);
+
+
     this->m_bIsInitialized = true;
+}
+
+bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
+    void **self, RBX::TaskScheduler::Job::Stats *timeMetrics) {
+    auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
+    auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
+        RBX::DataModelJobVFTable **>(self)]; // VFtable.
+
+    for (const auto &scheduler: orchestrator->m_taskSchedulers) {
+        scheduler->Step(jobOriginal->jobKind, self, timeMetrics);
+    }
+
+
+    return jobOriginal->original(self, timeMetrics);
 }
 
 
@@ -97,4 +136,18 @@ RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton() {
     }
 
     return RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
+}
+
+void RbxStu::Scheduling::TaskSchedulerOrchestrator::RemoveScheduler(
+    const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler) {
+    for (auto begin = this->m_taskSchedulers.begin(); begin != this->m_taskSchedulers.end();) {
+        if (*begin == scheduler) {
+            begin = this->m_taskSchedulers.erase(begin);
+        }
+    }
+}
+
+void RbxStu::Scheduling::TaskSchedulerOrchestrator::InjectScheduler(
+    const std::shared_ptr<RbxStu::Scheduling::TaskScheduler> &scheduler) {
+    this->m_taskSchedulers.push_back(scheduler);
 }

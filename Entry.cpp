@@ -71,8 +71,11 @@ void Entry() {
     RbxStu::Scanners::RBX::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
-    RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
+    auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
 
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskScheduler (Standalone)...");
+    orchestrator->InjectScheduler({});
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

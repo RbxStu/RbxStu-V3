@@ -14,6 +14,18 @@ namespace RbxStu::Concepts {
 }
 
 namespace RBX {
+    struct Time {
+        double sec;
+    };
+
+    namespace TaskScheduler::Job {
+        struct Stats {
+            RBX::Time timeSinceStartup; // timeNow
+            RBX::Time deltaTime; // timespanSinceLastStep
+            RBX::Time previousDeltaTime; // timespanOfLastStep
+        };
+    }
+
     struct DataModelJobVFTable {
         void (*Destroy)(void *job);
 
