@@ -10,7 +10,7 @@
 #include <StudioOffsets.h>
 
 namespace RbxStu::Scanners {
-    class RBX {
+    class RBX final {
     public:
 
     private:

@@ -5,6 +5,6 @@
 #pragma once
 
 namespace RbxStu::Scheduling {
-    class TaskSchedulerOrchestrator {
+    class TaskSchedulerOrchestrator final {
     };
 } // RbxStu::Scheduling

@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace RbxStu::Scanners {
-    class Luau {
+    class Luau final {
         static std::shared_ptr<RbxStu::Scanners::Luau> pInstance;
         std::atomic_bool m_bIsInitialized;
 
