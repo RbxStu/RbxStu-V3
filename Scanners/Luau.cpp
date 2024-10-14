@@ -79,28 +79,25 @@ static const std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
             "75 F7 4C 8B CB 4C 8B C7 BA ? ? ? ? 48 8D 8C 24 ? ? ? ? E8 ? ? ? ? 49 8D 4E ? 44 8D 4D ? 48 89 4C 24 ? "
             "4C 8B C0 48 8D 15 ? ? ? ? 49 8B CF E8 ? ? ? ? E9 01 0E 00 00 41 8D 45 ? 3C 03 0F 87 A8 0D 00 00 48 8B "
             "69 ? 48 89 6C 24 ? 48 8B 45 ? 48 39 45 48 72 12").value()
-    },
-
+    }
 };
 
 std::mutex RbxStuScannersLuauGetSingleton;
 
-bool RbxStu::Scanners::Luau::IsInitialized()
-{
+bool RbxStu::Scanners::Luau::IsInitialized() {
     return this->m_bIsInitialized;
 }
 
-void RbxStu::Scanners::Luau::Initialize()
-{
+void RbxStu::Scanners::Luau::Initialize() {
     if (this->m_bIsInitialized) return;
+    const auto initializationBegin = std::chrono::high_resolution_clock::now();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau, "Scanning...");
 
-    auto foundSignatures = std::map<std::string_view, const void*>();
+    auto foundSignatures = std::map<std::string_view, const void *>();
 
     const auto scanningBegin = std::chrono::high_resolution_clock::now();
-    for (const auto& [enumKey, address] : RbxStu::Utilities::ScanMany(SignatureMap, true))
-    {
+    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true)) {
         auto name = OffsetKeyToString(enumKey);
         if (address.has_result()) {
             foundSignatures.emplace(
@@ -117,18 +114,17 @@ void RbxStu::Scanners::Luau::Initialize()
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
               std::format("Scan completed in {}ms!", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::
                   high_resolution_clock::now() - scanningBegin).count()));
-    for (const auto& [funcName, funcAddress] : foundSignatures)
-    {
+    for (const auto &[funcName, funcAddress]: foundSignatures) {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
                   std::format("- {} --> {}", funcName, funcAddress));
     }
 
     lua_State *luaState = luaL_newstate();
     try {
-        auto lua_pushvalue = static_cast<void *(__fastcall *)(lua_State *L, int32_t lua_index)>(
+        const auto lua_pushvalue = static_cast<void *(__fastcall *)(lua_State *L, int32_t lua_index)>(
             RbxStuOffsets::GetSingleton()->GetOffset(
                 RbxStuOffsets::OffsetKey::lua_pushvalue));
-        auto luaH_new = static_cast<void *(__fastcall *)(void *L, int32_t narray, int32_t nhash)>(
+        const auto luaH_new = static_cast<void *(__fastcall *)(void *L, int32_t narray, int32_t nhash)>(
             RbxStuOffsets::GetSingleton()->GetOffset(
                 RbxStuOffsets::OffsetKey::luaH_new));
 
@@ -156,16 +152,20 @@ void RbxStu::Scanners::Luau::Initialize()
     lua_close(luaState);
 
 
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_Luau,
+              std::format("Luau Scanning Completed! Initialization completed in {}ms!", std::chrono::duration_cast<std::
+                  chrono::milliseconds>(std::chrono
+                      ::
+                      high_resolution_clock::now() - initializationBegin).count()));
+
     this->m_bIsInitialized = true;
 }
 
-std::shared_ptr<RbxStu::Scanners::Luau> RbxStu::Scanners::Luau::GetSingleton()
-{
+std::shared_ptr<RbxStu::Scanners::Luau> RbxStu::Scanners::Luau::GetSingleton() {
     if (nullptr == RbxStu::Scanners::Luau::pInstance)
         RbxStu::Scanners::Luau::pInstance = std::make_shared<RbxStu::Scanners::Luau>();
 
-    if (!RbxStu::Scanners::Luau::pInstance->IsInitialized())
-    {
+    if (!RbxStu::Scanners::Luau::pInstance->IsInitialized()) {
         std::scoped_lock lock{RbxStuScannersLuauGetSingleton};
         if (RbxStu::Scanners::Luau::pInstance->IsInitialized())
             return RbxStu::Scanners::Luau::pInstance;
