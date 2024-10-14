@@ -158,8 +158,9 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- End");
 
+    MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
     Sleep(10000);
-    return EXCEPTION_CONTINUE_EXECUTION;
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 void RbxStu::ExceptionHandler::InstallHandler() {
