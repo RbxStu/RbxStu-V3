@@ -128,16 +128,16 @@ RbxStu::Analysis::Disassembler::GetInstructions(_In_ const void *startAddress, c
         // ReSharper disable once CppRedundantComplexityInComparison
         if (CHECK_NOT_FLAG(buf.Protect, PAGE_EXECUTE) && CHECK_NOT_FLAG(buf.Protect, PAGE_EXECUTE_READ) &&
             CHECK_NOT_FLAG(buf.Protect, PAGE_EXECUTE_READWRITE) && CHECK_NOT_FLAG(buf.Protect, PAGE_GRAPHICS_EXECUTE)) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
-                      "Memory protections are non-executable! Disassembly will not proceed.");
+            //RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
+            //          "Memory protections are non-executable! Disassembly will not proceed.");
             return {};
         }
 #undef CHECK_NOT_FLAG
     }
 
-    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
-              std::format("Disassembling segment: {} ~ {}. Size: {:#x}", startAddress,
-                  endAddress, segmentSize));
+    //RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
+    //          std::format("Disassembling segment: {} ~ {}. Size: {:#x}", startAddress,
+    //              endAddress, segmentSize));
 
     cs_insn *instructions{nullptr};
 
@@ -147,8 +147,8 @@ RbxStu::Analysis::Disassembler::GetInstructions(_In_ const void *startAddress, c
         reinterpret_cast<std::uintptr_t>(startAddress), segmentSize, &instructions);
 
     if (disassembledCount > 0) {
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
-                  "Serializing instructions into a DisassembledChunk instance!");
+        //RbxStuLog(RbxStu::LogType::Debug, RbxStu::Analysis_Disassembler,
+        //          "Serializing instructions into a DisassembledChunk instance!");
         return std::make_unique<DisassembledChunk>(instructions, disassembledCount);
     }
 
