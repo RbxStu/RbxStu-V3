@@ -15,8 +15,8 @@
 #include "Settings.hpp"
 #include "Utilities.hpp"
 
-#include <RTTIHook/RTTIScanner.h>
 #include <Scanners/Luau.hpp>
+#include <Scanners/Rbx.hpp>
 
 void Entry() {
     AllocConsole();
@@ -60,6 +60,9 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for Luau...");
     RbxStu::Scanners::Luau::GetSingleton();
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for ROBLOX...");
+    RbxStu::Scanners::RBX::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {
