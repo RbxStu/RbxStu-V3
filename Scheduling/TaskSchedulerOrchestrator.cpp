@@ -115,7 +115,9 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 
     if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
-        TerminateProcess(GetCurrentProcess(), 0);
+        while (true == true) {
+            volatile int value = *reinterpret_cast<int*>(nullptr);
+        }
     }
 
     return jobOriginal->original(self, timeMetrics);
