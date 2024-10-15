@@ -7,6 +7,7 @@
 #include <Logger.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
+#include "ldebug.h"
 #include "luacode.h"
 #include "lualib.h"
 #include "Luau/BytecodeBuilder.h"
@@ -14,6 +15,7 @@
 #include "Luau/Compiler/src/BuiltinFolding.h"
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
+#include "ixwebsocket/IXHttpServer.h"
 
 namespace RbxStu::Scheduling::Jobs {
     Jobs::AvailableJobs ExecuteScriptJob::GetJobIdentifier() {
@@ -97,7 +99,6 @@ namespace RbxStu::Scheduling::Jobs {
     void ExecuteScriptJob::ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest) {
         std::lock_guard lock{executionQueueMutex};
         if (m_executionQueue.contains(datamodelType)) {
-            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_ExecuteScriptJob, "Pushed job");
             m_executionQueue.at(datamodelType).push(jobRequest);
         }
     }
@@ -156,7 +157,15 @@ namespace RbxStu::Scheduling::Jobs {
 
                 const auto bytecode = Luau::compile(scriptSource.data(), opts);
 
-                luau_load(nL, "RbxStuV3", bytecode.data(), bytecode.size(), 0);
+                if (luau_load(nL, "RbxStuV3", bytecode.data(), bytecode.size(), 0) != LUA_OK) {
+                    const auto error = lua_tostring(nL, -1);
+                    RbxStuLog(RbxStu::LogType::Error, "RbxStuV3::Compiler", std::format("Failed to load bytecode: {}", error));
+
+                    lua_pop(initContext.value()->executorState, 1);
+                    executionQueue.pop();
+                    continue;
+                }
+
                 task_defer(nL);
                 lua_pop(initContext.value()->executorState, 1);
 

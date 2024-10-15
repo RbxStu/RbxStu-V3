@@ -36,11 +36,8 @@ void RbxStu::Communication::WebsocketServer::Initialize() {
                 [](const std::shared_ptr<ix::ConnectionState> &connectionState, ix::WebSocket &webSocket,
                    const ix::WebSocketMessagePtr &msg) {
                     if (msg->type == ix::WebSocketMessageType::Message) {
-                        RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketServer,
-                                  std::format("Scheduling code: {}", msg->str));
-
                         auto newJob = RbxStu::Scheduling::ExecuteJobRequest{};
-                        newJob.scriptSource = msg->str;
+                        newJob.scriptSource = _strdup(msg->str.c_str());
                         newJob.bGenerateNativeCode = false;
 
                         auto executeJobs = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->
