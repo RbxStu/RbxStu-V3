@@ -20,6 +20,7 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Security.hpp"
+#include "Communication/WebsocketServer.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 
 void Entry() {
@@ -75,6 +76,9 @@ void Entry() {
     const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
     const auto scheduler = orchestrator->GetTaskScheduler();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecuteScriptJob>();
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
+    RbxStu::Communication::WebsocketServer::GetSingleton();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

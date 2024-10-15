@@ -88,6 +88,7 @@ namespace RbxStu {
     DefineSectionName(StructuredExceptionHandler, "RbxStuV3::StructuredExceptionHandler");
     DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");
 
+    DefineSectionName(WebsocketServer, "RbxStuV3::WebsocketServer");
 #undef DefineSectionName
 }; // namespace RbxStu
 

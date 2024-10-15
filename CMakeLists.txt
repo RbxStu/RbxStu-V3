@@ -74,6 +74,8 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/Job/ExecuteScriptJob.hpp
         Roblox/ScriptContext.cpp
         Roblox/ScriptContext.hpp
+        Communication/WebsocketServer.cpp
+        Communication/WebsocketServer.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
