@@ -121,6 +121,8 @@ namespace RbxStu
         void Initialize();
 
     public:
+        VMValue1<int*> lastRan;
+
         bool IsInitialized();
         __forceinline const char* GetHashedMemory() const;
         __forceinline static std::string HashModuleSections(LPVOID lpBaseOfDll, DWORD SizeOfImage);

@@ -6,6 +6,7 @@
 
 #include <Logger.hpp>
 #include <MinHook.h>
+#include <Security.hpp>
 #include <mutex>
 #include <Analysis/Disassembler.hpp>
 #include <libhat/Scanner.hpp>
@@ -112,6 +113,10 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
         RBX::DataModelJobVFTable **>(self)]; // VFtable.
 
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
+
+    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
+        TerminateProcess(GetCurrentProcess(), 0);
+    }
 
     return jobOriginal->original(self, timeMetrics);
 }

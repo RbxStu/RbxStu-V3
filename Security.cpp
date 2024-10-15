@@ -42,18 +42,18 @@ const char *RbxStu::Security::GetHashedMemory() const {
 [[noreturn]] void MemCheckLoop(LPVOID lpBaseOfDll, DWORD SizeOfImage) {
     while (true == true) {
         auto moduleHash = RbxStu::Security::HashModuleSections(lpBaseOfDll, SizeOfImage);
+        *RbxStu::Security::GetSingleton()->lastRan = std::time(nullptr);
 
         if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory()) != 0) {
-            ;
             std::thread([] {
                 MessageBoxA(nullptr, oxorany_converted("Bad Boy"), oxorany_converted("You were caught by Hyperion V6"),
                             MB_OK);
             }).detach();
-            Sleep(5000);
+            Sleep(oxorany(5000));
             TerminateProcess(GetCurrentProcess(), 0);
         }
 
-        Sleep(10000);
+        Sleep(oxorany(10000));
     }
 }
 
@@ -100,6 +100,8 @@ void RbxStu::Security::Initialize() {
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
     this->originalHashedMemory = _strdup(moduleHash.c_str());
+    this->lastRan = static_cast<int*>(malloc(sizeof(int)));
+    *this->lastRan = std::time(nullptr);
     RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName, std::format("Our module hashed is: {}", moduleHash));
 
     std::thread memCheckLoopThead(MemCheckLoop, moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
