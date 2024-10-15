@@ -12,11 +12,11 @@ namespace RbxStu::Communication {
     class ScheduleExecution : public PacketBase {
 
         std::list<std::string_view> GetRequiredFields() override {
-            return {"scriptSource", "datamodelType"};
+            return {"scriptSource", "datamodelType", "generateNativeCode"};
         };
 
         bool ValidateData(nlohmann::json jsonData) override {
-            if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer()) {
+            if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer() && jsonData["generateNativeCode"].is_boolean()) {
                 const auto receivedDatamodelType = jsonData["datamodelType"].get<std::int32_t>();
                 return receivedDatamodelType > -1 && receivedDatamodelType < 4;
             }
@@ -26,10 +26,11 @@ namespace RbxStu::Communication {
         void Callback(nlohmann::json jsonData) override {
             const auto receivedDatamodelType = jsonData["datamodelType"].get<RBX::DataModelType>();
             const auto scriptSource = jsonData["scriptSource"].get<std::string_view>();
+            const auto generateNativeCode = jsonData["generateNativeCode"].get<bool>();
 
             auto newExecutionJob = Scheduling::ExecuteJobRequest{};
             newExecutionJob.scriptSource = scriptSource;
-            newExecutionJob.bGenerateNativeCode = false;
+            newExecutionJob.bGenerateNativeCode = generateNativeCode;
 
             const auto TaskScheduler = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
             const auto allExecuteJobs = TaskScheduler->GetJobs(Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
