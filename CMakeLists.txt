@@ -76,6 +76,10 @@ add_library(${PROJECT_NAME} SHARED
         Roblox/ScriptContext.hpp
         Communication/WebsocketServer.cpp
         Communication/WebsocketServer.hpp
+        Communication/PacketManager.cpp
+        Communication/PacketManager.hpp
+        Communication/PacketBase.hpp
+        Communication/Packets/ScheduleExecution.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

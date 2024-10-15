@@ -6,6 +6,7 @@
 
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
+#include "PacketManager.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "ixwebsocket/IXWebSocketServer.h"
 
@@ -36,17 +37,18 @@ void RbxStu::Communication::WebsocketServer::Initialize() {
                 [](const std::shared_ptr<ix::ConnectionState> &connectionState, ix::WebSocket &webSocket,
                    const ix::WebSocketMessagePtr &msg) {
                     if (msg->type == ix::WebSocketMessageType::Message) {
-                        auto newJob = RbxStu::Scheduling::ExecuteJobRequest{};
-                        newJob.scriptSource = _strdup(msg->str.c_str());
-                        newJob.bGenerateNativeCode = false;
+                        const auto handleResults = PacketManager::HandleNewPacket(msg->str);
+                        if (handleResults.has_value()) {
+                            nlohmann::json errorJson;
+                            errorJson["success"] = false;
+                            errorJson["error"] = handleResults.value();
 
-                        auto executeJobs = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->
-                                           GetTaskScheduler()->GetJobs(
-                                                   Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
+                            webSocket.sendText(errorJson.dump());
+                        } else {
+                            nlohmann::json successJson;
+                            successJson["success"] = true;
 
-                        for (const auto& job: executeJobs) {
-                            const auto rightJob = std::dynamic_pointer_cast<Scheduling::Jobs::ExecuteScriptJob>(job);
-                            rightJob->ScheduleExecuteJob(RBX::DataModelType_PlayClient, newJob);
+                            webSocket.sendText(successJson.dump());
                         }
                     } else if (msg->type == ix::WebSocketMessageType::Open) {
                         RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketServer,
