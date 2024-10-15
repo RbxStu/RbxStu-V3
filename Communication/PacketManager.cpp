@@ -39,7 +39,7 @@ namespace RbxStu::Communication {
         }
 
         const auto& specificPacket = packetMap.at(packetType);
-        const auto specificPacketFields = specificPacket->Register();
+        const auto specificPacketFields = specificPacket->GetRequiredFields();
         for (const auto requiredFieldName : specificPacketFields) {
             if (!jsonData.contains(requiredFieldName)) {
                 return std::format("Packet is missing field: {}", requiredFieldName);

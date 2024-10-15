@@ -25,7 +25,7 @@ namespace RbxStu::Communication {
          * @brief Every packet must have this function otherwise we will throw an error
          * @return enum which determines fields of the packet required for validation
          */
-        virtual std::list<std::string_view> Register() {
+        virtual std::list<std::string_view> GetRequiredFields() {
             return {"packetId", "packetType"};
         }
 

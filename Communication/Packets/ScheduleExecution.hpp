@@ -11,7 +11,7 @@
 namespace RbxStu::Communication {
     class ScheduleExecution : public PacketBase {
 
-        std::list<std::string_view> Register() override {
+        std::list<std::string_view> GetRequiredFields() override {
             return {"scriptSource", "datamodelType"};
         };
 
