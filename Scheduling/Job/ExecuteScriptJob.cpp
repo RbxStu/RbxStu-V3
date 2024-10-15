@@ -16,6 +16,10 @@
 #include "Roblox/ScriptContext.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
+    Jobs::AvailableJobs ExecuteScriptJob::GetJobIdentifier() {
+        return AvailableJobs::ExecuteScriptJob;
+    }
+
     bool ExecuteScriptJob::ShouldReinitialize(void *job) {
         // Assuming 'job' is WaitingHybridScriptsJob...
         auto scriptContext = RbxStu::Roblox::ScriptContext::FromWaitingHybridScriptsJob(job);
@@ -57,14 +61,14 @@ namespace RbxStu::Scheduling::Jobs {
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        if (!this->m_executionQueue.contains(dataModel->GetDataModelType())) {
+        if (!m_executionQueue.contains(dataModel->GetDataModelType())) {
             // Initialize execution queue for this data model
 
             auto datamodelExecutionQueue = std::queue<ExecuteJobRequest>();
-            this->m_executionQueue[dataModel->GetDataModelType()] = datamodelExecutionQueue;
+            m_executionQueue[dataModel->GetDataModelType()] = datamodelExecutionQueue;
         } else {
             // Clear the queue on reinitialization
-            auto datamodelExecutionQueue = this->m_executionQueue[dataModel->GetDataModelType()];
+            auto datamodelExecutionQueue = m_executionQueue[dataModel->GetDataModelType()];
 
             while (!datamodelExecutionQueue.empty()) {
                 datamodelExecutionQueue.pop();
@@ -89,6 +93,14 @@ namespace RbxStu::Scheduling::Jobs {
     }
 
     ExecuteScriptJob::~ExecuteScriptJob() = default;
+
+    void ExecuteScriptJob::ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest) {
+        std::lock_guard lock{executionQueueMutex};
+        if (m_executionQueue.contains(datamodelType)) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_ExecuteScriptJob, "Pushed job");
+            m_executionQueue.at(datamodelType).push(jobRequest);
+        }
+    }
 
     bool ExecuteScriptJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                       RBX::TaskScheduler::Job::Stats *jobStats) {
@@ -123,6 +135,7 @@ namespace RbxStu::Scheduling::Jobs {
 
         const auto datamodelType = initContext.value()->dataModel->GetDataModelType();
 
+        std::lock_guard lock(executionQueueMutex);
         if (!m_executionQueue.empty() &&
             m_executionQueue.contains(datamodelType) &&
             !m_executionQueue[datamodelType].empty()) {

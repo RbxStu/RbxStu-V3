@@ -29,7 +29,9 @@ namespace RbxStu::Scheduling {
             };
 
             std::map<RBX::DataModelType, std::shared_ptr<ExecuteScriptJobInitializationData> > m_stateMap;
-            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest> > m_executionQueue;
+
+            std::mutex executionQueueMutex;
+            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest>> m_executionQueue;
 
             bool ShouldReinitialize(void *job);
 
@@ -40,6 +42,10 @@ namespace RbxStu::Scheduling {
 
         public:
             ~ExecuteScriptJob() override;
+
+            void ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest);
+
+            Jobs::AvailableJobs GetJobIdentifier() override;
 
             bool ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                             RBX::TaskScheduler::Job::Stats *jobStats) override;

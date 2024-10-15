@@ -3,6 +3,10 @@
 //
 
 #include "WebsocketServer.hpp"
+
+#include <Scheduling/TaskSchedulerOrchestrator.hpp>
+
+#include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "ixwebsocket/IXWebSocketServer.h"
 
 std::shared_ptr<RbxStu::Communication::WebsocketServer> RbxStu::Communication::WebsocketServer::pInstance;
@@ -23,23 +27,43 @@ bool RbxStu::Communication::WebsocketServer::IsInitialized() const {
 
 
 void RbxStu::Communication::WebsocketServer::Initialize() {
-    if (this->IsInitialized()) return;
+    if (this->IsInitialized())
+        return;
 
     std::thread([] {
         ix::WebSocketServer server(8080);
-        server.setOnClientMessageCallback([](const std::shared_ptr<ix::ConnectionState>& connectionState, ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
-            if (msg->type == ix::WebSocketMessageType::Message) {
-                RbxStuLog(RbxStu::LogType::Information ,RbxStu::WebsocketServer, std::format("Received message: {}", msg->str));
-            } else if (msg->type == ix::WebSocketMessageType::Open) {
-                RbxStuLog(RbxStu::LogType::Information ,RbxStu::WebsocketServer, std::format("New connection opened"));
-            } else if (msg->type == ix::WebSocketMessageType::Close) {
-                RbxStuLog(RbxStu::LogType::Information ,RbxStu::WebsocketServer, std::format("Some connection closed"));
-            }
-        });
+        server.setOnClientMessageCallback(
+                [](const std::shared_ptr<ix::ConnectionState> &connectionState, ix::WebSocket &webSocket,
+                   const ix::WebSocketMessagePtr &msg) {
+                    if (msg->type == ix::WebSocketMessageType::Message) {
+                        RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketServer,
+                                  std::format("Scheduling code: {}", msg->str));
+
+                        auto newJob = RbxStu::Scheduling::ExecuteJobRequest{};
+                        newJob.scriptSource = msg->str;
+                        newJob.bGenerateNativeCode = false;
+
+                        auto executeJobs = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->
+                                           GetTaskScheduler()->GetJobs(
+                                                   Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
+
+                        for (const auto& job: executeJobs) {
+                            const auto rightJob = std::dynamic_pointer_cast<Scheduling::Jobs::ExecuteScriptJob>(job);
+                            rightJob->ScheduleExecuteJob(RBX::DataModelType_PlayClient, newJob);
+                        }
+                    } else if (msg->type == ix::WebSocketMessageType::Open) {
+                        RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketServer,
+                                  std::format("New connection opened"));
+                    } else if (msg->type == ix::WebSocketMessageType::Close) {
+                        RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketServer,
+                                  std::format("Some connection closed"));
+                    }
+                });
 
         const auto startupResults = server.listen();
         if (!startupResults.first) {
-            RbxStuLog(RbxStu::LogType::Error, RbxStu::WebsocketServer, std::format("Failed to start Websocket server! Error: {}", startupResults.second));
+            RbxStuLog(RbxStu::LogType::Error, RbxStu::WebsocketServer,
+                      std::format("Failed to start Websocket server! Error: {}", startupResults.second));
             return;
         }
 
