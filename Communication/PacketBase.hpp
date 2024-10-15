@@ -17,8 +17,6 @@ namespace RbxStu::Communication {
     };
 
     class PacketBase abstract {
-        uint64_t packetId{};
-        uint64_t packetType{};
     public:
         virtual ~PacketBase() = default;
 
