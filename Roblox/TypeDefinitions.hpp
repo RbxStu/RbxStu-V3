@@ -10,8 +10,12 @@
 
 namespace RbxStu::Concepts {
     template<typename Derived, typename Base>
-    concept TypeConstraint_ = std::is_base_of_v<Base, Derived>;
+    concept TypeConstraint = std::is_base_of_v<Base, Derived>;
 }
+
+using r_RBX_ScriptContext_getGlobalState = lua_State *(__fastcall *)(void *scriptContext,
+                                                                     const uint64_t *identity,
+                                                                     const void *script);
 
 namespace RBX {
     struct Time {
@@ -351,7 +355,7 @@ namespace RBX {
             RBX::Reflection::EnumDescriptor *enumDescriptor;
         };
 
-        template<RbxStu::Concepts::TypeConstraint_<RBX::Reflection::MemberDescriptor> U>
+        template<RbxStu::Concepts::TypeConstraint<RBX::Reflection::MemberDescriptor> U>
         struct MemberDescriptorContainer {
             std::vector<U *> descriptors;
             const char _0[144];
@@ -467,21 +471,22 @@ namespace RBX {
 
     static std::string DataModelTypeToString(const std::int32_t num) {
         if (num == 0) {
-            return "StudioGameStateType_Edit";
+            return "Edit";
         }
         if (num == 1) {
-            return "StudioGameStateType_PlayClient";
+            return "Client";
         }
         if (num == 2) {
-            return "StudioGameStateType_PlayServer";
+            return "Server";
         }
         if (num == 3) {
-            return "StudioGameStateType_Standalone";
+            return "Standalone";
         }
         if (num == 4) {
-            return "StudioGameStateType_Null";
+            return "Null";
         }
-        return "<Invalid StudioGameStateType>";
+
+        return "unknown";
     }
 
     struct DataModel {

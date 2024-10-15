@@ -1,0 +1,52 @@
+//
+// Created by Dottik on 14/10/2024.
+//
+
+#pragma once
+
+#include <queue>
+
+#include "Scheduling/Job.hpp"
+
+namespace RbxStu::Roblox {
+    class DataModel;
+    class ScriptContext;
+}
+
+namespace RbxStu::Scheduling {
+    struct ExecuteJobRequest {
+        bool bGenerateNativeCode;
+        std::string_view scriptSource;
+    };
+
+    namespace Jobs {
+        class ExecuteScriptJob final : public RbxStu::Scheduling::Job {
+            struct ExecuteScriptJobInitializationData {
+                lua_State *globalState;
+                lua_State *executorState;
+                std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;
+                std::shared_ptr<RbxStu::Roblox::DataModel> dataModel;
+            };
+
+            std::map<RBX::DataModelType, std::shared_ptr<ExecuteScriptJobInitializationData> > m_stateMap;
+            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest> > m_executionQueue;
+
+            bool ShouldReinitialize(void *job);
+
+            void InitializeForDataModel(void *job);
+
+            std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData>>
+            GetInitializationContext(void *job);
+
+        public:
+            ~ExecuteScriptJob() override;
+
+            bool ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
+                            RBX::TaskScheduler::Job::Stats *jobStats) override;
+
+
+            void Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
+                      RbxStu::Scheduling::TaskScheduler *scheduler) override;
+        };
+    } // Jobs
+} // RbxStu::Scheduling

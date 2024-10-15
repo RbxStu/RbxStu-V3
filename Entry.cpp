@@ -20,6 +20,7 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Security.hpp"
+#include "Scheduling/Job/ExecuteScriptJob.hpp"
 
 void Entry() {
     AllocConsole();
@@ -71,7 +72,9 @@ void Entry() {
     RbxStu::Scanners::RBX::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
-    auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
+    const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
+    const auto scheduler = orchestrator->GetTaskScheduler();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecuteScriptJob>();
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

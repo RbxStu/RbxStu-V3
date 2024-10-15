@@ -70,6 +70,10 @@ add_library(${PROJECT_NAME} SHARED
         Analysis/Disassembler.cpp
         Analysis/RTTI.cpp
         Security.cpp
+        Scheduling/Job/ExecuteScriptJob.cpp
+        Scheduling/Job/ExecuteScriptJob.hpp
+        Roblox/ScriptContext.cpp
+        Roblox/ScriptContext.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

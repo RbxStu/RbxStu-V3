@@ -8,7 +8,7 @@
 
 #include "Roblox/DataModel.hpp"
 
-namespace RbxStu::Scheduling {
+namespace RbxStu::Scheduling::Jobs {
     ResumeYieldedThreadsJob::~ResumeYieldedThreadsJob() = default;
 
     bool ResumeYieldedThreadsJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,

@@ -6,6 +6,14 @@
 #include "TaskScheduler.hpp"
 
 namespace RbxStu::Scheduling {
+    namespace Jobs {
+        enum class AvailableJobs : std::int32_t {
+            GenericJob, // Not overriden.
+            ExecuteScriptJob,
+            ResumeYieldedThreadsJob,
+        };
+    }
+
     class Job abstract {
     public:
         virtual ~Job() = default;
@@ -16,7 +24,9 @@ namespace RbxStu::Scheduling {
          *      - False -> Does not execute Step function.
          */
         virtual bool ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
-                                RBX::TaskScheduler::Job::Stats *jobStats) { return false; };
+                                RBX::TaskScheduler::Job::Stats *jobStats) { return false; }
+
+        virtual Jobs::AvailableJobs GetJobIdentifier() { return Jobs::AvailableJobs::GenericJob; }
 
         virtual void Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
                           RbxStu::Scheduling::TaskScheduler *scheduler) { return; }

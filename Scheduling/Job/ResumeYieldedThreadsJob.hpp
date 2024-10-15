@@ -8,7 +8,7 @@
 
 #include "Scheduling/Job.hpp"
 
-namespace RbxStu::Scheduling {
+namespace RbxStu::Scheduling::Jobs {
     struct ResumeThreadRequest {
         lua_State *pResumeThread;
         int lArgCount;
@@ -18,7 +18,7 @@ namespace RbxStu::Scheduling {
     };
 
     class ResumeYieldedThreadsJob final : public Job {
-        std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ResumeThreadRequest *> > m_vResumptionList;
+        std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::Jobs::ResumeThreadRequest *> > m_vResumptionList;
 
     public:
         ~ResumeYieldedThreadsJob() override;

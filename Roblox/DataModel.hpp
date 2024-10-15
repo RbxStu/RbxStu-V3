@@ -14,7 +14,21 @@ namespace RbxStu::Roblox {
     public:
         explicit DataModel(RBX::DataModel *robloxDataModel);
 
-        static std::unique_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
+        bool operator==(const RBX::DataModel *dataModel) const;
+
+        bool operator==(RBX::DataModel *dataModel) const;
+
+        bool operator==(const RbxStu::Roblox::DataModel &dataModel) const;
+
+        bool operator==(RbxStu::Roblox::DataModel &dataModel) const;
+
+        bool operator==(const std::shared_ptr<RbxStu::Roblox::DataModel> &dataModel) const;
+
+        bool operator==(std::shared_ptr<RbxStu::Roblox::DataModel> &dataModel) const;
+
+        RBX::DataModel *GetRbxPointer() const;
+
+        static std::shared_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
 
         [[nodiscard]] RBX::DataModelType GetDataModelType() const;
     };
