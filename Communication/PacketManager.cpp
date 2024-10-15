@@ -20,7 +20,7 @@ namespace RbxStu::Communication {
             return "Invalid JSON";
         }
 
-        const auto baseTypeFields = { "packetId", "packetType" };
+        const auto baseTypeFields = { "packetType" };
         for (const auto requiredFieldName : baseTypeFields) {
             if (!jsonData.contains(requiredFieldName)) {
                 return std::format("Packet is missing field: {}", requiredFieldName);
