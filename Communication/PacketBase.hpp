@@ -21,7 +21,6 @@ namespace RbxStu::Communication {
         virtual ~PacketBase() = default;
 
         /**
-         * Every inheritor must also return the fields of the BasePacket
          * @brief Every packet must have this function otherwise we will throw an error
          * @return enum which determines fields of the packet required for validation
          */
