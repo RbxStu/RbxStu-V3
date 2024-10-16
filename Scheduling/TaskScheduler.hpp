@@ -4,7 +4,7 @@
 
 #pragma once
 #include <cstdint>
-
+#include <optional>
 #include "Roblox/TypeDefinitions.hpp"
 
 namespace RbxStu::Scheduling {
@@ -24,6 +24,17 @@ namespace RbxStu::Scheduling {
         template<Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
         __forceinline void AddSchedulerJob() {
             m_jobList.push_back(std::make_shared<T>());
+        };
+
+        template<RbxStu::Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
+        std::optional<std::shared_ptr<T>> GetJob(const Jobs::AvailableJobs jobIdentifier) {
+            for (const auto &job : this->m_jobList) {
+                if (job->GetJobIdentifier() == jobIdentifier) {
+                    return std::dynamic_pointer_cast<T>(job);
+                }
+            }
+
+            return {};
         };
 
         [[nodiscard]] std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > GetJobs(
