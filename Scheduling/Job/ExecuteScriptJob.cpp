@@ -28,8 +28,8 @@ namespace RbxStu::Scheduling::Jobs {
 
         if (const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
             this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-            at(dataModel->GetDataModelType())->
-            dataModel->GetRbxPointer() == dataModel->
+                                                                              at(dataModel->GetDataModelType())->
+                                                                              dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer())
             return false; // Already initialized
 
@@ -42,8 +42,8 @@ namespace RbxStu::Scheduling::Jobs {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-            at(dataModel->GetDataModelType())->
-            dataModel->GetRbxPointer() == dataModel->
+                                                                              at(dataModel->GetDataModelType())->
+                                                                              dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer()) {
             return; // Already initialized
         }
@@ -80,13 +80,13 @@ namespace RbxStu::Scheduling::Jobs {
         this->m_stateMap[dataModel->GetDataModelType()] = initData;
     }
 
-    std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData> >
+    std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData>>
     ExecuteScriptJob::GetInitializationContext(void *job) {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-            at(dataModel->GetDataModelType())->
-            dataModel->GetRbxPointer() == dataModel->
+                                                                              at(dataModel->GetDataModelType())->
+                                                                              dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer()) {
             return this->m_stateMap.at(dataModel->GetDataModelType()); // Already initialized
         }
@@ -168,7 +168,6 @@ namespace RbxStu::Scheduling::Jobs {
                 executionQueue.pop();
                 return Job::Step(job, jobStats, scheduler);
             }
-
             task_defer(nL);
 
             executionQueue.pop();
