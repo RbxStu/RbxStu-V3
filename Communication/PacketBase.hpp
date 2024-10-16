@@ -22,7 +22,7 @@ namespace RbxStu::Communication {
 
         /**
          * @brief Every packet must have this function otherwise we will throw an error
-         * @return enum which determines fields of the packet required for validation
+         * @return list of strings determining fields required for this packet
          */
         virtual std::list<std::string_view> GetRequiredFields() {
             return {"packetType"};
@@ -30,7 +30,7 @@ namespace RbxStu::Communication {
 
         /**
          * @brief This function should be used to validate all fields data type, the fields will have something, but here it is needed to be validated
-         * @return a bool that determines if the packet action will be executed
+         * @return a bool that determines if the packet callback will be executed
          */
         virtual bool ValidateData(nlohmann::json jsonData) {
             return true;

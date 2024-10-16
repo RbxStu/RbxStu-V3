@@ -27,7 +27,7 @@ namespace RbxStu::Communication {
             }
         }
 
-        if (!jsonData["packetId"].is_number_integer() || !jsonData["packetType"].is_number_integer()) {
+        if (!jsonData["packetType"].is_number_integer()) {
             return "Malformed packet";
         }
 
