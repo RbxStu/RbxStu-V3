@@ -15,7 +15,7 @@ namespace RbxStu::Scanners {
     class RBX final {
     public:
         enum class PointerOffsets {
-            ScriptContext_getGlobalState,
+            RBX_ScriptContext_resume,
         };
 
         struct PointerOffsetInformation {

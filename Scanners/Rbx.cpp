@@ -113,7 +113,6 @@ void RbxStu::Scanners::RBX::Initialize() {
     if (this->m_bIsInitialized) return;
     const auto initializationBegin = std::chrono::high_resolution_clock::now();
 
-
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX, "Scanning...");
 
     auto foundSignatures = std::map<std::string_view, const void *>();
@@ -139,23 +138,6 @@ void RbxStu::Scanners::RBX::Initialize() {
     for (const auto &[funcName, funcAddress]: foundSignatures) {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
                   std::format("- {} --> {}", funcName, funcAddress));
-    }
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
-              std::format("Scanning for RBX::ScriptContext::getGlobalState pointer offset...", std::chrono::
-                  duration_cast<std::chrono::milliseconds>(std::chrono::
-                      high_resolution_clock::now() - scanningBegin).count()));
-
-    // We must read the insns disassembled (because its easier, basically RbxStu V2 method)
-
-    auto getGlobalState = RbxStuOffsets::GetSingleton()->GetOffset(
-        RbxStuOffsets::OffsetKey::RBX_ScriptContext_getGlobalState);
-
-    if (getGlobalState == nullptr) {
-        RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
-                  std::format("Cannot dump pointer encryption", std::chrono::
-                      duration_cast<std::chrono::milliseconds>(std::chrono::
-                          high_resolution_clock::now() - scanningBegin).count()));
     }
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,

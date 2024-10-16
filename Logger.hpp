@@ -85,6 +85,8 @@ namespace RbxStu {
     DefineSectionName(Scanners_RBXReflection, "RbxStuV3::Scanners::RBXReflection");
     DefineSectionName(Scanners_RBX, "RbxStuV3::Scanners::RBX");
 
+    DefineSectionName(Modding_ModManager, "RbxStuV3::Modding::ModManager");
+
     DefineSectionName(StructuredExceptionHandler, "RbxStuV3::StructuredExceptionHandler");
     DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");
 

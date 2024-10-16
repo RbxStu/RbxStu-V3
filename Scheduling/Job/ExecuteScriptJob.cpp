@@ -28,8 +28,8 @@ namespace RbxStu::Scheduling::Jobs {
 
         if (const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
             this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
+            at(dataModel->GetDataModelType())->
+            dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer())
             return false; // Already initialized
 
@@ -42,8 +42,8 @@ namespace RbxStu::Scheduling::Jobs {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
+            at(dataModel->GetDataModelType())->
+            dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer()) {
             return; // Already initialized
         }
@@ -80,13 +80,13 @@ namespace RbxStu::Scheduling::Jobs {
         this->m_stateMap[dataModel->GetDataModelType()] = initData;
     }
 
-    std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData>>
+    std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData> >
     ExecuteScriptJob::GetInitializationContext(void *job) {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
+            at(dataModel->GetDataModelType())->
+            dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer()) {
             return this->m_stateMap.at(dataModel->GetDataModelType()); // Already initialized
         }
@@ -97,8 +97,8 @@ namespace RbxStu::Scheduling::Jobs {
     ExecuteScriptJob::~ExecuteScriptJob() = default;
 
     void ExecuteScriptJob::ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest) {
-        std::lock_guard lock{executionQueueMutex};
         if (m_executionQueue.contains(datamodelType)) {
+            std::lock_guard lock{executionQueueMutex};
             m_executionQueue.at(datamodelType).push(jobRequest);
         }
     }
@@ -119,7 +119,7 @@ namespace RbxStu::Scheduling::Jobs {
             this->InitializeForDataModel(job);
         }
 
-        auto initContext = this->GetInitializationContext(job);
+        const auto initContext = this->GetInitializationContext(job);
 
         if (!initContext.has_value()) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Scheduling_Jobs_ExecuteScriptJob, std::format(
@@ -136,41 +136,42 @@ namespace RbxStu::Scheduling::Jobs {
 
         const auto datamodelType = initContext.value()->dataModel->GetDataModelType();
 
-        std::lock_guard lock(executionQueueMutex);
         if (!m_executionQueue.empty() &&
             m_executionQueue.contains(datamodelType) &&
             !m_executionQueue[datamodelType].empty()) {
+            std::lock_guard lock(executionQueueMutex);
             const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
                 RbxStuOffsets::GetSingleton()->
                 GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
+
             auto opts = Luau::CompileOptions{};
             opts.debugLevel = 2;
             opts.optimizationLevel = 1;
 
             auto &executionQueue = m_executionQueue[datamodelType];
 
-            while (!executionQueue.empty()) {
-                auto [bGenerateNativeCode, scriptSource] = executionQueue.front();
+            if (executionQueue.empty())
+                return Job::Step(job, jobStats, scheduler);
+            auto [bGenerateNativeCode, scriptSource] = executionQueue.front();
 
-                const auto nL = lua_newthread(initContext.value()->executorState);
-                luaL_sandboxthread(nL);
+            const auto nL = lua_newthread(initContext.value()->executorState);
+            luaL_sandboxthread(nL);
+            lua_pop(initContext.value()->executorState, 1);
 
-                const auto bytecode = Luau::compile(scriptSource.data(), opts);
+            const auto bytecode = Luau::compile(scriptSource.data(), opts);
 
-                if (luau_load(nL, "RbxStuV3", bytecode.data(), bytecode.size(), 0) != LUA_OK) {
-                    const auto error = lua_tostring(nL, -1);
-                    RbxStuLog(RbxStu::LogType::Error, "RbxStuV3::Compiler", std::format("Failed to load bytecode: {}", error));
-
-                    lua_pop(initContext.value()->executorState, 1);
-                    executionQueue.pop();
-                    continue;
-                }
-
-                task_defer(nL);
-                lua_pop(initContext.value()->executorState, 1);
+            if (luau_load(nL, "=RbxStuV3", bytecode.data(), bytecode.size(), 0) != LUA_OK) {
+                const auto error = lua_tostring(nL, -1);
+                RbxStuLog(RbxStu::LogType::Error, "RbxStuV3::Compiler",
+                          std::format("Failed to load bytecode: {}", error));
 
                 executionQueue.pop();
+                return Job::Step(job, jobStats, scheduler);
             }
+
+            task_defer(nL);
+
+            executionQueue.pop();
         }
 
         return Job::Step(job, jobStats, scheduler);

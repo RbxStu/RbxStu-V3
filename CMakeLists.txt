@@ -80,6 +80,12 @@ add_library(${PROJECT_NAME} SHARED
         Communication/PacketManager.hpp
         Communication/PacketBase.hpp
         Communication/Packets/ScheduleExecution.hpp
+
+        # RbxStu V3/Modding
+        Modding/ModContext.cpp
+        Modding/include/ModVersion.hpp
+        Modding/ModManager.cpp
+        Modding/include/ModContext.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

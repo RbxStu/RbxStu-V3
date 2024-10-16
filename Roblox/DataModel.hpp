@@ -26,7 +26,7 @@ namespace RbxStu::Roblox {
 
         bool operator==(std::shared_ptr<RbxStu::Roblox::DataModel> &dataModel) const;
 
-        RBX::DataModel *GetRbxPointer() const;
+        [[nodiscard]] RBX::DataModel *GetRbxPointer() const;
 
         static std::shared_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
 

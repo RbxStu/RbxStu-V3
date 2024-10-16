@@ -8,6 +8,12 @@
 #define RBXSTU_ENABLE_DEBUG_LOGS true
 #define RBXSTU_DLL_NAME "RbxStuV3"
 
+
+// Begin declspec macros.
+#define RBXSTU_EXPORT __declspec(dllexport)
+#define RBXSTU_NOINLINE __declspec(noinline
+#define RBXSTU_FORCEINLINE __forceinline
+
 // Begin Macro Definitions
 
 #define assert_ex(condition, exception) { if (!(condition)) { throw exception; } }

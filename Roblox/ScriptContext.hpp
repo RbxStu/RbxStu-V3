@@ -8,7 +8,7 @@
 #include "lua.h"
 
 namespace RbxStu::Roblox {
-    class ScriptContext {
+    class ScriptContext final {
         void *m_pScriptContext;
 
     public:
@@ -17,7 +17,7 @@ namespace RbxStu::Roblox {
 
         explicit ScriptContext(void *scriptContext);
 
-        void *GetRbxPointer() const;
+        [[nodiscard]] void *GetRbxPointer() const;
 
         lua_State *GetGlobalState();
     };
