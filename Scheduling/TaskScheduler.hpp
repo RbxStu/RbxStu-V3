@@ -17,7 +17,7 @@ namespace RbxStu::Scheduling {
 }
 
 namespace RbxStu::Scheduling {
-    class TaskScheduler final {
+    class __declspec(dllexport, novtable) TaskScheduler final {
         std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > m_jobList;
 
     public:

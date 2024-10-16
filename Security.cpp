@@ -2,7 +2,11 @@
 // Created by Pixeluted on 14/10/2024.
 //
 
+#include <LazyImporter.hpp>
+
 #include "Security.hpp"
+
+#define RBXSTU_SECURITY_ENABLE_JUNK_CODE true
 
 std::shared_ptr<RbxStu::Security> RbxStu::Security::pInstance;
 
@@ -40,20 +44,126 @@ const char *RbxStu::Security::GetHashedMemory() const {
 }
 
 [[noreturn]] void MemCheckLoop(LPVOID lpBaseOfDll, DWORD SizeOfImage) {
-    while (true == true) {
+    while (!oxorany(false) == oxorany(true)) {
         auto moduleHash = RbxStu::Security::HashModuleSections(lpBaseOfDll, SizeOfImage);
         *RbxStu::Security::GetSingleton()->lastRan = std::time(nullptr);
 
         if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory()) != 0) {
             std::thread([] {
-                MessageBoxA(nullptr, oxorany_converted("Bad Boy"), oxorany_converted("You were caught by Hyperion V6"),
-                            MB_OK);
-            }).detach();
+#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
+                            if (oxorany(1) == oxorany(0)) {
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(printf)(nullptr, nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(wprintf)(nullptr, nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(OpenProcess)(0, false, 0);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(OpenClipboard)(nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(wprintf)(nullptr, nullptr);
+                                }
+                            }
+#endif
+                            MessageBoxA(nullptr, oxorany_converted("Bad Boy"),
+                                        oxorany_converted("You were caught by Hyperion V6"),
+                                        MB_OK);
+#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
+                            if (oxorany(1) == oxorany(0)) {
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(printf)(nullptr, nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(wprintf)(nullptr, nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(OpenProcess)(0, false, 0);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(OpenClipboard)(nullptr);
+                                }
+                                if (oxorany(1) == oxorany(0)) {
+                                    LI_FN(wprintf)(nullptr, nullptr);
+                                }
+                            }
+                        }
+#endif
+                    )
+                    .
+                    detach();
             Sleep(oxorany(5000));
-            TerminateProcess(GetCurrentProcess(), 0);
+#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
+            if (oxorany(1) == oxorany(0)) {
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(printf)(nullptr, nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(wprintf)(nullptr, nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(OpenProcess)(0, false, 0);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(OpenClipboard)(nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(wprintf)(nullptr, nullptr);
+                }
+            }
+#endif
+            if (oxorany(1) == oxorany(1))
+                TerminateProcess(GetCurrentProcess(), 0);
         }
 
-        Sleep(oxorany(10000));
+        if (oxorany(1) == oxorany(1)) {
+            if (oxorany(1) == oxorany(1)) {
+                if (oxorany(1) == oxorany(1))
+                    Sleep(oxorany(10000));
+                else if (oxorany(1) != oxorany(1))
+                    if (oxorany(1) != oxorany(1) && oxorany(1) == oxorany(1))
+                        Sleep(oxorany(-1));
+            } else {
+#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(printf)(nullptr, nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(wprintf)(nullptr, nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(OpenProcess)(0, false, 0);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(OpenClipboard)(nullptr);
+                }
+                if (oxorany(1) == oxorany(0)) {
+                    LI_FN(wprintf)(nullptr, nullptr);
+                }
+            }
+#endif
+        } else {
+#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
+            if (oxorany(1) == oxorany(0)) {
+                LI_FN(printf)(nullptr, nullptr);
+            }
+            if (oxorany(1) == oxorany(0)) {
+                LI_FN(wprintf)(nullptr, nullptr);
+            }
+            if (oxorany(1) == oxorany(0)) {
+                LI_FN(OpenProcess)(0, false, 0);
+            }
+            if (oxorany(1) == oxorany(0)) {
+                LI_FN(OpenClipboard)(nullptr);
+            }
+            if (oxorany(1) == oxorany(0)) {
+                LI_FN(wprintf)(nullptr, nullptr);
+            }
+        }
+#endif
     }
 }
 
@@ -100,9 +210,10 @@ void RbxStu::Security::Initialize() {
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
     this->originalHashedMemory = _strdup(moduleHash.c_str());
-    this->lastRan = static_cast<int*>(malloc(sizeof(int)));
+    this->lastRan = static_cast<int *>(malloc(sizeof(int)));
     *this->lastRan = std::time(nullptr);
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName, std::format("Our module hashed is: {}", moduleHash));
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName,
+              std::format("Our module hashed is: {}", moduleHash));
 
     std::thread memCheckLoopThead(MemCheckLoop, moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
     memCheckLoopThead.detach();

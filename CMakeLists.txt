@@ -86,6 +86,8 @@ add_library(${PROJECT_NAME} SHARED
         Modding/include/ModVersion.hpp
         Modding/ModManager.cpp
         Modding/include/ModContext.hpp
+        Modding/include/TaskScheduler.hpp
+        Modding/include/Job.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
