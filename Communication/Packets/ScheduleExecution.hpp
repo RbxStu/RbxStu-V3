@@ -16,7 +16,8 @@ namespace RbxStu::Communication {
         };
 
         bool ValidateData(nlohmann::json jsonData) override {
-            if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer() && jsonData["generateNativeCode"].is_boolean()) {
+            if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer() && jsonData[
+                    "generateNativeCode"].is_boolean()) {
                 const auto receivedDatamodelType = jsonData["datamodelType"].get<std::int32_t>();
                 return receivedDatamodelType > -1 && receivedDatamodelType < 4;
             }
@@ -33,12 +34,17 @@ namespace RbxStu::Communication {
             newExecutionJob.bGenerateNativeCode = generateNativeCode;
 
             const auto TaskScheduler = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
-            const auto allExecuteJobs = TaskScheduler->GetJobs(Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
+            const auto executeScriptJob = TaskScheduler->GetJob<Scheduling::Jobs::ExecuteScriptJob>(
+                    Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
 
-            for (const auto& job : allExecuteJobs) {
-                const auto rightJob = std::dynamic_pointer_cast<Scheduling::Jobs::ExecuteScriptJob>(job);
-                rightJob->ScheduleExecuteJob(receivedDatamodelType, newExecutionJob);
-                Sleep(50); // Without this wait, code will never get executed :shrug: idk why
+            if (executeScriptJob.has_value()) {
+                executeScriptJob.value()->ScheduleExecuteJob(receivedDatamodelType, newExecutionJob);
+
+                /*
+                 * Without this wait, it will not get scheduled,
+                 * Honestly, I have no clue why
+                 */
+                Sleep(50);
             }
         };
     };
