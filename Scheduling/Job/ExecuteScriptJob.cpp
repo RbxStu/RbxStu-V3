@@ -97,8 +97,8 @@ namespace RbxStu::Scheduling::Jobs {
     ExecuteScriptJob::~ExecuteScriptJob() = default;
 
     void ExecuteScriptJob::ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest) {
+        std::lock_guard lock{executionQueueMutex};
         if (m_executionQueue.contains(datamodelType)) {
-            std::lock_guard lock{executionQueueMutex};
             m_executionQueue.at(datamodelType).push(jobRequest);
         }
     }
