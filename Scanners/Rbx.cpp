@@ -72,7 +72,9 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
     {
         RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance,
         hat::parse_signature(
-            "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 48 83 3A 00").value()
+            "48 89 5C 24 ? 57 48 83 EC ? 48 83 3A 00 48 8B FA 48 8B D9 75 0F 48 8B 5C 24 ? 48 83 C4 ? 5F E9 ? ? ? ? 45 "
+            "33 C0 48 8D 15 ? ? ? ? E8 ? ? ? ? BA F0 D8 FF FF 48 8B CB E8 ? ? ? ? 48 8B 17 45 33 C0 48 8B CB E8 ? ? ? ? B"
+            "A FE FF FF FF 48 8B CB E8 ? ? ? ? BA FF FF FF FF 48 8B CB E8 ? ? ? ? 85 C0 0F 85 9B 00 00 ?").value()
     },
     {
         RbxStuOffsets::OffsetKey::RBX_Instance_getTopAncestor,
@@ -101,8 +103,8 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
     {
         RbxStuOffsets::OffsetKey::RBXCRASH,
         hat::parse_signature(
-            "48 89 5C 24 ? 48 89 7C 24 ? 48 89 4C 24 ? 55 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 48 8B FA 48 8B D9 "
-            "48 8B 05 ? ? ? ? 48 85 C0 74 0A FF D0 84 C0 0F 84 D0 04 00 ? E8 ? ? ? ? 85 C0 0F 84 C3 04 00 ?")
+            "48 89 5C 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B FA 48 8B D9 48 8B 05 ? ? ? ? 48 85 C0 "
+            "74 0A FF D0 84 C0 0F 84 82 03 00 ? E8 ? ? ? ?")
         .value()
     }
 
