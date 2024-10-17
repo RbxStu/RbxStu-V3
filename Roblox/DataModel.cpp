@@ -53,6 +53,6 @@ namespace RbxStu::Roblox {
     }
 
     RBX::DataModelType DataModel::GetDataModelType() const {
-        return this->m_pDataModel->m_dwDataModelType;
+        return *reinterpret_cast<RBX::DataModelType *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x2D8);
     }
 } // RbxStu::Roblox
