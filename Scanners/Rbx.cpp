@@ -72,9 +72,8 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
     {
         RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance,
         hat::parse_signature(
-            "48 89 5C 24 ? 57 48 83 EC ? 48 83 3A 00 48 8B FA 48 8B D9 75 0F 48 8B 5C 24 ? 48 83 C4 ? 5F E9 ? ? ? ? 45 "
-            "33 C0 48 8D 15 ? ? ? ? E8 ? ? ? ? BA F0 D8 FF FF 48 8B CB E8 ? ? ? ? 48 8B 17 45 33 C0 48 8B CB E8 ? ? ? ? B"
-            "A FE FF FF FF 48 8B CB E8 ? ? ? ? BA FF FF FF FF 48 8B CB E8 ? ? ? ? 85 C0 0F 85 9B 00 00 ?").value()
+            "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 E8 ? "
+            "? ? ? 48 8B CB 84 C0 74 12 48 8B D7 48 8B 5C 24 ? 48 83 C4 ? 5F E9 ? ? ? ?").value()
     },
     {
         RbxStuOffsets::OffsetKey::RBX_Instance_getTopAncestor,
