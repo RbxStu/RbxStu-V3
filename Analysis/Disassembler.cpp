@@ -94,8 +94,7 @@ void RbxStu::Analysis::Disassembler::Initialize() {
     }
 
     cs_option(this->m_capstoneHandle, CS_OPT_DETAIL, CS_OPT_ON);
-
-    this->m_bIsInitialized = true;
+    cs_option(this->m_capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
     this->m_bIsInitialized = true;
 }
