@@ -39,6 +39,7 @@ namespace RbxStu
 
         static std::string WcharToString(const wchar_t* wideStr);
         static std::string ToLower(std::string target);
+        static std::string ToUpper(std::string target);
 
         __forceinline static bool IsWine()
         {

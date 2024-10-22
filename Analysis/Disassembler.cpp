@@ -200,6 +200,8 @@ RbxStu::Analysis::Disassembler::TranslateRelativeLeaIntoRuntimeAddress(const cs_
     return reinterpret_cast<void *>(disposition + insn.address + insn.size);
 }
 
+csh RbxStu::Analysis::Disassembler::GetCapstoneHandle() const { return this->m_capstoneHandle; }
+
 std::shared_ptr<RbxStu::Analysis::Disassembler> RbxStu::Analysis::Disassembler::GetSingleton() {
     if (RbxStu::Analysis::Disassembler::pInstance == nullptr)
         RbxStu::Analysis::Disassembler::pInstance = std::make_shared<RbxStu::Analysis::Disassembler>();

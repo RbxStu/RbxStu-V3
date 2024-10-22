@@ -51,6 +51,8 @@ namespace RbxStu::Analysis {
 
         std::optional<const void *> TranslateRelativeLeaIntoRuntimeAddress(const cs_insn &insn);
 
+        csh GetCapstoneHandle() const;
+
         static std::shared_ptr<Disassembler> GetSingleton();
     };
 };

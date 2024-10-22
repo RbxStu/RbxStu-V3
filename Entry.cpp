@@ -20,6 +20,7 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Security.hpp"
+#include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
 #include "Modding/ModManager.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
@@ -64,6 +65,10 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::RTTI...");
     RbxStu::Analysis::RTTI::GetSingleton();
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
+              "-- Initializing RbxStu::Analysis::XrefSearcher - Complex Cross-Reference Searcher...");
+    RbxStu::Analysis::XrefSearcher::GetSingleton()->BootstrapXrefsForModule(hat::process::get_process_module());
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Bootstrapping RbxStu V3!");
 

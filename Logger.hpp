@@ -75,6 +75,7 @@ namespace RbxStu {
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
 
     DefineSectionName(Analysis_RTTI, "RbxStuV3::Analysis::RTTI");
+    DefineSectionName(Analysis_XrefSearcher, "RbxStuV3::Analysis::XrefSearcher");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
 
     DefineSectionName(Scheduling_Jobs_ExecuteScriptJob, "RbxStuV3::Scheduling::Jobs::ExecuteScriptJob");

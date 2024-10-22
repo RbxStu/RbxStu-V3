@@ -6,8 +6,6 @@
 
 #include "Security.hpp"
 
-#define RBXSTU_SECURITY_ENABLE_JUNK_CODE true
-
 std::shared_ptr<RbxStu::Security> RbxStu::Security::pInstance;
 
 std::shared_ptr<RbxStu::Security> RbxStu::Security::GetSingleton() {
@@ -50,71 +48,14 @@ const char *RbxStu::Security::GetHashedMemory() const {
 
         if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory()) != 0) {
             std::thread([] {
-#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
-                            if (oxorany(1) == oxorany(0)) {
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(printf)(nullptr, nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(wprintf)(nullptr, nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(OpenProcess)(0, false, 0);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(OpenClipboard)(nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(wprintf)(nullptr, nullptr);
-                                }
-                            }
-#endif
-                            MessageBoxA(nullptr, oxorany_converted("Bad Boy"),
-                                        oxorany_converted("You were caught by Hyperion V6"),
-                                        MB_OK);
-#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
-                            if (oxorany(1) == oxorany(0)) {
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(printf)(nullptr, nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(wprintf)(nullptr, nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(OpenProcess)(0, false, 0);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(OpenClipboard)(nullptr);
-                                }
-                                if (oxorany(1) == oxorany(0)) {
-                                    LI_FN(wprintf)(nullptr, nullptr);
-                                }
-                            }
-                        }
-#endif
-                    )
+                        MessageBoxA(nullptr, oxorany_converted("Bad Boy"),
+                                    oxorany_converted("You were caught by Hyperion V6"),
+                                    MB_OK);
+                    })
                     .
                     detach();
             Sleep(oxorany(5000));
-#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
-            if (oxorany(1) == oxorany(0)) {
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(printf)(nullptr, nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(wprintf)(nullptr, nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(OpenProcess)(0, false, 0);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(OpenClipboard)(nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(wprintf)(nullptr, nullptr);
-                }
-            }
-#endif
+
             if (oxorany(1) == oxorany(1))
                 TerminateProcess(GetCurrentProcess(), 0);
         }
@@ -126,44 +67,8 @@ const char *RbxStu::Security::GetHashedMemory() const {
                 else if (oxorany(1) != oxorany(1))
                     if (oxorany(1) != oxorany(1) && oxorany(1) == oxorany(1))
                         Sleep(oxorany(-1));
-            } else {
-#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(printf)(nullptr, nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(wprintf)(nullptr, nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(OpenProcess)(0, false, 0);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(OpenClipboard)(nullptr);
-                }
-                if (oxorany(1) == oxorany(0)) {
-                    LI_FN(wprintf)(nullptr, nullptr);
-                }
-            }
-#endif
-        } else {
-#if RBXSTU_SECURITY_ENABLE_JUNK_CODE
-            if (oxorany(1) == oxorany(0)) {
-                LI_FN(printf)(nullptr, nullptr);
-            }
-            if (oxorany(1) == oxorany(0)) {
-                LI_FN(wprintf)(nullptr, nullptr);
-            }
-            if (oxorany(1) == oxorany(0)) {
-                LI_FN(OpenProcess)(0, false, 0);
-            }
-            if (oxorany(1) == oxorany(0)) {
-                LI_FN(OpenClipboard)(nullptr);
-            }
-            if (oxorany(1) == oxorany(0)) {
-                LI_FN(wprintf)(nullptr, nullptr);
             }
         }
-#endif
     }
 }
 
@@ -178,7 +83,8 @@ std::string RbxStu::Security::HashModuleSections(LPVOID lpBaseOfDll, DWORD SizeO
 
         for (const auto &section: {oxorany_converted(".text"), oxorany_converted(".rdata")}) {
             auto sectionData = process->get_section_data(section);
-            auto sectionHash = HashBytes(reinterpret_cast<const byte *>(sectionData.data()), sectionData.size());
+            auto sectionHash = HashBytes(reinterpret_cast<const byte *>(sectionData.data()),
+                                         sectionData.size());
 
             combinedHash += sectionHash;
         }
