@@ -106,7 +106,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
             } else {
                 RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
                           std::format(
-                              "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll and KERNELBASE.dll ARE THE ONES FOR THE CRASH (most likely)!"
+                              "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll and KERNELBASE.dll ARE THE TRUE STACK TRACE!"
                               , message,
                               reinterpret_cast<void*>(
                                   reinterpret_cast<
