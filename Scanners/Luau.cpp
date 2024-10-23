@@ -97,7 +97,7 @@ void RbxStu::Scanners::Luau::Initialize() {
     auto foundSignatures = std::map<std::string_view, const void *>();
 
     const auto scanningBegin = std::chrono::high_resolution_clock::now();
-    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true)) {
+    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true, ".text")) {
         auto name = OffsetKeyToString(enumKey);
         if (address.has_result()) {
             foundSignatures.emplace(

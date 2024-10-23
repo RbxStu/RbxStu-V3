@@ -74,6 +74,8 @@ namespace RbxStu {
     DefineSectionName(SecurityName, "RbxStuV3::Security");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
 
+    DefineSectionName(Analysis_SignatureMatcher, "RbxStuV3::Analysis::SignatureMatcher");
+    DefineSectionName(Analysis_StringMatcher, "RbxStuV3::Analysis::StringMatcher");
     DefineSectionName(Analysis_RTTI, "RbxStuV3::Analysis::RTTI");
     DefineSectionName(Analysis_XrefSearcher, "RbxStuV3::Analysis::XrefSearcher");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");

@@ -64,9 +64,10 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
     void *stack[256];
     const auto frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
-    const auto callstack = std::vector<void *>(stack, stack + frameCount);
+    // +6 due to the fact that the stack trace includes NTDLL code and whatnot.
+    const auto callstack = std::vector<void *>(frameCount > 6 ? stack + 6 : stack, stack + frameCount);
 
-    auto hasFramePassed = false;
+    // auto hasFramePassed = false;
     for (auto call: callstack) {
         const auto functionStart = disassembler->GetFunctionStart(call);
         std::string belongsTo = "Unknown Origin";
@@ -97,23 +98,23 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
             const auto base = 0x0;
 #endif
 
-            if (hasFramePassed) {
-                RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
-                          std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(
-                              reinterpret_cast<
-                              std::uintptr_t>(call) -
-                              reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
-            } else {
-                RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
-                          std::format(
-                              "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll and KERNELBASE.dll ARE THE TRUE STACK TRACE!"
-                              , message,
-                              reinterpret_cast<void*>(
-                                  reinterpret_cast<
-                                  std::uintptr_t>(call) -
-                                  reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
-                hasFramePassed = true;
-            }
+            // if (hasFramePassed) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+                      std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(
+                          reinterpret_cast<
+                          std::uintptr_t>(call) -
+                          reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
+            // } else {
+            //     RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+            //               std::format(
+            //                   "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll and KERNELBASE.dll ARE THE TRUE STACK TRACE!"
+            //                   , message,
+            //                   reinterpret_cast<void*>(
+            //                       reinterpret_cast<
+            //                       std::uintptr_t>(call) -
+            //                       reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
+            //     hasFramePassed = true;
+            // }
         }
     }
 

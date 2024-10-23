@@ -13,31 +13,35 @@ namespace RbxStu::Roblox {
     class ScriptContext;
 }
 
+namespace RbxStu::StuLuau {
+    class ExecutionEngine;
+}
+
 namespace RbxStu::Scheduling {
     struct ExecuteJobRequest {
         bool bGenerateNativeCode;
         std::string_view scriptSource;
     };
 
+    struct ExecuteScriptJobInitializationInformation {
+        lua_State *globalState;
+        lua_State *executorState;
+        std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;
+        std::shared_ptr<RbxStu::Roblox::DataModel> dataModel;
+    };
+
     namespace Jobs {
         class ExecuteScriptJob final : public RbxStu::Scheduling::Job {
-            struct ExecuteScriptJobInitializationData {
-                lua_State *globalState;
-                lua_State *executorState;
-                std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;
-                std::shared_ptr<RbxStu::Roblox::DataModel> dataModel;
-            };
-
-            std::map<RBX::DataModelType, std::shared_ptr<ExecuteScriptJobInitializationData> > m_stateMap;
+            std::map<RBX::DataModelType, std::shared_ptr<StuLuau::ExecutionEngine> > m_stateMap;
 
             std::mutex executionQueueMutex;
-            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest>> m_executionQueue;
+            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest> > m_executionQueue;
 
             bool ShouldReinitialize(void *job);
 
             void InitializeForDataModel(void *job);
 
-            std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData>>
+            std::optional<std::shared_ptr<StuLuau::ExecutionEngine> >
             GetInitializationContext(void *job);
 
         public:

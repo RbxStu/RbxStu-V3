@@ -73,6 +73,10 @@ add_library(${PROJECT_NAME} SHARED
         Analysis/StringSearcher.hpp
         Analysis/XrefSearcher.cpp
         Analysis/XrefSearcher.hpp
+        Analysis/StringMatcher.cpp
+        Analysis/StringMatcher.hpp
+        Analysis/SignatureMatcher.cpp
+        Analysis/SignatureMatcher.hpp
 
         Security.cpp
         Scheduling/Job/ExecuteScriptJob.cpp
@@ -85,16 +89,8 @@ add_library(${PROJECT_NAME} SHARED
         Communication/PacketManager.hpp
         Communication/PacketBase.hpp
         Communication/Packets/ScheduleExecution.hpp
-
-        # RbxStu V3/Modding
-        Modding/ModContext.cpp
-        Modding/include/ModVersion.hpp
-        Modding/ModManager.cpp
-        Modding/include/ModContext.hpp
-        Modding/include/TaskScheduler.hpp
-        Modding/include/Job.hpp
-
-
+        StuLuau/ExecutionEngine.cpp
+        StuLuau/ExecutionEngine.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

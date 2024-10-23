@@ -22,7 +22,6 @@
 #include "Security.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
-#include "Modding/ModManager.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 
 void Entry() {
@@ -77,10 +76,6 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for ROBLOX...");
     RbxStu::Scanners::RBX::GetSingleton();
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Mod Manager...");
-    RbxStu::Modding::ModManager::GetSingleton();
-
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
     const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();

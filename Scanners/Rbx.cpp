@@ -119,7 +119,7 @@ void RbxStu::Scanners::RBX::Initialize() {
     auto foundSignatures = std::map<std::string_view, const void *>();
 
     const auto scanningBegin = std::chrono::high_resolution_clock::now();
-    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true)) {
+    for (const auto &[enumKey, address]: RbxStu::Utilities::ScanMany(SignatureMap, true, ".text")) {
         const auto name = OffsetKeyToString(enumKey);
         SetOffset(enumKey, address.get());
         if (address.has_result()) {

@@ -17,6 +17,8 @@
 #include "Roblox/ScriptContext.hpp"
 #include "ixwebsocket/IXHttpServer.h"
 
+#include "StuLuau/ExecutionEngine.hpp"
+
 namespace RbxStu::Scheduling::Jobs {
     Jobs::AvailableJobs ExecuteScriptJob::GetJobIdentifier() {
         return AvailableJobs::ExecuteScriptJob;
@@ -28,8 +30,8 @@ namespace RbxStu::Scheduling::Jobs {
 
         if (const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
             this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
+            at(dataModel->GetDataModelType())->GetInitializationInformation()->
+            dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer())
             return false; // Already initialized
 
@@ -42,8 +44,8 @@ namespace RbxStu::Scheduling::Jobs {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
+            at(dataModel->GetDataModelType())->GetInitializationInformation()->
+            dataModel->GetRbxPointer() == dataModel->
             GetRbxPointer()) {
             return; // Already initialized
         }
@@ -57,7 +59,7 @@ namespace RbxStu::Scheduling::Jobs {
         lua_ref(rL, -1);
         lua_pop(rL, 1);
 
-        const auto initData = std::make_shared<ExecuteScriptJobInitializationData>();
+        const auto initData = std::make_shared<ExecuteScriptJobInitializationInformation>();
         initData->globalState = rL;
         initData->executorState = nL;
         initData->scriptContext = scriptContext;
@@ -77,17 +79,16 @@ namespace RbxStu::Scheduling::Jobs {
             }
         }
 
-        this->m_stateMap[dataModel->GetDataModelType()] = initData;
+        this->m_stateMap[dataModel->GetDataModelType()] = std::make_shared<StuLuau::ExecutionEngine>(initData);
     }
 
-    std::optional<std::shared_ptr<ExecuteScriptJob::ExecuteScriptJobInitializationData>>
+    std::optional<std::shared_ptr<StuLuau::ExecutionEngine> >
     ExecuteScriptJob::GetInitializationContext(void *job) {
         auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
         if (this->m_stateMap.contains(dataModel->GetDataModelType()) && this->m_stateMap.
-                                                                              at(dataModel->GetDataModelType())->
-                                                                              dataModel->GetRbxPointer() == dataModel->
-            GetRbxPointer()) {
+            at(dataModel->GetDataModelType())->
+            GetInitializationInformation()->dataModel->GetRbxPointer() == dataModel->GetRbxPointer()) {
             return this->m_stateMap.at(dataModel->GetDataModelType()); // Already initialized
         }
 
@@ -134,7 +135,7 @@ namespace RbxStu::Scheduling::Jobs {
             return;
         }
 
-        const auto datamodelType = initContext.value()->dataModel->GetDataModelType();
+        const auto datamodelType = initContext.value()->GetInitializationInformation()->dataModel->GetDataModelType();
 
         if (!m_executionQueue.empty() &&
             m_executionQueue.contains(datamodelType) &&
@@ -154,9 +155,9 @@ namespace RbxStu::Scheduling::Jobs {
                 return Job::Step(job, jobStats, scheduler);
             auto [bGenerateNativeCode, scriptSource] = executionQueue.front();
 
-            const auto nL = lua_newthread(initContext.value()->executorState);
+            const auto nL = lua_newthread(initContext.value()->GetInitializationInformation()->executorState);
             luaL_sandboxthread(nL);
-            lua_pop(initContext.value()->executorState, 1);
+            lua_pop(initContext.value()->GetInitializationInformation()->executorState, 1);
 
             const auto bytecode = Luau::compile(scriptSource.data(), opts);
 
@@ -168,6 +169,7 @@ namespace RbxStu::Scheduling::Jobs {
                 executionQueue.pop();
                 return Job::Step(job, jobStats, scheduler);
             }
+
             task_defer(nL);
 
             executionQueue.pop();
