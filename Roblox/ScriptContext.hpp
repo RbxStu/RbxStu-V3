@@ -6,6 +6,11 @@
 #include <memory>
 
 #include "lua.h"
+#include "TypeDefinitions.hpp"
+
+namespace RbxStu::StuLuau {
+    struct YieldResult;
+}
 
 namespace RbxStu::Roblox {
     class ScriptContext final {
@@ -20,5 +25,7 @@ namespace RbxStu::Roblox {
         [[nodiscard]] void *GetRbxPointer() const;
 
         lua_State *GetGlobalState();
+
+        void ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult);
     };
 } // RbxStu::Roblox

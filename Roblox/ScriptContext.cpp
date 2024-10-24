@@ -7,6 +7,7 @@
 #include <Scanners/Rbx.hpp>
 
 #include "TypeDefinitions.hpp"
+#include "StuLuau/ExecutionEngine.hpp"
 
 namespace RbxStu::Roblox {
     std::shared_ptr<RbxStu::Roblox::ScriptContext> ScriptContext::FromWaitingHybridScriptsJob(
@@ -35,5 +36,9 @@ namespace RbxStu::Roblox {
         constexpr auto script = 0ull;
         return getGlobalState(this->m_pScriptContext,
                               &identity, &script);
+    }
+
+    void ScriptContext::ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult) {
+
     }
 }

@@ -422,7 +422,7 @@ namespace RBX {
 
     namespace Lua {
         struct WeakThreadRef {
-            std::atomic<int> _Refs;
+            int _Refs;
             lua_State *thread;
             int32_t thread_ref;
             int32_t objectId;
