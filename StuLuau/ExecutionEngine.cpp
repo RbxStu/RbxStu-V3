@@ -19,17 +19,16 @@ namespace RbxStu::StuLuau {
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation) {
         this->m_executionEngineState = parentJobInitializationInformation;
 
-        if (!Luau::CodeGen::isNativeExecutionEnabled(this->m_executionEngineState->executorState)) {
-            RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-                      "Luau Native Code Generation is not enabled on the Luau VM! Enabling without ROBLOX intervention!");
-            Luau::CodeGen::create(this->m_executionEngineState->executorState->global->mainthread);
-            Luau::CodeGen::setNativeExecutionEnabled(this->m_executionEngineState->executorState->global->mainthread,
-                                                     true);
-            Luau::CodeGen::setNativeExecutionEnabled(this->m_executionEngineState->executorState, true);
+        //if (!Luau::CodeGen::isNativeExecutionEnabled(this->m_executionEngineState->executorState->global->mainthread)) {
+        //    RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
+        //              "Luau Native Code Generation is not enabled on the Luau VM! Enabling without ROBLOX intervention!");
+        //    Luau::CodeGen::create(this->m_executionEngineState->executorState->global->mainthread);
+        //    Luau::CodeGen::setNativeExecutionEnabled(this->m_executionEngineState->executorState->global->mainthread,
+        //                                             true);
 
-            RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-                      "Luau Native Code Generation support has been forcefully enabled on the Luau VM.");
-        }
+        //    RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
+        //              "Luau Native Code Generation support has been forcefully enabled on the Luau VM.");
+        //}
     }
 
     std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> ExecutionEngine::
@@ -82,6 +81,8 @@ namespace RbxStu::StuLuau {
                 // During the yielding stage we want to step over our yield jobs queue and
                 // dequeue the next yielding step, if it is not ready we want to reschedule (if there is no other job on the queue we want to leave it be for performance reasons)
 
+                if (this->m_yieldQueue.empty()) break; // Nothing to yield.
+
                 auto frontYield = this->m_yieldQueue.front();
 
                 if (!frontYield->bIsReady) {
@@ -105,6 +106,8 @@ namespace RbxStu::StuLuau {
 
             case ExecutionEngineStep::ExecuteStep: {
                 // The execute step will dequeue luau scripts and run them through the ROBLOX scheduler
+
+                if (this->m_executeQueue.empty()) break; // Nothing to execute.
 
                 auto frontExec = this->m_executeQueue.front();
                 this->m_executeQueue.pop();

@@ -75,12 +75,16 @@ namespace RbxStu {
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
     DefineSectionName(ExecutionEngine, "RbxStuV3::ExecutionEngine");
 
+    DefineSectionName(Roblox_ScriptContext, "RbxStuV3::Roblox::ScriptContext");
+
     DefineSectionName(Analysis_SignatureMatcher, "RbxStuV3::Analysis::SignatureMatcher");
     DefineSectionName(Analysis_StringMatcher, "RbxStuV3::Analysis::StringMatcher");
     DefineSectionName(Analysis_RTTI, "RbxStuV3::Analysis::RTTI");
     DefineSectionName(Analysis_XrefSearcher, "RbxStuV3::Analysis::XrefSearcher");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
 
+    DefineSectionName(Scheduling_Jobs_InitializeExecutionEngineJob,
+                      "RbxStuV3::Scheduling::Jobs::InitializeExecutionEngineJob");
     DefineSectionName(Scheduling_Jobs_ExecuteScriptJob, "RbxStuV3::Scheduling::Jobs::ExecuteScriptJob");
     DefineSectionName(Scheduling_Jobs_ResumeYieldedThreadsJob, "RbxStuV3::Scheduling::Jobs::ResumeYieldedThreadsJob");
     DefineSectionName(Scheduling_TaskSchedulerOrchestrator, "RbxStuV3::Scheduling::TaskSchedulerOrchestrator");

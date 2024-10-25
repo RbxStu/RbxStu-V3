@@ -30,7 +30,7 @@ namespace RbxStu::Scheduling {
 
     public:
         void CreateExecutionEngine(RBX::DataModelType dataModelType,
-                                   std::shared_ptr<ExecutionEngineInitializationInformation> initInfo);
+                                   const std::shared_ptr<ExecutionEngineInitializationInformation> &initInfo);
 
         std::shared_ptr<StuLuau::ExecutionEngine> GetExecutionEngine(RBX::DataModelType dataModelType);
 

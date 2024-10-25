@@ -8,18 +8,21 @@
 #include "Roblox/TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
-void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(RBX::DataModelType dataModelType,
-                                                              std::shared_ptr<ExecutionEngineInitializationInformation>
+void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataModelType dataModelType,
+                                                              const std::shared_ptr<
+                                                                  ExecutionEngineInitializationInformation> &
                                                               initInfo) {
-    auto prev = this->m_executionEngines[dataModelType];
-    prev.reset();
+    if (this->m_executionEngines.contains(dataModelType)) { // If it is the first load, then it will be false.
+        auto prev = this->m_executionEngines[dataModelType];
+        prev.reset();
+    }
 
     this->m_executionEngines[dataModelType] = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
     const RBX::DataModelType dataModelType) {
-    return this->m_executionEngines.at(dataModelType);
+    return this->m_executionEngines.contains(dataModelType) ? this->m_executionEngines.at(dataModelType) : nullptr;
 }
 
 std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskScheduler::GetJobs(

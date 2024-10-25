@@ -79,8 +79,6 @@ add_library(${PROJECT_NAME} SHARED
         Analysis/SignatureMatcher.hpp
 
         Security.cpp
-        Scheduling/Job/ExecuteScriptJob.cpp
-        Scheduling/Job/ExecuteScriptJob.hpp
         Roblox/ScriptContext.cpp
         Roblox/ScriptContext.hpp
         Communication/WebsocketServer.cpp
@@ -93,6 +91,9 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/ExecutionEngine.hpp
         StuLuau/LuauSecurity.cpp
         StuLuau/LuauSecurity.hpp
+
+        Scheduling/Job/ExecuteScriptJob.cpp
+        Scheduling/Job/ExecuteScriptJob.hpp
         Scheduling/Job/InitializeExecutionEngineJob.cpp
         Scheduling/Job/InitializeExecutionEngineJob.hpp
 )

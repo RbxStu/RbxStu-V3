@@ -3,6 +3,8 @@
 //
 
 #include "ScriptContext.hpp"
+
+#include <Logger.hpp>
 #include <StudioOffsets.h>
 #include <Scanners/Rbx.hpp>
 
@@ -40,6 +42,13 @@ namespace RbxStu::Roblox {
 
     void ScriptContext::ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext,
                                      const StuLuau::YieldResult &YieldResult) {
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext,
+                  std::format(
+                      "Performing yield using RBX::ScriptContext::resume; Yield Information: nRet: {}; targetL: {}; successful: {}; errorMessage: {}"
+                      , YieldResult.dwNumberOfReturns, reinterpret_cast<void*>(resumptionContext->thread), YieldResult.
+                      bIsSuccess, (YieldResult.szErrorMessage.has_value() ? YieldResult.szErrorMessage.value() :
+                          "no error described")));
+
         const auto offsetContainer = RbxStuOffsets::GetSingleton();
 
         const auto resume = reinterpret_cast<r_RBX_ScriptContext_resume>(offsetContainer->

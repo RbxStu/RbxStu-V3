@@ -18,11 +18,13 @@
 #include <Scanners/Luau.hpp>
 #include <Scanners/Rbx.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
+#include <Scheduling/Job/ResumeYieldedThreadsJob.hpp>
 
 #include "Security.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
+#include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 
 void Entry() {
     AllocConsole();
@@ -80,7 +82,9 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
     const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
     const auto scheduler = orchestrator->GetTaskScheduler();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::InitializeExecutionEngineJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecuteScriptJob>();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ResumeYieldedThreadsJob>();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
