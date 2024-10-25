@@ -67,7 +67,8 @@ namespace RbxStu::Scheduling::Jobs {
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()).get() == nullptr;
+        const auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()).get() ==
+                                       nullptr;
 
         taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
 

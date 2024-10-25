@@ -123,29 +123,48 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               "-- Analysing the Stack Trace for common exception patterns...");
 
-    std::unordered_set<void *> nestedCalls{};
-    nestedCalls.reserve(frameCount / 2);
-    for (const auto call: callstack) {
-        const auto functionStart = disassembler->GetFunctionStart(call);
-        auto count = 0;
+    /*
+     *  Stack Overflow Analysis (Flags possibly-recursing function)
+     */
+    while (true) {
+        std::unordered_set<void *> nestedCalls{};
+        nestedCalls.reserve(frameCount / 2);
+        for (const auto call: callstack) {
+            const auto functionStart = disassembler->GetFunctionStart(call);
+            auto count = 0;
 
-        for (const auto callAgain: callstack) {
-            if (callAgain == call) {
-                count++;
+            for (const auto callAgain: callstack) {
+                if (callAgain == call) {
+                    count++;
+                }
+            }
+
+            if (count > 3 && !nestedCalls.contains(call)) {
+                nestedCalls.insert(call);
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
+                          std::format(
+                              "sub_{}() + {} is present many times on the call-stack (Possibly a Recursive sub-routine)"
+                              ,
+                              functionStart, reinterpret_cast<void *>(max(
+                                  reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
+                                  ::intptr_t>(call),
+                                  reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
+                                      functionStart)))));
             }
         }
+        break;
+    }
 
-        if (count > 3 && !nestedCalls.contains(call)) {
-            nestedCalls.insert(call);
+    /*
+     *  CALL into nullptr, cannot be traced :(
+     */
+    while (true) {
+        if (callstack.size() < 5) {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
-                      std::format(
-                          "sub_{}() + {} is present many times on the call-stack (Possibly a Recursive sub-routine)",
-                          functionStart, reinterpret_cast<void *>(max(
-                              reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
-                              ::intptr_t>(call),
-                              reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
-                                  functionStart)))));
+                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) violation?)");
         }
+
+        break;
     }
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
