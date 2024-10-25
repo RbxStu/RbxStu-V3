@@ -1,6 +1,7 @@
 //
 // Created by Pixeluted on 15/10/2024.
 //
+#pragma once
 
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
@@ -10,12 +11,12 @@
 #include "StuLuau/ExecutionEngine.hpp"
 
 namespace RbxStu::Communication {
-    class ScheduleExecution : public PacketBase {
+    class ScheduleExecution final : public PacketBase {
         std::list<std::string_view> GetRequiredFields() override {
             return {"scriptSource", "datamodelType", "generateNativeCode"};
         };
 
-        bool ValidateData(const nlohmann::json & jsonData) override {
+        bool ValidateData(const nlohmann::json &jsonData) override {
             if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer() && jsonData[
                     "generateNativeCode"].is_boolean()) {
                 const auto receivedDatamodelType = jsonData["datamodelType"].get<std::int32_t>();
