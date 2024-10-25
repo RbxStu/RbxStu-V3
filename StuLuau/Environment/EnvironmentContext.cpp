@@ -62,6 +62,8 @@ namespace RbxStu::StuLuau::Environment {
         this->m_libraries.emplace_back(library);
     }
 
+    // It is not really const, modifies static mutable state, shut up ReSharper++ :)
+    // ReSharper disable once CppMemberFunctionMayBeConst
     void EnvironmentContext::DefineDataModelHook(std::string_view szMetamethodName,
                                                  std::function<std::int32_t(lua_State *)>
                                                  func) {
