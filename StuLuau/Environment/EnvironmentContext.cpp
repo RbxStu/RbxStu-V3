@@ -73,16 +73,19 @@ namespace RbxStu::StuLuau::Environment {
             // DataModel pointers must match, else we must void the map entirely and re-create it.
             if (s_hookChain.at(initInfo->dataModel->GetDataModelType()).executionEngineDataModel->GetRbxPointer() !=
                 initInfo->dataModel->GetRbxPointer()) {
+                auto hkChain = s_hookChain[initInfo->dataModel->GetDataModelType()];
                 // DataModel pointer is out of date, void map and re-create.
-                s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain.erase(
-                    s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain.begin(),
-                    s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain.end()); // Clear.
+                hkChain.originalChain.erase(
+                    hkChain.originalChain.begin(),
+                    hkChain.originalChain.end()); // Clear.
 
-                s_hookChain[initInfo->dataModel->GetDataModelType()].executionEngineDataModel.reset();
-                s_hookChain[initInfo->dataModel->GetDataModelType()].executionEngineDataModel = nullptr;
-                s_hookChain[initInfo->dataModel->GetDataModelType()].executionEngineDataModel = initInfo->dataModel;
-                s_hookChain[initInfo->dataModel->GetDataModelType()].mainthread = lua_mainthread(
+                hkChain.executionEngineDataModel.reset();
+                hkChain.executionEngineDataModel = nullptr;
+                hkChain.executionEngineDataModel = initInfo->dataModel;
+                hkChain.mainthread = lua_mainthread(
                     initInfo->executorState);
+
+                s_hookChain[initInfo->dataModel->GetDataModelType()] = hkChain;
             }
         } else {
             s_hookChain[initInfo->dataModel->GetDataModelType()] = {
