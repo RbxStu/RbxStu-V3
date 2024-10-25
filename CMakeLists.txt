@@ -96,6 +96,12 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/Job/ExecuteScriptJob.hpp
         Scheduling/Job/InitializeExecutionEngineJob.cpp
         Scheduling/Job/InitializeExecutionEngineJob.hpp
+        StuLuau/Environment/EnvironmentContext.cpp
+        StuLuau/Environment/EnvironmentContext.hpp
+        StuLuau/Environment/Library.cpp
+        StuLuau/Environment/Library.hpp
+        StuLuau/Environment/UNC/Closures.cpp
+        StuLuau/Environment/UNC/Closures.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

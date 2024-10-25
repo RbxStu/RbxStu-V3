@@ -18,29 +18,12 @@ namespace RbxStu::StuLuau {
 }
 
 namespace RbxStu::Scheduling {
-    struct ExecuteJobRequest {
-        bool bGenerateNativeCode;
-        std::string_view scriptSource;
-    };
 
-    struct ExecutionEngineInitializationInformation {
-        lua_State *globalState;
-        lua_State *executorState;
-        std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;
-        std::shared_ptr<RbxStu::Roblox::DataModel> dataModel;
-    };
 
     namespace Jobs {
         class ExecuteScriptJob final : public RbxStu::Scheduling::Job {
-            std::map<RBX::DataModelType, std::shared_ptr<StuLuau::ExecutionEngine> > m_stateMap;
-
-            std::mutex executionQueueMutex;
-            std::map<RBX::DataModelType, std::queue<RbxStu::Scheduling::ExecuteJobRequest> > m_executionQueue;
-
         public:
             ~ExecuteScriptJob() override;
-
-            void ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest);
 
             Jobs::AvailableJobs GetJobIdentifier() override;
 

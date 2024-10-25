@@ -7,6 +7,7 @@
 #include <Logger.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
+#include "InitializeExecutionEngineJob.hpp"
 #include "ldebug.h"
 #include "luacode.h"
 #include "lualib.h"
@@ -26,13 +27,6 @@ namespace RbxStu::Scheduling::Jobs {
 
     ExecuteScriptJob::~ExecuteScriptJob() = default;
 
-    void ExecuteScriptJob::ScheduleExecuteJob(RBX::DataModelType datamodelType, ExecuteJobRequest jobRequest) {
-        std::lock_guard lock{executionQueueMutex};
-        if (m_executionQueue.contains(datamodelType)) {
-            m_executionQueue.at(datamodelType).push(jobRequest);
-        }
-    }
-
     bool ExecuteScriptJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                       RBX::TaskScheduler::Job::Stats *jobStats) {
         // This Job always executes as long as the Job is WaitingHybridScriptsJob.
@@ -50,8 +44,10 @@ namespace RbxStu::Scheduling::Jobs {
         if (nullptr == currentExecutionEngine)
             return; // ExecutionEngine not initialized for this DataModel
 
-        if (currentExecutionEngine->GetInitializationInformation()->dataModel->GetRbxPointer() != dataModel->GetRbxPointer())
-            return; // DataModel is different, ExecutionEngine is out-of-date, reset required by InitializeExecutionEngineJob.
+        if (currentExecutionEngine->GetInitializationInformation()->dataModel->GetRbxPointer() != dataModel->
+            GetRbxPointer())
+            return;
+        // DataModel is different, ExecutionEngine is out-of-date, reset required by InitializeExecutionEngineJob.
 
         currentExecutionEngine->StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep::ExecuteStep);
     }

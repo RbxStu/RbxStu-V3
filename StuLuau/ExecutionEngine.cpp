@@ -11,24 +11,27 @@
 #include "LuauSecurity.hpp"
 #include "Luau/CodeGen.h"
 #include "Luau/Compiler.h"
-#include "Luau/Compiler/src/BuiltinFolding.h"
+#include "Luau/CodeGen/src/CodeGenContext.h"
 #include "Roblox/ScriptContext.hpp"
+
+#include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 
 namespace RbxStu::StuLuau {
     ExecutionEngine::ExecutionEngine(
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation) {
         this->m_executionEngineState = parentJobInitializationInformation;
 
-        //if (!Luau::CodeGen::isNativeExecutionEnabled(this->m_executionEngineState->executorState->global->mainthread)) {
-        //    RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-        //              "Luau Native Code Generation is not enabled on the Luau VM! Enabling without ROBLOX intervention!");
-        //    Luau::CodeGen::create(this->m_executionEngineState->executorState->global->mainthread);
-        //    Luau::CodeGen::setNativeExecutionEnabled(this->m_executionEngineState->executorState->global->mainthread,
-        //                                             true);
+        if (this->m_executionEngineState->executorState->global && this->m_executionEngineState->executorState->global->
+            ecb.context == nullptr) {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
+                      "Luau Native Code Generation is not enabled on the Luau VM! Code Generated request will be interpreted instead!");
+            this->m_bCanUseCodeGeneration = false;
+        } else {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
+                      "Luau Native Code Generation is set up on this Luau VM, but it must be enabled by ROBLOX on their methods (Else we may make it crash :()!");
+        }
 
-        //    RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-        //              "Luau Native Code Generation support has been forcefully enabled on the Luau VM.");
-        //}
+        this->m_bCanUseCodeGeneration = this->m_executionEngineState->executorState->global->ecb.context == nullptr;
     }
 
     std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> ExecutionEngine::
@@ -137,5 +140,14 @@ namespace RbxStu::StuLuau {
         this->m_yieldQueue.emplace(yieldRequest);
 
         std::thread(runForYield, yieldRequest).detach();
+    }
+
+    void ExecutionEngine::SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared) {
+        this->m_environmentContext = shared;
+    }
+
+    void ExecutionEngine::ScheduleExecute(bool bGenerateNativeCode, std::string_view szLuauCode,
+                                          RbxStu::StuLuau::ExecutionSecurity executeWithSecurity) {
+        this->m_executeQueue.emplace(bGenerateNativeCode, szLuauCode.data(), executeWithSecurity);
     }
 } // RbxStu::Luau

@@ -4,8 +4,14 @@
 
 #pragma once
 #include <functional>
+#include <nlohmann/json.hpp>
 
+#include "Environment/EnvironmentContext.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
+
+namespace RbxStu::Scheduling {
+    struct ExecutionEngineInitializationInformation;
+}
 
 namespace RbxStu::StuLuau {
     enum class ExecutionEngineStep : std::int32_t {
@@ -46,6 +52,10 @@ namespace RbxStu::StuLuau {
 
         std::queue<std::shared_ptr<RbxStu::StuLuau::YieldRequest> > m_yieldQueue;
         std::queue<RbxStu::StuLuau::ExecuteRequest> m_executeQueue;
+        bool m_bCanUseCodeGeneration;
+        std::shared_ptr<Environment::EnvironmentContext> m_environmentContext;
+
+        void Execute(const ExecuteRequest &execute_request);
 
     public:
         explicit ExecutionEngine(
@@ -53,11 +63,17 @@ namespace RbxStu::StuLuau {
 
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> GetInitializationInformation();
 
-        void Execute(const ExecuteRequest &execute_request);
-
         void StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType);
 
         void YieldThread(lua_State *L,
                          std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield);
+
+        void SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared);
+
+        void ScheduleExecute(
+            bool bGenerateNativeCode,
+            std::string_view szLuauCode,
+            RbxStu::StuLuau::ExecutionSecurity executeWithSecurity
+        );
     };
 } // RbxStu::Luau

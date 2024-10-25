@@ -5,6 +5,7 @@
 #include "ResumeYieldedThreadsJob.hpp"
 
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
+#include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 
 #include "Roblox/DataModel.hpp"
 #include "StuLuau/ExecutionEngine.hpp"

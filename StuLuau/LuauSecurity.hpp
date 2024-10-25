@@ -20,9 +20,9 @@ namespace RbxStu::StuLuau {
 
         std::int64_t ToCapabilitiesFlags(RbxStu::StuLuau::ExecutionSecurity executionSecurity);
 
-        void SetThreadSecurity(lua_State *L, ExecutionSecurity executionSecurity, bool markThread);
+        void SetThreadSecurity(lua_State *L, RbxStu::StuLuau::ExecutionSecurity executionSecurity, bool markThread);
 
-        void MarkThread(lua_State * L);
+        void MarkThread(lua_State *L);
 
         bool IsMarkedThread(lua_State *L);
 

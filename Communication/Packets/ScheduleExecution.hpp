@@ -7,10 +7,10 @@
 #include "Communication/PacketBase.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "ixwebsocket/IXHttpServer.h"
+#include "StuLuau/ExecutionEngine.hpp"
 
 namespace RbxStu::Communication {
     class ScheduleExecution : public PacketBase {
-
         std::list<std::string_view> GetRequiredFields() override {
             return {"scriptSource", "datamodelType", "generateNativeCode"};
         };
@@ -29,22 +29,18 @@ namespace RbxStu::Communication {
             const auto scriptSource = jsonData["scriptSource"].get<std::string_view>();
             const auto generateNativeCode = jsonData["generateNativeCode"].get<bool>();
 
-            auto newExecutionJob = Scheduling::ExecuteJobRequest{};
-            newExecutionJob.scriptSource = scriptSource;
-            newExecutionJob.bGenerateNativeCode = generateNativeCode;
-
             const auto TaskScheduler = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
-            const auto executeScriptJob = TaskScheduler->GetJob<Scheduling::Jobs::ExecuteScriptJob>(
-                    Scheduling::Jobs::AvailableJobs::ExecuteScriptJob);
 
-            if (executeScriptJob.has_value()) {
-                executeScriptJob.value()->ScheduleExecuteJob(receivedDatamodelType, newExecutionJob);
-
+            if (const auto executionEngine = TaskScheduler->GetExecutionEngine(receivedDatamodelType);
+                executionEngine != nullptr) {
+                executionEngine->ScheduleExecute(generateNativeCode, scriptSource,
+                                                 RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
                 /*
-                 * Without this wait, it will not get scheduled,
-                 * Honestly, I have no clue why
+                 *  Without this wait, it will not get scheduled,
+                 *  Honestly, I have no clue why
+                 * -- Idk until i suffer i wont try pixel :> (written by yours trully, dottik)
                  */
-                Sleep(50);
+                // Sleep(50);
             }
         };
     };

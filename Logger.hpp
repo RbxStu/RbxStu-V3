@@ -74,6 +74,7 @@ namespace RbxStu {
     DefineSectionName(SecurityName, "RbxStuV3::Security");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
     DefineSectionName(ExecutionEngine, "RbxStuV3::ExecutionEngine");
+    DefineSectionName(EnvironmentContext, "RbxStuV3::EnvironmentContext");
 
     DefineSectionName(Roblox_ScriptContext, "RbxStuV3::Roblox::ScriptContext");
 

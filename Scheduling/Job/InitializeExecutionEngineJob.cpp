@@ -11,6 +11,8 @@
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/Environment/EnvironmentContext.hpp"
+#include "StuLuau/Environment/UNC/Closures.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
@@ -71,7 +73,7 @@ namespace RbxStu::Scheduling::Jobs {
                                        nullptr;
 
         taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
-
+        const auto executionEngine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
         if (didNotExistBefore) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
                       std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
@@ -84,5 +86,25 @@ namespace RbxStu::Scheduling::Jobs {
                           DataModelTypeToString(
                               dataModel->GetDataModelType())));
         }
+
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  std::format("Pushing Environment for DataModel Executor State {}...", RBX
+                      ::
+                      DataModelTypeToString(
+                          dataModel->GetDataModelType())));
+
+
+        const auto envContext = std::make_shared<StuLuau::Environment::EnvironmentContext>(executionEngine);
+        executionEngine->SetEnvironmentContext(envContext);
+
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
+
+        envContext->PushEnviornment();
+
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  std::format("Environment pushed to DataModel {}", RBX
+                      ::
+                      DataModelTypeToString(
+                          dataModel->GetDataModelType())));
     }
 } // RbxStu::Scheduling::Jobs
