@@ -15,7 +15,7 @@ namespace RbxStu::Communication {
             return {"scriptSource", "datamodelType", "generateNativeCode"};
         };
 
-        bool ValidateData(nlohmann::json jsonData) override {
+        bool ValidateData(const nlohmann::json & jsonData) override {
             if (jsonData["scriptSource"].is_string() && jsonData["datamodelType"].is_number_integer() && jsonData[
                     "generateNativeCode"].is_boolean()) {
                 const auto receivedDatamodelType = jsonData["datamodelType"].get<std::int32_t>();
@@ -24,7 +24,7 @@ namespace RbxStu::Communication {
             return false;
         };
 
-        void Callback(nlohmann::json jsonData) override {
+        void Callback(const nlohmann::json &jsonData) override {
             const auto receivedDatamodelType = jsonData["datamodelType"].get<RBX::DataModelType>();
             const auto scriptSource = jsonData["scriptSource"].get<std::string_view>();
             const auto generateNativeCode = jsonData["generateNativeCode"].get<bool>();
