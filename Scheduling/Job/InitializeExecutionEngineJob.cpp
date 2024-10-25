@@ -38,8 +38,8 @@ namespace RbxStu::Scheduling::Jobs {
                                             RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
-        const auto thisJob = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
-        const auto engine = thisJob->GetExecutionEngine(dataModel->GetDataModelType());
+        const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
+        const auto engine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
 
         /*
          *  We make a few assumptions here:
@@ -67,10 +67,21 @@ namespace RbxStu::Scheduling::Jobs {
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        thisJob->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
+        auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()).get() == nullptr;
 
-        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                  std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::DataModelTypeToString(
-                      dataModel->GetDataModelType())));
+        taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
+
+        if (didNotExistBefore) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
+                          DataModelTypeToString(
+                              dataModel->GetDataModelType())));
+        } else {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      std::format("Re-Initialized RbxStu::StuLuau::ExecutionEngine for DataModel {} successfully!", RBX
+                          ::
+                          DataModelTypeToString(
+                              dataModel->GetDataModelType())));
+        }
     }
 } // RbxStu::Scheduling::Jobs
