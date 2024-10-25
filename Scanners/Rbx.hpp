@@ -55,5 +55,8 @@ namespace RbxStu::Scanners {
 
             return this->m_FunctionMap.at(functionIdentifier);
         }
+
+        std::optional<RbxStu::Scanners::RBX::PointerOffsetInformation> GetRbxPointerOffset(
+            RbxStu::Scanners::RBX::PointerOffsets offset);
     };
 } // RbxStu::Scanners

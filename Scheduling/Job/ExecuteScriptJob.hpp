@@ -23,7 +23,7 @@ namespace RbxStu::Scheduling {
         std::string_view scriptSource;
     };
 
-    struct ExecuteScriptJobInitializationInformation {
+    struct ExecutionEngineInitializationInformation {
         lua_State *globalState;
         lua_State *executorState;
         std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;

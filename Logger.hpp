@@ -73,6 +73,7 @@ namespace RbxStu {
     DefineSectionName(MainThread, "RbxStuV3::MainThread");
     DefineSectionName(SecurityName, "RbxStuV3::Security");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");
+    DefineSectionName(ExecutionEngine, "RbxStuV3::ExecutionEngine");
 
     DefineSectionName(Analysis_SignatureMatcher, "RbxStuV3::Analysis::SignatureMatcher");
     DefineSectionName(Analysis_StringMatcher, "RbxStuV3::Analysis::StringMatcher");

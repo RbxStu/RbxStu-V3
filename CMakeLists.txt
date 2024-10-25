@@ -91,6 +91,10 @@ add_library(${PROJECT_NAME} SHARED
         Communication/Packets/ScheduleExecution.hpp
         StuLuau/ExecutionEngine.cpp
         StuLuau/ExecutionEngine.hpp
+        StuLuau/LuauSecurity.cpp
+        StuLuau/LuauSecurity.hpp
+        Scheduling/Job/InitializeExecutionEngineJob.cpp
+        Scheduling/Job/InitializeExecutionEngineJob.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

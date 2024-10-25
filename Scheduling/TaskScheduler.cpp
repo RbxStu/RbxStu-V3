@@ -4,7 +4,23 @@
 
 #include "TaskScheduler.hpp"
 #include "Job.hpp"
+#include "Job/ExecuteScriptJob.hpp"
 #include "Roblox/TypeDefinitions.hpp"
+#include "StuLuau/ExecutionEngine.hpp"
+
+void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(RBX::DataModelType dataModelType,
+                                                              std::shared_ptr<ExecutionEngineInitializationInformation>
+                                                              initInfo) {
+    auto prev = this->m_executionEngines[dataModelType];
+    prev.reset();
+
+    this->m_executionEngines[dataModelType] = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
+}
+
+std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
+    const RBX::DataModelType dataModelType) {
+    return this->m_executionEngines.at(dataModelType);
+}
 
 std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskScheduler::GetJobs(
     const RbxStu::Scheduling::Jobs::AvailableJobs jobIdentifier) const {

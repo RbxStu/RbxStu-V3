@@ -8,16 +8,147 @@
 
 #include "lstate.h"
 
+namespace RBX {
+    namespace Lua {
+        struct WeakThreadRef;
+    }
+
+    namespace Luau {
+        enum TaskState : std::int8_t;
+    }
+
+    struct Script;
+    struct Actor;
+
+    namespace Security {
+        struct ExtendedIdentity;
+    }
+
+    enum TouchEventType : std::uint8_t;
+
+    namespace Console {
+        enum MessageType : std::int32_t;
+    }
+
+    enum DataModelType : std::int32_t;
+    struct DataModel;
+    struct SystemAddress;
+}
+
 namespace RbxStu::Concepts {
     template<typename Derived, typename Base>
     concept TypeConstraint = std::is_base_of_v<Base, Derived>;
 }
 
+using r_RBX_Instance_pushInstance = void(__fastcall *)(lua_State *L, void *instance);
+using r_RBX_ProximityPrompt_onTriggered = void(__fastcall *)(void *proximityPrompt);
+using r_RBX_ScriptContext_scriptStart = void(__fastcall *)(void *scriptContext, void *baseScript);
+using r_RBX_ScriptContext_openStateImpl = bool(__fastcall *)(void *scriptContext, void *unk_0,
+                                                             std::int32_t unk_1, std::int32_t unk_2);
+using r_RBX_ExtraSpace_initializeFrom = void *(__fastcall *)(void *newExtraSpace, void *baseExtraSpace);
+
 using r_RBX_ScriptContext_getGlobalState = lua_State *(__fastcall *)(void *scriptContext,
                                                                      const uint64_t *identity,
-                                                                     const void *script);
+                                                                     const uint64_t *unk_0);
+
+using r_RBX_Console_StandardOut = std::int32_t(__fastcall *)(RBX::Console::MessageType dwMessageId,
+                                                             const char *szFormatString, ...);
+
+using r_RBX_ScriptContext_resumeDelayedThreads = void *(__fastcall *)(void *scriptContext);
+
+using r_RBX_DataModel_getStudioGameStateType = RBX::DataModelType(__fastcall *)(void *dataModel);
+using r_RBX_DataModel_doCloseDataModel = void(__fastcall *)(void *dataModel);
+using r_RBX_ScriptContext_getDataModel = RBX::DataModel *(__fastcall *)(void *scriptContext);
+
+using r_RBX_ScriptContext_resume = void(__fastcall *)(void *scriptContext, std::int64_t unk[0x2],
+                                                      RBX::Lua::WeakThreadRef **ppWeakThreadRef, int32_t nRet,
+                                                      bool isError, char const *szErrorMessage);
+using r_RBX_BasePart_getNetworkOwner =
+RBX::SystemAddress *(__fastcall *)(void *basePart, RBX::SystemAddress *returnSystemAddress);
+
+// other is wrapped in a std::shared_ptr
+using r_RBX_BasePart_fireTouchSignals = void(__fastcall *)(void *basePart, void **other,
+                                                           RBX::TouchEventType type, bool isLocal);
+
+using r_RBX_Player_findPlayerWithAddress = std::shared_ptr<void> *(__fastcall *)(std::shared_ptr<void> *__return,
+    const RBX::SystemAddress *playerAddress, const void *context);
 
 namespace RBX {
+    typedef int64_t (*Validator)(int64_t testAgainst, struct lua_State *testWith);
+
+    namespace Security {
+        enum Permissions : std::uint32_t;
+
+        struct ExtendedIdentity {
+            Permissions identity;
+            uint64_t assetId;
+            void *runningContext;
+        };
+
+        enum CapabilityPermissions : std::uint64_t {
+            Plugin = 0b1,
+            LocalUser = 0b10,
+            WritePlayer = 0b100,
+            RobloxScript = 0b1000,
+            RobloxEngine = 0b10000,
+            NotAccessible = 0b100000,
+
+            RunClientScript = 0b10000000,
+            RunServerScript = 0b100000000,
+            AccessOutsideWrite = 0b10000000000,
+
+            Unassigned = 0b100000000000000,
+            AssetRequire = 0b1000000000000000,
+            LoadString = 0b10000000000000000,
+            ScriptGlobals = 0b100000000000000000,
+            CreateInstances = 0b1000000000000000000,
+            Basic = 0b10000000000000000000,
+            Audio = 0b100000000000000000000,
+            DataStore = 0b1000000000000000000000,
+            Network = 0b10000000000000000000000,
+            Physics = 0b100000000000000000000000,
+            UI = 0b1000000000000000000000000,
+            CSG = 0b10000000000000000000000000,
+            Chat = 0b100000000000000000000000000,
+            Animation = 0b1000000000000000000000000000,
+            Avatar = 0b10000000000000000000000000000,
+            RemoteEvent = 0b10000000000000000000000000000000,
+
+            PluginOrOpenCloud = 0b1000000000000000000000000000000000000000000000000000000000000,
+            Assistant = 0b10000000000000000000000000000000000000000000000000000000000000,
+
+            // Restricted is a check below zero, meaning negative or, for lack of a better term, -1.
+            Restricted = 0xffffffffffffffff
+        };
+    } // namespace Security
+
+    struct ExtraSpace {
+        struct Shared {
+            int32_t threadCount;
+            void *scriptContext;
+            void *scriptVmState;
+            char field_18[0x8];
+            void *__intrusive_set_AllThreads;
+        };
+
+        char _0[8];
+        char _8[8];
+        char _10[8];
+        struct RBX::ExtraSpace::Shared *sharedExtraSpace;
+        char _20[8];
+        Validator *CapabilitiesValidator;
+        RBX::Security::ExtendedIdentity contextInformation;
+        uint64_t capabilities;
+        char _50[8];
+        char _58[8];
+        std::weak_ptr<RBX::Actor> actor;
+        char _70[8];
+        std::weak_ptr<RBX::Script> script;
+        char _88[8];
+        bool isActorState;
+        enum RBX::Luau::TaskState taskStatus;
+    };
+
     struct Time {
         double sec;
     };
@@ -124,15 +255,6 @@ namespace RBX {
 
     enum TouchEventType : std::uint8_t { Touch = 0x0, Untouch = 0x1 };
 
-    namespace Security {
-        enum Permissions : uint32_t;
-
-        struct ExtendedIdentity {
-            std::int32_t identity;
-            uint64_t assetId;
-            void *runningContext;
-        };
-    } // namespace Security
     struct Script {
     };
 
@@ -153,15 +275,15 @@ namespace RBX {
 
     namespace Security {
         enum Permissions : uint32_t {
-            None = 0x0,
-            Plugin = 0x1,
-            LocalUser = 0x3,
-            WritePlayer = 0x4,
-            RobloxScript = 0x5,
-            RobloxEngine = 0x6,
-            NotAccessible = 0x7,
-            ExecutorLevel = 0x8, // not from roblox i added lmao
-            TestLocalUser = 0x3
+            NonePermission = 0x0,
+            PluginPermission = 0x1,
+            LocalUserPermission = 0x3,
+            WritePlayerPermission = 0x4,
+            RobloxScriptPermission = 0x5,
+            RobloxEnginePermission = 0x6,
+            NotAccessiblePermission = 0x7,
+            ExecutorLevelPermission = 0x8, // not from roblox i added lmao
+            TestLocalUserPermission = 0x3
         };
     }
 

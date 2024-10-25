@@ -59,7 +59,9 @@ namespace RbxStu::Scheduling::Jobs {
         lua_ref(rL, -1);
         lua_pop(rL, 1);
 
-        const auto initData = std::make_shared<ExecuteScriptJobInitializationInformation>();
+        luaL_sandboxthread(nL); // Sandbox to make renv != genv.
+
+        const auto initData = std::make_shared<ExecutionEngineInitializationInformation>();
         initData->globalState = rL;
         initData->executorState = nL;
         initData->scriptContext = scriptContext;
@@ -128,7 +130,9 @@ namespace RbxStu::Scheduling::Jobs {
                           ::DataModelTypeToString(dataModel->GetDataModelType())));
             for (auto init = this->m_stateMap.begin(); init != this->m_stateMap.end(); ++init) {
                 if (init->first == dataModel->GetDataModelType()) {
+                    auto pExecEngine = init->second;
                     this->m_stateMap.erase(init);
+                    pExecEngine.reset();
                 }
             }
 

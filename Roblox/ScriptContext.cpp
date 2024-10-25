@@ -38,7 +38,26 @@ namespace RbxStu::Roblox {
                               &identity, &script);
     }
 
-    void ScriptContext::ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult) {
+    void ScriptContext::ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext,
+                                     const StuLuau::YieldResult &YieldResult) {
+        const auto offsetContainer = RbxStuOffsets::GetSingleton();
 
+        const auto resume = reinterpret_cast<r_RBX_ScriptContext_resume>(offsetContainer->
+            GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_resume));
+
+        const auto pointerOffset = RbxStu::Scanners::RBX::GetSingleton()->GetRbxPointerOffset(
+            RbxStu::Scanners::RBX::PointerOffsets::RBX_ScriptContext_resume);
+
+        if (!pointerOffset.has_value())
+            throw std::exception("How did you even get here? This should NOT happen, it is IMPOSSIBLE buddy.");
+
+        std::int64_t status[0x2];
+
+        std::string errorMessage = "No error from RbxStu::StuLuau";
+        if (!YieldResult.szErrorMessage.has_value())
+            errorMessage = YieldResult.szErrorMessage.value();
+
+        resume(this->GetRbxPointer(), status, &resumptionContext, YieldResult.dwNumberOfReturns, YieldResult.bIsSuccess,
+               errorMessage.c_str());
     }
 }

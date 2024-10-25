@@ -5,9 +5,16 @@
 #pragma once
 #include <cstdint>
 #include <optional>
+
 #include "Roblox/TypeDefinitions.hpp"
 
+namespace RbxStu::StuLuau {
+    class ExecutionEngine;
+}
+
 namespace RbxStu::Scheduling {
+    struct ExecutionEngineInitializationInformation;
+
     namespace Jobs {
         enum class AvailableJobs;
     }
@@ -19,16 +26,22 @@ namespace RbxStu::Scheduling {
 namespace RbxStu::Scheduling {
     class __declspec(dllexport, novtable) TaskScheduler final {
         std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > m_jobList;
+        std::map<RBX::DataModelType, std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> > m_executionEngines;
 
     public:
+        void CreateExecutionEngine(RBX::DataModelType dataModelType,
+                                   std::shared_ptr<ExecutionEngineInitializationInformation> initInfo);
+
+        std::shared_ptr<StuLuau::ExecutionEngine> GetExecutionEngine(RBX::DataModelType dataModelType);
+
         template<Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
         __forceinline void AddSchedulerJob() {
             m_jobList.push_back(std::make_shared<T>());
         };
 
         template<RbxStu::Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
-        std::optional<std::shared_ptr<T>> GetJob(const Jobs::AvailableJobs jobIdentifier) {
-            for (const auto &job : this->m_jobList) {
+        std::optional<std::shared_ptr<T> > GetJob(const Jobs::AvailableJobs jobIdentifier) {
+            for (const auto &job: this->m_jobList) {
                 if (job->GetJobIdentifier() == jobIdentifier) {
                     return std::dynamic_pointer_cast<T>(job);
                 }

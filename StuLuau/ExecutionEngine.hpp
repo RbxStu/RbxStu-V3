@@ -14,9 +14,11 @@ namespace RbxStu::StuLuau {
     };
 
     enum class ExecutionSecurity {
-        LocalScript, // Level 3
-        Plugin, // Level 7
-        RobloxExecutor // Level 8
+        LocalScript,
+        RobloxScript,
+        Plugin,
+        RobloxPlugin,
+        RobloxExecutor
     };
 
     struct YieldResult {
@@ -26,28 +28,32 @@ namespace RbxStu::StuLuau {
     };
 
     struct YieldRequest {
-        bool bIsReady;  // should be an std::atomic_bool, but thanks to the fun bits of fucking C++ STL it doesn't WORK, thank you for deleting the ONLY constructor I need.
+        bool bIsReady;
+        // should be an std::atomic_bool, but thanks to the fun bits of fucking C++ STL it doesn't WORK, thank you for deleting the ONLY constructor I need.
         lua_State *lpResumeTarget;
         RBX::Lua::WeakThreadRef threadRef;
         std::function<YieldResult()> fpCompletionCallback;
     };
 
     struct ExecuteRequest {
+        bool bGenerateNativeCode;
         std::string szLuauCode;
         RbxStu::StuLuau::ExecutionSecurity executeWithSecurity;
     };
 
     class ExecutionEngine final {
-        std::shared_ptr<Scheduling::ExecuteScriptJobInitializationInformation> m_executionEngineState;
+        std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> m_executionEngineState;
 
         std::queue<std::shared_ptr<RbxStu::StuLuau::YieldRequest> > m_yieldQueue;
         std::queue<RbxStu::StuLuau::ExecuteRequest> m_executeQueue;
 
     public:
         explicit ExecutionEngine(
-            std::shared_ptr<Scheduling::ExecuteScriptJobInitializationInformation> parentJobInitializationInformation);
+            std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
 
-        std::shared_ptr<Scheduling::ExecuteScriptJobInitializationInformation> GetInitializationInformation();
+        std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> GetInitializationInformation();
+
+        void Execute(const ExecuteRequest &execute_request);
 
         void StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType);
 

@@ -114,6 +114,8 @@ void RbxStu::Scanners::RBX::Initialize() {
     if (this->m_bIsInitialized) return;
     const auto initializationBegin = std::chrono::high_resolution_clock::now();
 
+    auto rbxStuDissassembler = RbxStu::Analysis::Disassembler::GetSingleton();
+
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX, "Scanning...");
 
     auto foundSignatures = std::map<std::string_view, const void *>();
@@ -134,11 +136,53 @@ void RbxStu::Scanners::RBX::Initialize() {
 
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
-              std::format("Scan completed in {}ms!", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::
+              std::format("Simple Scan completed in {}ms!", std::chrono::duration_cast<std::chrono::milliseconds>(std::
+                  chrono::
                   high_resolution_clock::now() - scanningBegin).count()));
     for (const auto &[funcName, funcAddress]: foundSignatures) {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
                   std::format("- {} --> {}", funcName, funcAddress));
+    } {
+        RbxStuLog(
+            RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+            "Scanning for pointer offsets (Offsets used by callers to functions, de-offsetted at callee)...");
+
+
+        if (auto insns = rbxStuDissassembler->GetInstructions(foundSignatures["RBX::ScriptContext::resume"],
+                                                              reinterpret_cast<void *>(
+                                                                  reinterpret_cast<std::uintptr_t>(foundSignatures[
+                                                                      "RBX::ScriptContext::resume"]) - 0xFF),
+                                                              true); insns.has_value()) {
+            auto instructions = std::move(insns.value());
+
+            if (!instructions->ContainsInstruction("lea", "rbx, [rdi -", true)) {
+                RbxStuLog(
+                    RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                    "Failed to find instruction lea rbx, [rdi - ...] to crack RBX::ScriptContext::resume pointer offsetting.");
+                throw std::exception(
+                    "Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+            }
+
+            const auto insn = instructions->GetInstructionWhichMatches("lea", "rbx, [rdi -", true);
+            const auto instruction = insn.value();
+            RbxStuLog(
+                RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+                std::format("Found pointer offset for RBX::ScriptContext as {:#x}",
+                    instruction.detail->x86.operands[1].mem.disp));
+
+            const auto disposition = instruction.detail->x86.operands[1].mem.disp;
+
+            this->m_pointerObfuscation[PointerOffsets::RBX_ScriptContext_resume] = {
+                // We must invert the pointer, why? Because it's the contrary operation for the caller that the
+                // callee does.
+                disposition < 0 ? ::RBX::PointerEncryptionType::SUB : ::RBX::PointerEncryptionType::ADD, disposition
+            };
+        } else {
+            RbxStuLog(
+                RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                "Cannot get instructions for RBX::ScriptContext::resume!");
+            throw std::exception("Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+        }
     }
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
@@ -204,11 +248,11 @@ void RbxStu::Scanners::RBX::Initialize() {
                   ::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - fastFlagScanBegin).count(), this->
                   m_FastFlagMap.size()));
 
+
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
               std::format("ROBLOX + FastFlags Scanning Completed! Initialization completed in {}ms!", std::chrono::
                   duration_cast<std
                   ::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - initializationBegin).count()));
-
 
     this->m_bIsInitialized = true;
 }
@@ -216,4 +260,12 @@ void RbxStu::Scanners::RBX::Initialize() {
 
 bool RbxStu::Scanners::RBX::IsInitialized() {
     return this->m_bIsInitialized;
+}
+
+std::optional<RbxStu::Scanners::RBX::PointerOffsetInformation> RbxStu::Scanners::RBX::GetRbxPointerOffset(
+    const RbxStu::Scanners::RBX::PointerOffsets offset) {
+    if (this->m_pointerObfuscation.contains(offset))
+        return {};
+
+    return this->m_pointerObfuscation.at(offset);
 }
