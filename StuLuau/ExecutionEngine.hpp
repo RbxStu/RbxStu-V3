@@ -57,11 +57,11 @@ namespace RbxStu::StuLuau {
         std::atomic_bool m_bIsReadyStepping;
         bool m_bCanUseCodeGeneration;
 
-        void Execute(const ExecuteRequest &execute_request);
-
     public:
         explicit ExecutionEngine(
             std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
+
+        void Execute(const ExecuteRequest &executeRequest);
 
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> GetInitializationInformation();
 

@@ -116,14 +116,9 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
 
     if (!Roblox::DataModel::FromJob(self)->IsDataModelOpen()) {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                  "Refusing to step on a closed DataModel");
+                  "Cowardly refusing to step on a closed DataModel");
         return jobOriginal->original(self, timeMetrics);
     }
-
-    // printf("JOBSTEP: %p\n", self);
-    // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-    //           std::format("Stepping DataModel {} -- JobKind: {}", RBX::DataModelTypeToString(Roblox::DataModel::FromJob(self)->
-    //               GetDataModelType()), (int)jobOriginal->jobKind));
 
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 

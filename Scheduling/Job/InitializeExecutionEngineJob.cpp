@@ -128,6 +128,11 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
 
+        envContext->DefineInitScript(R"(
+
+
+        )", "InstanceFunctionIntialization");
+
         envContext->PushEnviornment();
 
         executionEngine->SetExecuteReady(true);

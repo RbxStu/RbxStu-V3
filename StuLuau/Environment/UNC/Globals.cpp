@@ -21,12 +21,27 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getrenv(lua_State *L) {
-        const auto rL = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L)->GetInitializationInformation()->globalState;
+        const auto rL = lua_mainthread(Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+            GetExecutionEngine(L)->GetInitializationInformation()->globalState);
 
         lua_pushvalue(rL, LUA_GLOBALSINDEX);
         lua_xmove(rL, L, 1);
 
+        return 1;
+    }
+
+    int Globals::gettenv(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
+        lua_settop(L, 1);
+        const auto th = lua_tothread(L, 1);
+
+        if (th->gt == nullptr) {
+            lua_pushnil(L);
+            return 1;
+        }
+
+        lua_pushvalue(th, LUA_GLOBALSINDEX);
+        lua_xmove(th, L, 1);
         return 1;
     }
 
@@ -35,6 +50,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         static luaL_Reg libreg[] = {
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
             {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
+            {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},
             {nullptr, nullptr}
         };
 

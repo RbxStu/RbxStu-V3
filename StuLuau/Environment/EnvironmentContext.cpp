@@ -49,6 +49,10 @@ namespace RbxStu::StuLuau::Environment {
             "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
     }
 
+    void EnvironmentContext::DefineInitScript(const std::string &scriptSource, const std::string &scriptName) {
+        this->m_initScripts.emplace_back(scriptSource, scriptName);
+    }
+
     void EnvironmentContext::DefineLibrary(const std::shared_ptr<RbxStu::StuLuau::Environment::Library> &library) {
         for (const auto &lib: this->m_libraries) {
             if (strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
@@ -168,5 +172,14 @@ namespace RbxStu::StuLuau::Environment {
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Normalizing Luau Stack.");
         lua_settop(this->m_parentEngine->GetInitializationInformation()->executorState, oldTop);
+
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext, "Executing Init Scripts...");
+
+        for (const auto &init: this->m_initScripts) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
+                      std::format("- RbxStuV3/init/{}.luau", init));
+
+            m_parentEngine->Execute({true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
+        }
     }
 } // RbxStu::StuLuau::Environment

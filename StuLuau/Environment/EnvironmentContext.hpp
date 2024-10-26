@@ -18,9 +18,15 @@ namespace RbxStu::StuLuau {
 namespace RbxStu::StuLuau::Environment {
     class Library abstract;
 
+    struct InitScript {
+        std::string scriptSource;
+        std::string scriptName;
+    };
+
     class EnvironmentContext final {
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_parentEngine;
 
+        std::vector<InitScript> m_initScripts;
         std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library> > m_libraries;
         std::vector<Closure *> m_unhookableClosures;
 
@@ -29,6 +35,8 @@ namespace RbxStu::StuLuau::Environment {
             const std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> &parentEngine) : m_parentEngine(
             parentEngine) {
         };
+
+        void DefineInitScript(const std::string &scriptSource, const std::string &scriptName);
 
         void DefineLibrary(const std::shared_ptr<RbxStu::StuLuau::Environment::Library> &library);
 
