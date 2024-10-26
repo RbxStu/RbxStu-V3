@@ -230,15 +230,14 @@ namespace RbxStu::StuLuau {
     static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
         // NEVER FORGET TO SET THE PROTOS and SUB PROTOS USERDATA!!
         proto->userdata = static_cast<void *>(proto_identity);
-        for (auto i = 0; i < proto->sizep; i++) {
+        for (auto i = 0; i < proto->sizep; i++)
             set_proto(proto->p[i], proto_identity);
-        }
     }
 
-    void LuauSecurity::ElevateClosure(Closure *closure, const RbxStu::StuLuau::ExecutionSecurity execSecurity) {
+    void LuauSecurity::ElevateClosure(const Closure *closure, const RbxStu::StuLuau::ExecutionSecurity execSecurity) {
         if (closure->isC) return;
 
-        auto *security = new std::uint64_t[0x1];
+        auto *security = new std::uint64_t[0x1]{0};
         *security = static_cast<std::uint64_t>(this->ToCapabilitiesFlags(execSecurity));
 
         set_proto(closure->l.p, security);

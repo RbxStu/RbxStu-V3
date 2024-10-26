@@ -6,6 +6,7 @@
 #include "Job.hpp"
 #include "Job/ExecuteScriptJob.hpp"
 #include "Job/InitializeExecutionEngineJob.hpp"
+#include "Roblox/DataModel.hpp"
 #include "Roblox/TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
@@ -51,6 +52,9 @@ std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskS
 
 void RbxStu::Scheduling::TaskScheduler::Step(const RbxStu::Scheduling::JobKind jobType, void *robloxJob,
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
+    if (!Roblox::DataModel::FromJob(robloxJob)->IsDataModelOpen())
+        return; // TaskScheduler should not step on DataModel's which have been closed.
+
     for (const auto &job: this->m_jobList) {
         // Step all jobs that wish to run.
         if (job->ShouldStep(jobType, robloxJob, jobStats)) {

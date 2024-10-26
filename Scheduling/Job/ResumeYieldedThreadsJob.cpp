@@ -30,8 +30,9 @@ namespace RbxStu::Scheduling::Jobs {
             return; // ExecutionEngine not initialized for this DataModel
 
 
-        if (currentExecutionEngine->GetInitializationInformation()->dataModel->GetRbxPointer() != dataModel->
-            GetRbxPointer())
+        if (const auto execEngineDataModel = currentExecutionEngine->GetInitializationInformation()->dataModel;
+            execEngineDataModel->GetRbxPointer() != dataModel->GetRbxPointer() || !execEngineDataModel->
+            IsDataModelOpen())
             return;
         // DataModel is different, ExecutionEngine is out-of-date, reset required by InitializeExecutionEngineJob.
 

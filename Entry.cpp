@@ -70,7 +70,8 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::XrefSearcher - Complex Cross-Reference Searcher...");
-    RbxStu::Analysis::XrefSearcher::GetSingleton()->BootstrapXrefsForModule(hat::process::get_process_module());
+
+    // RbxStu::Analysis::XrefSearcher::GetSingleton()->BootstrapXrefsForModule(hat::process::get_process_module());
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Bootstrapping RbxStu V3!");
 
@@ -92,6 +93,11 @@ void Entry() {
 
     while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone) == nullptr)
         _mm_pause();
+
+    /*
+     *  TODO: Fix crashes on re-initialization.
+     *
+     */
 
     scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone)->ScheduleExecute(false, R"(
     print("Hello, world!")

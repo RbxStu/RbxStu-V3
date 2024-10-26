@@ -30,6 +30,10 @@ namespace RbxStu::Roblox {
 
         static std::shared_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
 
+        bool IsDataModelOpen() const;
+
+        bool CheckPointer() const;
+
         [[nodiscard]] RBX::DataModelType GetDataModelType() const;
     };
 } // RbxStu::Roblox

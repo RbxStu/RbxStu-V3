@@ -13,6 +13,7 @@
 #include "Luau/CodeGen.h"
 #include "Luau/Compiler.h"
 #include "Luau/CodeGen/src/CodeGenContext.h"
+#include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
 
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
@@ -75,12 +76,12 @@ namespace RbxStu::StuLuau {
             return;
         }
 
-       luauSecurity->ElevateClosure(lua_toclosure(L, -1), executeRequest.executeWithSecurity);
+        luauSecurity->ElevateClosure(lua_toclosure(nL, -1), executeRequest.executeWithSecurity);
 
         if (executeRequest.bGenerateNativeCode) {
             Luau::CodeGen::CompilationOptions opts{};
             opts.flags = Luau::CodeGen::CodeGenFlags::CodeGen_ColdFunctions;
-            Luau::CodeGen::compile(L, -1, opts);
+            Luau::CodeGen::compile(nL, -1, opts);
         }
 
         task_defer(nL);
@@ -89,6 +90,13 @@ namespace RbxStu::StuLuau {
     void ExecutionEngine::ExecutionEngine::StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType) {
         if (!this->m_bIsReadyStepping)
             return;
+
+        if (!this->GetInitializationInformation()->dataModel->IsDataModelOpen()) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
+                      "ExecutionEngine being stepped on a closed DataModel!");
+            return; // DataModel closed.
+        }
+
         switch (stepType) {
             case ExecutionEngineStep::YieldStep: {
                 // During the yielding stage we want to step over our yield jobs queue and

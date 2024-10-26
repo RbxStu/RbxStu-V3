@@ -4,6 +4,8 @@
 
 #include "DataModel.hpp"
 
+#include <Utilities.hpp>
+
 #include "TypeDefinitions.hpp"
 
 namespace RbxStu::Roblox {
@@ -53,7 +55,20 @@ namespace RbxStu::Roblox {
         return std::make_shared<RbxStu::Roblox::DataModel>(realDataModel);
     }
 
+    bool DataModel::IsDataModelOpen() const {
+        if (!this->CheckPointer()) return false;
+
+        // Check for strings mentioning a closed DataModel to update offset
+        return *reinterpret_cast<bool *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561);
+    }
+
+    bool DataModel::CheckPointer() const {
+        return Utilities::IsPointerValid(this->GetRbxPointer());
+    }
+
     RBX::DataModelType DataModel::GetDataModelType() const {
+        if (!this->CheckPointer()) return RBX::DataModelType_Null;
+
         return *reinterpret_cast<RBX::DataModelType *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x2D8);
     }
 } // RbxStu::Roblox

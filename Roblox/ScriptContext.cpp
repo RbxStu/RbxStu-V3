@@ -6,6 +6,7 @@
 
 #include <Logger.hpp>
 #include <StudioOffsets.h>
+#include <Utilities.hpp>
 #include <Scanners/Rbx.hpp>
 
 #include "TypeDefinitions.hpp"
@@ -14,6 +15,15 @@
 namespace RbxStu::Roblox {
     std::shared_ptr<RbxStu::Roblox::ScriptContext> ScriptContext::FromWaitingHybridScriptsJob(
         void *waitingHybridScriptsJob) {
+        if (!Utilities::IsPointerValid(
+                reinterpret_cast<void ***>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8)) ||
+            !Utilities::IsPointerValid(
+                *reinterpret_cast<void ***>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8))) {
+            return {
+                nullptr
+            };
+        }
+
         return std::make_shared<RbxStu::Roblox::ScriptContext>(
             *reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8));
     }

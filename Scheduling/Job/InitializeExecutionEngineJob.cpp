@@ -21,14 +21,23 @@ namespace RbxStu::Scheduling::Jobs {
                                                   RBX::TaskScheduler::Job::Stats *jobStats) {
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
+        if (!dataModel->IsDataModelOpen()) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      "Not stepping on a closed DataModel pointer.");
+            return false; // if DataModel is closed, we should not step this job.
+        }
+
         const auto thisJob = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto engine = thisJob->GetExecutionEngine(dataModel->GetDataModelType());
 
         if (engine != nullptr) {
             const auto engineDataModel = engine->GetInitializationInformation()->dataModel;
+
             if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() && engineDataModel->GetRbxPointer()
                 != dataModel->GetRbxPointer())
                 return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob; // DataModel has re-initialized.
+
+            return false;
         }
 
         return engine == nullptr && jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
@@ -42,6 +51,12 @@ namespace RbxStu::Scheduling::Jobs {
                                             RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
 
+        if (!dataModel->IsDataModelOpen()) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      "Dropping Initialization on closed DataModel pointer.");
+            return; // if DataModel is closed, we should not step this job, REGARDLESS.
+        }
+
         const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto engine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
 
@@ -52,7 +67,13 @@ namespace RbxStu::Scheduling::Jobs {
          */
 
         // Assuming 'job' is WaitingHybridScriptsJob...
-        auto scriptContext = RbxStu::Roblox::ScriptContext::FromWaitingHybridScriptsJob(job);
+        const auto scriptContext = RbxStu::Roblox::ScriptContext::FromWaitingHybridScriptsJob(job);
+
+        if (nullptr == scriptContext) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      "RBX::ScriptContext invalid on WaitingHybridScriptsJob?");
+            return;
+        }
 
         const auto globalState = scriptContext->GetGlobalState();
 

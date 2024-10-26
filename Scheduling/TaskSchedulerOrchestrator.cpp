@@ -13,6 +13,8 @@
 #include <libhat/Signature.hpp>
 #include <RTTIHook/VFTHook.h>
 
+#include "Roblox/DataModel.hpp"
+
 std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator>
 RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
 
@@ -112,11 +114,21 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
     const auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
         RBX::DataModelJobVFTable **>(self)]; // VFtable.
 
+    if (!Roblox::DataModel::FromJob(self)->IsDataModelOpen()) {
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  "Refusing to step on a closed DataModel");
+        return jobOriginal->original(self, timeMetrics);
+    }
+
+    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+              std::format("Stepping DataModel {} -- JobKind: {}", RBX::DataModelTypeToString(Roblox::DataModel::FromJob(self)->
+                  GetDataModelType()), (int)jobOriginal->jobKind));
+
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 
     if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
-        while (true == true) {
-            volatile int value = *reinterpret_cast<int*>(nullptr);
+        while (oxorany(true) == oxorany(true)) {
+            throw std::exception("RBXCRASH: whopsies");
         }
     }
 
