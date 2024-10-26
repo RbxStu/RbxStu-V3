@@ -14,7 +14,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int islclosure(lua_State *L);
 
-        luaL_Reg *GetFunctionRegistry() override;
+        const luaL_Reg *GetFunctionRegistry() override;
 
         const char *GetLibraryName() override;;
     };

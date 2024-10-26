@@ -25,6 +25,7 @@
 #include "Communication/WebsocketServer.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
+#include "StuLuau/ExecutionEngine.hpp"
 
 void Entry() {
     AllocConsole();
@@ -89,6 +90,15 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
+    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone) == nullptr)
+        _mm_pause();
+
+    scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone)->ScheduleExecute(false, R"(
+    print("Hello, world!")
+    print(getfenv(0))
+    print(getgenv())
+    print(getrenv())
+)", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

@@ -139,6 +139,9 @@ namespace RbxStu::StuLuau::Environment {
     void EnvironmentContext::PushEnviornment() {
         const auto L = this->m_parentEngine->GetInitializationInformation()->executorState;
         for (const auto &lib: this->m_libraries) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
+                      std::format("Pushing library {} to the environment.",lib->GetLibraryName()));
+
             const auto envGlobals = lib->GetFunctionRegistry();
             lua_newtable(L);
             luaL_register(L, nullptr, envGlobals);
@@ -155,8 +158,12 @@ namespace RbxStu::StuLuau::Environment {
 
             lua_setglobal(L, lib->GetLibraryName());
 
-            // lua_pushvalue(L, LUA_GLOBALSINDEX);
-            // luaL_register(L, nullptr, envGlobals);
+            if (lib->PushToGlobals()) {
+                lua_pushvalue(L, LUA_GLOBALSINDEX);
+                luaL_register(L, nullptr, envGlobals);
+                lua_pop(L, 1);
+            }
+
             lua_pop(L, 1);
         }
     }

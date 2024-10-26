@@ -33,7 +33,10 @@ namespace RbxStu::Scheduling {
                                    const std::shared_ptr<RbxStu::Scheduling::ExecutionEngineInitializationInformation> &
                                    initInfo);
 
-        std::shared_ptr<StuLuau::ExecutionEngine> GetExecutionEngine(RBX::DataModelType dataModelType);
+        [[nodiscard]] std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> GetExecutionEngine(
+            RBX::DataModelType dataModelType) const;
+
+        [[nodiscard]] std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> GetExecutionEngine(lua_State *L) const;
 
         template<Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
         __forceinline void AddSchedulerJob() {

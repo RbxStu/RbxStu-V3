@@ -17,12 +17,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
-    luaL_Reg *Closures::GetFunctionRegistry() {
-        return new luaL_Reg [0x5]{
+    const luaL_Reg *Closures::GetFunctionRegistry() {
+        static luaL_Reg libreg[] = {
             {"iscclosure", RbxStu::StuLuau::Environment::UNC::Closures::iscclosure},
             {"islclosure", RbxStu::StuLuau::Environment::UNC::Closures::islclosure},
             {nullptr, nullptr},
         };
+        return libreg;
     }
 
     const char *Closures::GetLibraryName() {

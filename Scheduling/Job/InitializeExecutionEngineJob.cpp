@@ -12,7 +12,9 @@
 #include "Roblox/ScriptContext.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/Environment/EnvironmentContext.hpp"
+
 #include "StuLuau/Environment/UNC/Closures.hpp"
+#include "StuLuau/Environment/UNC/Globals.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
@@ -69,7 +71,7 @@ namespace RbxStu::Scheduling::Jobs {
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        const auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()).get() ==
+        const auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()) ==
                                        nullptr;
 
         taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
@@ -98,9 +100,11 @@ namespace RbxStu::Scheduling::Jobs {
         executionEngine->SetEnvironmentContext(envContext);
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
 
         envContext->PushEnviornment();
 
+        executionEngine->SetExecuteReady(true);
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
                   std::format("Environment pushed to DataModel {}", RBX
                       ::

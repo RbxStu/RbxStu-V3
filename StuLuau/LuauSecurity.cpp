@@ -227,13 +227,35 @@ namespace RbxStu::StuLuau {
         return LuauSecurity::IsMarkedThread(L);
     }
 
+    static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
+        // NEVER FORGET TO SET THE PROTOS and SUB PROTOS USERDATA!!
+        proto->userdata = static_cast<void *>(proto_identity);
+        for (auto i = 0; i < proto->sizep; i++) {
+            set_proto(proto->p[i], proto_identity);
+        }
+    }
+
+    void LuauSecurity::ElevateClosure(Closure *closure, const RbxStu::StuLuau::ExecutionSecurity execSecurity) {
+        if (closure->isC) return;
+
+        auto *security = new std::uint64_t[0x1];
+        *security = static_cast<std::uint64_t>(this->ToCapabilitiesFlags(execSecurity));
+
+        set_proto(closure->l.p, security);
+    }
+
     void LuauSecurity::SetThreadSecurity(lua_State *L, const ExecutionSecurity executionSecurity,
                                          const bool markThread) {
         const auto extraSpace = GetThreadExtraspace(L);
         if (nullptr == extraSpace)
             L->global->cb.userthread(L->global->mainthread, L); // Initialize RBX::ExtraSpace forcefully.
 
-        std::int64_t executorSecurity = this->ToCapabilitiesFlags(executionSecurity);
+        if (nullptr == extraSpace)
+            return;
+
+        const std::int64_t executorSecurity = this->ToCapabilitiesFlags(executionSecurity);
+
+        extraSpace->capabilities = executorSecurity;
 
         if (markThread) this->MarkThread(L);
     }

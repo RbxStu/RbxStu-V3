@@ -52,8 +52,10 @@ namespace RbxStu::StuLuau {
 
         std::queue<std::shared_ptr<RbxStu::StuLuau::YieldRequest> > m_yieldQueue;
         std::queue<RbxStu::StuLuau::ExecuteRequest> m_executeQueue;
-        bool m_bCanUseCodeGeneration;
         std::shared_ptr<Environment::EnvironmentContext> m_environmentContext;
+
+        std::atomic_bool m_bIsReadyStepping;
+        bool m_bCanUseCodeGeneration;
 
         void Execute(const ExecuteRequest &execute_request);
 
@@ -62,6 +64,8 @@ namespace RbxStu::StuLuau {
             std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
 
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> GetInitializationInformation();
+
+        void SetExecuteReady(bool isReady);
 
         void StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType);
 

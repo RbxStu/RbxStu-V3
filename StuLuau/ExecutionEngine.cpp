@@ -7,6 +7,7 @@
 #include <Logger.hpp>
 #include <string>
 
+#include "lapi.h"
 #include "lualib.h"
 #include "LuauSecurity.hpp"
 #include "Luau/CodeGen.h"
@@ -19,7 +20,8 @@
 namespace RbxStu::StuLuau {
     ExecutionEngine::ExecutionEngine(
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation) {
-        this->m_executionEngineState = parentJobInitializationInformation;
+        this->m_executionEngineState = std::move(parentJobInitializationInformation);
+        this->m_bIsReadyStepping = false;
 
         if (this->m_executionEngineState->executorState->global && this->m_executionEngineState->executorState->global->
             ecb.context == nullptr) {
@@ -39,12 +41,16 @@ namespace RbxStu::StuLuau {
         return this->m_executionEngineState;
     }
 
+    void ExecutionEngine::SetExecuteReady(bool isReady) {
+        this->m_bIsReadyStepping = isReady;
+    }
+
     void ExecutionEngine::Execute(const ExecuteRequest &executeRequest) {
         auto luauSecurity = StuLuau::LuauSecurity::GetSingleton();
 
-        auto L = this->GetInitializationInformation()->executorState;
+        const auto L = this->GetInitializationInformation()->executorState;
 
-        auto nL = lua_newthread(L);
+        const auto nL = lua_newthread(L);
         lua_pop(L, 1);
         luaL_sandboxthread(nL);
 
@@ -69,6 +75,8 @@ namespace RbxStu::StuLuau {
             return;
         }
 
+       luauSecurity->ElevateClosure(lua_toclosure(L, -1), executeRequest.executeWithSecurity);
+
         if (executeRequest.bGenerateNativeCode) {
             Luau::CodeGen::CompilationOptions opts{};
             opts.flags = Luau::CodeGen::CodeGenFlags::CodeGen_ColdFunctions;
@@ -79,6 +87,8 @@ namespace RbxStu::StuLuau {
     }
 
     void ExecutionEngine::ExecutionEngine::StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType) {
+        if (!this->m_bIsReadyStepping)
+            return;
         switch (stepType) {
             case ExecutionEngineStep::YieldStep: {
                 // During the yielding stage we want to step over our yield jobs queue and

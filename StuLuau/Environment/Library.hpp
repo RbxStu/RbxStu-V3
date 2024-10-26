@@ -10,7 +10,9 @@ namespace RbxStu::StuLuau::Environment {
     public:
         virtual ~Library() = default;
 
-        virtual luaL_Reg *GetFunctionRegistry() { return nullptr; };
+        virtual const luaL_Reg *GetFunctionRegistry() { return nullptr; };
+
+        virtual bool PushToGlobals() { return false; }
 
         virtual const char *GetLibraryName() { return nullptr; };
     };

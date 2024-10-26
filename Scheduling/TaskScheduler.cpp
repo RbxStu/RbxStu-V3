@@ -5,6 +5,7 @@
 #include "TaskScheduler.hpp"
 #include "Job.hpp"
 #include "Job/ExecuteScriptJob.hpp"
+#include "Job/InitializeExecutionEngineJob.hpp"
 #include "Roblox/TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
@@ -12,7 +13,8 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
                                                               const std::shared_ptr<
                                                                   ExecutionEngineInitializationInformation> &
                                                               initInfo) {
-    if (this->m_executionEngines.contains(dataModelType)) { // If it is the first load, then it will be false.
+    if (this->m_executionEngines.contains(dataModelType)) {
+        // If it is the first load, then it will be false.
         auto prev = this->m_executionEngines[dataModelType];
         prev.reset();
     }
@@ -21,8 +23,18 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
-    const RBX::DataModelType dataModelType) {
+    const RBX::DataModelType dataModelType) const {
     return this->m_executionEngines.contains(dataModelType) ? this->m_executionEngines.at(dataModelType) : nullptr;
+}
+
+std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
+    lua_State *L) const {
+    for (const auto &engine: this->m_executionEngines | std::views::values) {
+        if (lua_mainthread(engine->GetInitializationInformation()->globalState) == lua_mainthread(L))
+            return engine;
+    }
+
+    return nullptr;
 }
 
 std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskScheduler::GetJobs(
