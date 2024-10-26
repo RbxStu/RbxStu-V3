@@ -8,12 +8,13 @@
 #include <vector>
 #include <Windows.h>
 
-namespace RbxStu
-{
-    class ExceptionHandler
-    {
-        static long UnhandledSEH(EXCEPTION_POINTERS* pExceptionPointers);
-        static std::optional<std::pair<std::string, void*>> LookupAddress(const void* address);
+namespace RbxStu {
+    class ExceptionHandler final abstract {
+        static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
+
+        static std::optional<std::pair<std::string, void *> > LookupAddress(const void *address);
+
+        static void RBXCRASH(const char *crashType, const char *crashDescription);
 
     public:
         static void InstallHandler();

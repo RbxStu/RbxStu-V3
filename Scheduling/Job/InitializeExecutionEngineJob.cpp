@@ -19,28 +19,41 @@
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
                                                   RBX::TaskScheduler::Job::Stats *jobStats) {
-        const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
+        try {
+            const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
+            const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
+            const auto engine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
 
-        if (!dataModel->IsDataModelOpen()) {
+            if (!dataModel->IsDataModelOpen()) {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                          "Not stepping on a closed DataModel pointer.");
+                taskScheduler->ResetExecutionEngine(dataModel->GetDataModelType());
+                return false; // if DataModel is closed, we should not step this job.
+            }
+
+
+            if (engine != nullptr) {
+                const auto engineDataModel = engine->GetInitializationInformation()->dataModel;
+
+
+                if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() && engineDataModel->
+                    GetRbxPointer()
+                    != dataModel->GetRbxPointer()) {
+                    // DataModel has re-initialized.
+                    taskScheduler->ResetExecutionEngine(dataModel->GetDataModelType());
+                    return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
+                }
+
+                return false;
+            }
+
+            return engine == nullptr && jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
+        } catch (const std::exception &ex) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                      "Not stepping on a closed DataModel pointer.");
-            return false; // if DataModel is closed, we should not step this job.
+                      std::format("InitializeExecutionEngine::ShouldStep Failure {}", ex.what()));
         }
 
-        const auto thisJob = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
-        const auto engine = thisJob->GetExecutionEngine(dataModel->GetDataModelType());
-
-        if (engine != nullptr) {
-            const auto engineDataModel = engine->GetInitializationInformation()->dataModel;
-
-            if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() && engineDataModel->GetRbxPointer()
-                != dataModel->GetRbxPointer())
-                return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob; // DataModel has re-initialized.
-
-            return false;
-        }
-
-        return engine == nullptr && jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
+        return false;
     }
 
     Jobs::AvailableJobs InitializeExecutionEngineJob::GetJobIdentifier() {
@@ -75,14 +88,18 @@ namespace RbxStu::Scheduling::Jobs {
             return;
         }
 
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  "RBX::ScriptContext::getGlobalState");
         const auto globalState = scriptContext->GetGlobalState();
 
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  "lua_newthread(global)");
         const auto rL = lua_newthread(globalState);
         lua_ref(globalState, -1);
         lua_pop(globalState, 1);
-        const auto nL = lua_newthread(rL);
-        lua_ref(rL, -1);
-        lua_pop(rL, 1);
+        const auto nL = lua_newthread(globalState);
+        lua_ref(globalState, -1);
+        lua_pop(globalState, 1);
 
         luaL_sandboxthread(nL); // Sandbox to make renv != genv.
 
@@ -92,30 +109,18 @@ namespace RbxStu::Scheduling::Jobs {
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        const auto didNotExistBefore = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType()) ==
-                                       nullptr;
-
         taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
         const auto executionEngine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
-        if (didNotExistBefore) {
-            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                      std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
-                          DataModelTypeToString(
-                              dataModel->GetDataModelType())));
-        } else {
-            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                      std::format("Re-Initialized RbxStu::StuLuau::ExecutionEngine for DataModel {} successfully!", RBX
-                          ::
-                          DataModelTypeToString(
-                              dataModel->GetDataModelType())));
-        }
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
+                      DataModelTypeToString(
+                          dataModel->GetDataModelType())));
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
                   std::format("Pushing Environment for DataModel Executor State {}...", RBX
                       ::
                       DataModelTypeToString(
                           dataModel->GetDataModelType())));
-
 
         const auto envContext = std::make_shared<StuLuau::Environment::EnvironmentContext>(executionEngine);
         executionEngine->SetEnvironmentContext(envContext);

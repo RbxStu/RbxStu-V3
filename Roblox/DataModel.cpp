@@ -49,21 +49,29 @@ namespace RbxStu::Roblox {
          * Fake Datamodel + 0x198 - Real Datamodel
          */
 
-        const auto realDataModel = *reinterpret_cast<RBX::DataModel **>(
-            *reinterpret_cast<uintptr_t *>(reinterpret_cast<uintptr_t>(robloxJob) + 0xB0) + 0x198);
+        try {
+            const auto realDataModel = *reinterpret_cast<RBX::DataModel **>(
+                *reinterpret_cast<uintptr_t *>(
+                    reinterpret_cast<uintptr_t>(robloxJob) + 0xB0) + 0x198);
+            return std::make_shared<RbxStu::Roblox::DataModel>(realDataModel);
+        } catch (const std::exception &ex) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                      std::format("Failed to obtain DataModel {}", ex.what()));
+        }
 
-        return std::make_shared<RbxStu::Roblox::DataModel>(realDataModel);
+        return std::make_shared<RbxStu::Roblox::DataModel>(nullptr);
     }
 
     bool DataModel::IsDataModelOpen() const {
         if (!this->CheckPointer()) return false;
 
         // Check for strings mentioning a closed DataModel to update offset
-        return *reinterpret_cast<bool *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561);
+        return this->GetDataModelType() != RBX::DataModelType_Null && *reinterpret_cast<uint8_t *>(
+                   reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561) != 0;
     }
 
     bool DataModel::CheckPointer() const {
-        return Utilities::IsPointerValid(this->GetRbxPointer());
+        return this->GetRbxPointer() != nullptr && Utilities::IsPointerValid(this->GetRbxPointer());
     }
 
     RBX::DataModelType DataModel::GetDataModelType() const {

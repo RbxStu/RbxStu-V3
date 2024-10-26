@@ -5,6 +5,7 @@
 
 #include "ExceptionHandler.hpp"
 
+#include <MinHook.h>
 #include <print>
 #include <Psapi.h>
 #include <Windows.h>
@@ -45,14 +46,42 @@ std::optional<std::pair<std::string, void *> > RbxStu::ExceptionHandler::LookupA
     return {};
 }
 
+static void *pOriginalRbxCrash{};
+
+void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crashDescription) {
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::RBXCRASH,
+              "-- RbxStu V3 -- RBXCRASH HAS BEEN INVOKED --");
+
+    if (crashType == nullptr)
+        crashType = "Crash Type Not Specified";
+
+    if (crashDescription == nullptr)
+        crashDescription = "Crash Not Described";
+
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::RBXCRASH,
+              std::format("Crash Type: {}; Crash Description: {}; Triggering SEH for further analysis...", crashType,
+                  crashDescription));
+
+    throw std::exception(std::format("RBXCRASH->CxxEH->SEH transition. Crash Type: {}, Crash Description: {}.",
+                                     crashType,
+                                     crashDescription).c_str());
+}
+
 
 long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- Begin");
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              std::format("C++ exception code: '0x{:X}'",
+              std::format("SEH exception code: '0x{:X}'",
                   pExceptionPointers->ExceptionRecord->ExceptionCode));
+
+    try {
+        std::rethrow_exception(std::current_exception());
+    } catch (const std::exception &ex) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+                  std::format("C++ exception message: '{}'", ex.what()));
+    }
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               "-- Obtaining callstack...");
@@ -186,4 +215,12 @@ void RbxStu::ExceptionHandler::InstallHandler() {
         RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
                   "Attempted to the top level SEH, but the top level SEH was ALREADY our exception handler! Did you by mistake call RbxStu::ExceptionHandler::InstallHandler twice?");
     }
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+              "Attempting to hook RBXCRASH to monitor ROBLOX-sided crashes...");
+    MH_Initialize();
+
+    MH_CreateHook(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBXCRASH),
+                  RbxStu::ExceptionHandler::RBXCRASH, &pOriginalRbxCrash);
+    MH_EnableHook(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBXCRASH));
 }

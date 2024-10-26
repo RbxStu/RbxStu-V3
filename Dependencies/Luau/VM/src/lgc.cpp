@@ -1014,6 +1014,7 @@ static size_t getheaptrigger(global_State* g, size_t heapgoal)
 size_t luaC_step(lua_State* L, bool assist)
 {
     return 0;
+    printf("luaC_step (shouldn't run unless msvc is retarded)\n");
     global_State* g = L->global;
 
     int lim = g->gcstepsize * g->gcstepmul / 100; // how much to work

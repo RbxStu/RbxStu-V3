@@ -44,7 +44,7 @@ namespace RbxStu::Roblox {
 
         const auto scanner = RbxStu::Scanners::RBX::GetSingleton();
 
-        constexpr auto identity = 8ull;
+        constexpr auto identity = 0ull;
         constexpr auto script = 0ull;
         return getGlobalState(this->m_pScriptContext,
                               &identity, &script);

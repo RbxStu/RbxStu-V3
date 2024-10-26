@@ -164,7 +164,7 @@ namespace RbxStu::StuLuau {
         this->m_environmentContext = shared;
     }
 
-    void ExecutionEngine::ScheduleExecute(bool bGenerateNativeCode, std::string_view szLuauCode,
+    void ExecutionEngine::ScheduleExecute(bool bGenerateNativeCode, const std::string_view szLuauCode,
                                           RbxStu::StuLuau::ExecutionSecurity executeWithSecurity) {
         this->m_executeQueue.emplace(bGenerateNativeCode, szLuauCode.data(), executeWithSecurity);
     }

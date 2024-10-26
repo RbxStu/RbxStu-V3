@@ -33,8 +33,10 @@ namespace RbxStu::Scheduling {
                                    const std::shared_ptr<RbxStu::Scheduling::ExecutionEngineInitializationInformation> &
                                    initInfo);
 
+        void ResetExecutionEngine(RBX::DataModelType dataModelType);
+
         [[nodiscard]] std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> GetExecutionEngine(
-            RBX::DataModelType dataModelType) const;
+            RBX::DataModelType dataModelType);
 
         [[nodiscard]] std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> GetExecutionEngine(lua_State *L) const;
 

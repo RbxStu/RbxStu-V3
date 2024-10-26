@@ -81,11 +81,9 @@ namespace RbxStu::StuLuau::Environment {
                     hkChain.originalChain.begin(),
                     hkChain.originalChain.end()); // Clear.
 
-                hkChain.executionEngineDataModel.reset();
                 hkChain.executionEngineDataModel = nullptr;
                 hkChain.executionEngineDataModel = initInfo->dataModel;
-                hkChain.mainthread = lua_mainthread(
-                    initInfo->executorState);
+                hkChain.mainthread = lua_mainthread(initInfo->executorState);
 
                 s_hookChain[initInfo->dataModel->GetDataModelType()] = hkChain;
             }
@@ -137,7 +135,13 @@ namespace RbxStu::StuLuau::Environment {
     }
 
     void EnvironmentContext::PushEnviornment() {
+        /*
+         *  Note: Unbalanced Luau Stacks are bad. do NOT pop like an idiot, just save the previous top and then pop it all out, its MUCH easier
+         *  like that, sudden crashes are crazy, though.
+         */
+
         const auto L = this->m_parentEngine->GetInitializationInformation()->executorState;
+        const auto oldTop = lua_gettop(this->m_parentEngine->GetInitializationInformation()->executorState);
         for (const auto &lib: this->m_libraries) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
                       std::format("Pushing library {} to the environment.",lib->GetLibraryName()));
@@ -154,17 +158,15 @@ namespace RbxStu::StuLuau::Environment {
                           ,
                           lib->GetLibraryName()));
 
-            lua_pop(L, 1);
-
             lua_setglobal(L, lib->GetLibraryName());
 
             if (lib->PushToGlobals()) {
                 lua_pushvalue(L, LUA_GLOBALSINDEX);
                 luaL_register(L, nullptr, envGlobals);
-                lua_pop(L, 1);
             }
-
-            lua_pop(L, 1);
         }
+
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Normalizing Luau Stack.");
+        lua_settop(this->m_parentEngine->GetInitializationInformation()->executorState, oldTop);
     }
 } // RbxStu::StuLuau::Environment

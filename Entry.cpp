@@ -91,20 +91,23 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
-    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone) == nullptr)
+    /*
+        // Test exec.
+    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) == nullptr)
         _mm_pause();
 
-    /*
-     *  TODO: Fix crashes on re-initialization.
-     *
+    while (true) {
+        if (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) != nullptr) {
+            scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit)->ScheduleExecute(false, R"(
+                print("Hello, world!")
+                print(getfenv(0))
+                print(getgenv())
+                print(getrenv())
+            )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+        }
+        Sleep(2000);
+    }
      */
-
-    scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_MainMenuStandalone)->ScheduleExecute(false, R"(
-    print("Hello, world!")
-    print(getfenv(0))
-    print(getgenv())
-    print(getrenv())
-)", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

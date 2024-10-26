@@ -35,18 +35,18 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
     this->m_taskScheduler = std::make_shared<RbxStu::Scheduling::TaskScheduler>();
 
     std::map<std::string_view, RbxStu::Scheduling::JobKind> targets{
-        {".?AVDebuggerConnectionJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::DebuggerConnection},
-        {".?AVModelMeshJob@RBX@@", RbxStu::Scheduling::JobKind::ModelMeshJob},
-        {".?AVGcJob@ScriptContextFacets@RBX@@", RbxStu::Scheduling::JobKind::LuauGarbageCollection},
+        // {".?AVDebuggerConnectionJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::DebuggerConnection},
+        // {".?AVModelMeshJob@RBX@@", RbxStu::Scheduling::JobKind::ModelMeshJob},
+        // {".?AVGcJob@ScriptContextFacets@RBX@@", RbxStu::Scheduling::JobKind::LuauGarbageCollection},
         {".?AVWaitingHybridScriptsJob@ScriptContextFacets@RBX@@", RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob},
-        {".?AVHeartbeatTask@RBX@@", RbxStu::Scheduling::JobKind::Heartbeat},
-        {".?AVPhysicsJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsJob},
-        {".?AVRenderJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::RenderJob},
-        {".?AUPathUpdateJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::PathUpdateJob},
-        {".?AUNavigationJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::NavigationJob},
-        {".?AVGenericDataModelJob@RBX@@", RbxStu::Scheduling::JobKind::Generic_UnknownJob},
-        {".?AVHttpRbxApiJob@RBX@@", RbxStu::Scheduling::JobKind::HttpRbxApi},
-        {".?AVPhysicsStepJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsStepJob},
+        // {".?AVHeartbeatTask@RBX@@", RbxStu::Scheduling::JobKind::Heartbeat},
+        // {".?AVPhysicsJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsJob},
+        // {".?AVRenderJob@Studio@RBX@@", RbxStu::Scheduling::JobKind::RenderJob},
+        // {".?AUPathUpdateJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::PathUpdateJob},
+        // {".?AUNavigationJob@NavigationService@RBX@@", RbxStu::Scheduling::JobKind::NavigationJob},
+        // {".?AVGenericDataModelJob@RBX@@", RbxStu::Scheduling::JobKind::Generic_UnknownJob},
+        // {".?AVHttpRbxApiJob@RBX@@", RbxStu::Scheduling::JobKind::HttpRbxApi},
+        // {".?AVPhysicsStepJob@RBX@@", RbxStu::Scheduling::JobKind::PhysicsStepJob},
     };
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_TaskSchedulerOrchestrator,
@@ -120,9 +120,10 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
         return jobOriginal->original(self, timeMetrics);
     }
 
-    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-              std::format("Stepping DataModel {} -- JobKind: {}", RBX::DataModelTypeToString(Roblox::DataModel::FromJob(self)->
-                  GetDataModelType()), (int)jobOriginal->jobKind));
+    // printf("JOBSTEP: %p\n", self);
+    // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+    //           std::format("Stepping DataModel {} -- JobKind: {}", RBX::DataModelTypeToString(Roblox::DataModel::FromJob(self)->
+    //               GetDataModelType()), (int)jobOriginal->jobKind));
 
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 

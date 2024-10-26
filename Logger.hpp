@@ -89,6 +89,7 @@ namespace RbxStu {
     DefineSectionName(Scheduling_Jobs_ExecuteScriptJob, "RbxStuV3::Scheduling::Jobs::ExecuteScriptJob");
     DefineSectionName(Scheduling_Jobs_ResumeYieldedThreadsJob, "RbxStuV3::Scheduling::Jobs::ResumeYieldedThreadsJob");
     DefineSectionName(Scheduling_TaskSchedulerOrchestrator, "RbxStuV3::Scheduling::TaskSchedulerOrchestrator");
+    DefineSectionName(Scheduling_TaskScheduler, "RbxStuV3::Scheduling::TaskScheduler");
 
     DefineSectionName(Scanners_Luau, "RbxStuV3::Scanners::Luau");
     DefineSectionName(Scanners_RBXReflection, "RbxStuV3::Scanners::RBXReflection");
@@ -96,6 +97,7 @@ namespace RbxStu {
 
     DefineSectionName(Modding_ModManager, "RbxStuV3::Modding::ModManager");
 
+    DefineSectionName(RBXCRASH, "RbxStuV3::HK_RBXCRASH");
     DefineSectionName(StructuredExceptionHandler, "RbxStuV3::StructuredExceptionHandler");
     DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");
 

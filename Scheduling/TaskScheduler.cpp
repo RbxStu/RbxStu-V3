@@ -16,16 +16,53 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
                                                               initInfo) {
     if (this->m_executionEngines.contains(dataModelType)) {
         // If it is the first load, then it will be false.
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                  std::format("Swapping Execution Engine for DataModel {}...", RBX::DataModelTypeToString(dataModelType)
+                  ));
         auto prev = this->m_executionEngines[dataModelType];
-        prev.reset();
+        auto newObj = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
+        this->m_executionEngines[dataModelType].swap(newObj);
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
+                  std::format("Execution Engine for DataModel {} Swapped.", RBX::DataModelTypeToString(dataModelType)));
     }
+
+    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
+              std::format("Created ExecutionEngine for DataModel {} internally.", RBX::DataModelTypeToString(
+                  dataModelType)));
 
     this->m_executionEngines[dataModelType] = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
 }
 
+void RbxStu::Scheduling::TaskScheduler::ResetExecutionEngine(const RBX::DataModelType dataModelType) {
+    if (this->m_executionEngines.contains(dataModelType)) {
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
+                  std::format("ExecutionEngine for DataModel {} has been reset to nullptr.", RBX::DataModelTypeToString(
+                      dataModelType)));
+        this->m_executionEngines.erase(dataModelType);
+    }
+}
+
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
-    const RBX::DataModelType dataModelType) const {
-    return this->m_executionEngines.contains(dataModelType) ? this->m_executionEngines.at(dataModelType) : nullptr;
+    const RBX::DataModelType dataModelType)  {
+    if (!this->m_executionEngines.contains(dataModelType)) {
+        return nullptr;
+    }
+
+    auto currentEngine = this->m_executionEngines.at(dataModelType);
+
+    if (currentEngine == nullptr || currentEngine->GetInitializationInformation() == nullptr || !currentEngine->
+        GetInitializationInformation()->dataModel->IsDataModelOpen() || !currentEngine->
+        GetInitializationInformation()->dataModel->CheckPointer()) {
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
+                  std::format(
+                      "DataModel is closed for Execution Engine {}, it's pointer is invalid or it has been swapped whilst requesting information. Resetting for next call"
+                      , RBX::DataModelTypeToString(
+                          dataModelType)));
+        this->ResetExecutionEngine(dataModelType);
+        return nullptr;
+    }
+
+    return currentEngine;
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
