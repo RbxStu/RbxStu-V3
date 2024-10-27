@@ -104,6 +104,9 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Closures.hpp
         StuLuau/Environment/UNC/Globals.cpp
         StuLuau/Environment/UNC/Globals.hpp
+
+        StuLuau/Interop/ExposedObject.cpp
+        StuLuau/Interop/ExposedObject.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

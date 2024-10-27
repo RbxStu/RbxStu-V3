@@ -183,7 +183,7 @@ namespace RbxStu::StuLuau {
 
         if (bRunInParallel)
             // ReSharper disable once CppNoDiscardExpression
-            std::async(std::launch::async, runForYield, yieldRequest);
+            std::thread(runForYield, yieldRequest).detach();
         else
             runForYield(yieldRequest);
     }
