@@ -38,6 +38,16 @@ namespace RbxStu::StuLuau {
         this->m_bCanUseCodeGeneration = this->m_executionEngineState->executorState->global->ecb.context == nullptr;
     }
 
+    ExecutionEngine::~ExecutionEngine() {
+        while (!this->m_yieldQueue.empty())
+            this->m_yieldQueue.pop();
+
+        while (!this->m_executeQueue.empty())
+            this->m_executeQueue.pop();
+
+        this->m_environmentContext.reset();
+    }
+
     std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> ExecutionEngine::
     GetInitializationInformation() {
         return this->m_executionEngineState;
@@ -122,7 +132,6 @@ namespace RbxStu::StuLuau {
                 }
 
                 // The yield is ready, we must resume.
-
                 const auto completionResults = frontYield->fpCompletionCallback();
 
                 this->m_executionEngineState->scriptContext->ResumeThread(&frontYield->threadRef, completionResults);
@@ -175,17 +184,16 @@ namespace RbxStu::StuLuau {
         lua_pop(L, 1);
 
         auto yieldRequest = std::make_shared<RbxStu::StuLuau::YieldRequest>(RbxStu::StuLuau::YieldRequest{
-                false, L, {0, L, threadRef, 0}, nullptr
+                false, L, {0, L, threadRef, 0}, nullptr,
+                {}
             }
         );
 
-        this->m_yieldQueue.emplace(yieldRequest);
+        yieldRequest->lpRunningTask = bRunInParallel
+                                          ? std::async(std::launch::async, runForYield, yieldRequest).share()
+                                          : std::async(std::launch::deferred, runForYield, yieldRequest).share();
 
-        if (bRunInParallel)
-            // ReSharper disable once CppNoDiscardExpression
-            std::thread(runForYield, yieldRequest).detach();
-        else
-            runForYield(yieldRequest);
+        this->m_yieldQueue.emplace(yieldRequest);
     }
 
     void ExecutionEngine::SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared) {

@@ -4,6 +4,7 @@
 
 #pragma once
 #include <functional>
+#include <future>
 #include <nlohmann/json.hpp>
 
 #include "Environment/EnvironmentContext.hpp"
@@ -39,6 +40,7 @@ namespace RbxStu::StuLuau {
         lua_State *lpResumeTarget;
         RBX::Lua::WeakThreadRef threadRef;
         std::function<YieldResult()> fpCompletionCallback;
+        std::shared_future<void> lpRunningTask;
     };
 
     struct ExecuteRequest {
@@ -61,6 +63,8 @@ namespace RbxStu::StuLuau {
     public:
         explicit ExecutionEngine(
             std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
+
+        ~ExecutionEngine();
 
         void Execute(const ExecuteRequest &executeRequest);
 
