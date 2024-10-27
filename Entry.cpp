@@ -99,25 +99,13 @@ void Entry() {
         _mm_pause();
 
     while (true) {
+        Sleep(200);
         if (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) != nullptr) {
             scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit)->ScheduleExecute(false, R"(
-                print("Hello, world!")
-                print(getfenv(0))
-                print(getgenv())
-                print(getrenv())
-                print(closures.newcclosure(function() end))
-                local cPrint = closures.clonefunction(print)
-                cPrint(httpget("https://google.com"))
-                --[[ closures.newcclosure(function(arg1, arg2)
-                    cPrint("Attempting native ROBLOX (Powering Imagination:tm:) yield.");
-                    task.wait();
-                    cPrint("ok cooked");
-                    cPrint(httpget("https://google.com"))
-                    cPrint(arg1, arg2, "Hello from newcclosure")
-                    end)("hello", "bye") ]]
+
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
         }
-        Sleep(2000);
+        Sleep(1000);
     }
 }
 
