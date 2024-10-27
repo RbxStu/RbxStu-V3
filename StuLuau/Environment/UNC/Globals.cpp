@@ -15,6 +15,8 @@
 
 #include <cpr/cpr.h>
 
+#include "StuLuau/LuauSecurity.hpp"
+
 namespace RbxStu::StuLuau::Environment::UNC {
     int Globals::getgenv(lua_State *L) {
         const auto mainState = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
@@ -77,7 +79,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (url.find("http://") == std::string::npos && url.find("https://") == std::string::npos)
             luaL_argerror(L, 1, "Invalid protocol (expected 'http://' or 'https://')");
 
-        executionEngine->YieldThread(L, [url](const std::shared_ptr<RbxStu::StuLuau::YieldRequest>& yieldRequest) {
+        executionEngine->YieldThread(L, [url](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
             auto Headers = std::map<std::string, std::string, cpr::CaseInsensitiveCompare>();
             Headers["User-Agent"] = "Roblox/WinInet";
             Headers["RbxStu-Fingerprint"] = Utilities::GetHwid().value();
@@ -106,6 +108,30 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return lua_yield(L, 0);
     }
 
+    int Globals::checkcaller(lua_State *L) {
+        const auto luauSecurity = LuauSecurity::GetSingleton();
+        lua_pushboolean(L, luauSecurity->IsOurThread(L));
+        return 1;
+    }
+
+    int Globals::checkcallstack(lua_State *L) {
+        const auto luauSecurity = LuauSecurity::GetSingleton();
+
+        if (!luauSecurity->IsOurThread(L)) {
+            lua_pushboolean(L, false);
+            return 1;
+        }
+
+        for (auto startCi = L->base_ci; startCi < L->ci; startCi++) {
+            if (!luauSecurity->IsOurClosure(clvalue(startCi->func))) {
+                lua_pushboolean(L, false);
+                return 1;
+            }
+        }
+
+        lua_pushboolean(L, true);
+        return 1;
+    }
 
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
@@ -113,6 +139,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
             {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
             {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},
             {"httpget", RbxStu::StuLuau::Environment::UNC::Globals::httpget},
+
+            {"checkcallstack", RbxStu::StuLuau::Environment::UNC::Globals::checkcallstack},
+            {"checkcaller", RbxStu::StuLuau::Environment::UNC::Globals::checkcaller},
 
             {nullptr, nullptr}
         };

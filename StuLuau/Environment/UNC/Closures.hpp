@@ -16,7 +16,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int clonefunction(lua_State *L);
 
+        static int newcclosure_stub(lua_State *L);
+
         static int newcclosure(lua_State *L);
+
+        static int newlclosure(lua_State *L);
+
+        static int isourclosure(lua_State *L);
 
         const luaL_Reg *GetFunctionRegistry() override;
 

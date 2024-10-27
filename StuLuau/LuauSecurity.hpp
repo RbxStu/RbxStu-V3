@@ -29,5 +29,7 @@ namespace RbxStu::StuLuau {
         bool IsOurThread(lua_State *L);
 
         void ElevateClosure(const Closure *closure, RbxStu::StuLuau::ExecutionSecurity execSecurity);
+
+        bool IsOurClosure(Closure *closure);
     };
 } // RbxStu::StuLuau

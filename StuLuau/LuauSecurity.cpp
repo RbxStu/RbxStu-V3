@@ -4,6 +4,10 @@
 
 #include "LuauSecurity.hpp"
 
+#include <libhat/Process.hpp>
+
+#include "Environment/UNC/Closures.hpp"
+
 const static std::map<RbxStu::StuLuau::ExecutionSecurity, std::vector<RBX::Security::CapabilityPermissions> >
 s_CapabilityMap = {
     {
@@ -241,6 +245,28 @@ namespace RbxStu::StuLuau {
         *security = static_cast<std::uint64_t>(this->ToCapabilitiesFlags(execSecurity));
 
         set_proto(closure->l.p, security);
+    }
+
+    bool LuauSecurity::IsOurClosure(Closure *closure) {
+        /*
+         *  We modify the Luau Closures we push with their line defined to be -1.
+         */
+        if (!closure->isC)
+            return true;
+
+        /*
+         *  We check if the c.f is our newcclosure stub, for other functions, we just check how close the memory address is to ROBLOXs .text section,
+         *  if it is within the range of .text, then it is likely that it is not our function.
+         */
+
+        const auto cClosure = reinterpret_cast<std::uintptr_t>(closure->c.f);
+        const auto textSection = hat::process::get_process_module().get_section_data(".text");
+
+        const auto isRobloxFunction = cClosure > reinterpret_cast<std::uintptr_t>(textSection.data()) && cClosure <
+                                      reinterpret_cast<
+                                          std::uintptr_t>(textSection.data() + textSection.size());
+
+        return closure->c.f == RbxStu::StuLuau::Environment::UNC::Closures::newcclosure_stub || !isRobloxFunction;
     }
 
     void LuauSecurity::SetThreadSecurity(lua_State *L, const ExecutionSecurity executionSecurity,

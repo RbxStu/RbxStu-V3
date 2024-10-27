@@ -14,7 +14,9 @@
 
 #include "lobject.h"
 #include "lstate.h"
+#include "Luau/Compiler.h"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Closures::iscclosure(lua_State *L) {
@@ -63,7 +65,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
-    int newcclosure_stub(lua_State *L) {
+    int Closures::newcclosure_stub(lua_State *L) {
         const auto executionEngine = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
                 GetExecutionEngine(L);
         const auto envContext = executionEngine->GetEnvironmentContext();
@@ -148,12 +150,52 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Closures::newlclosure(lua_State *L) {
+        luaL_checktype(L, -1, LUA_TFUNCTION);
+
+        if (!lua_iscfunction(L, -1))
+            lua_ref(L, -1);
+
+        lua_newtable(L); // t
+        lua_newtable(L); // Meta
+
+        lua_pushvalue(L, LUA_GLOBALSINDEX);
+        lua_setfield(L, -2, "__index");
+        lua_setreadonly(L, -1, true);
+        lua_setmetatable(L, -2);
+
+        lua_pushvalue(L, -2);
+        lua_setfield(L, -2, "abcdefg"); // Set abcdefg to that of idx
+        const auto code = "return abcdefg(...)";
+
+        constexpr auto compileOpts = Luau::CompileOptions{0, 0};
+        const auto bytecode = Luau::compile(code, compileOpts);
+        luau_load(L, "=RbxStuV3_newlclosurewrapper", bytecode.c_str(), bytecode.size(), -1);
+
+        lua_remove(L, lua_gettop(L) - 1); // Balance lua stack.
+        return 1;
+    }
+
+    // ReSharper disable once CppDFAConstantFunctionResult
+    int Closures::isourclosure(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
+        const auto closure = lua_toclosure(L, 1);
+
+        lua_pushboolean(L, LuauSecurity::GetSingleton()->IsOurClosure(closure));
+        return 1;
+    }
+
     const luaL_Reg *Closures::GetFunctionRegistry() {
         static luaL_Reg closuresLib[] = {
+            {"isourclosure", RbxStu::StuLuau::Environment::UNC::Closures::isourclosure},
+
             {"iscclosure", RbxStu::StuLuau::Environment::UNC::Closures::iscclosure},
             {"islclosure", RbxStu::StuLuau::Environment::UNC::Closures::islclosure},
+
             {"clonefunction", RbxStu::StuLuau::Environment::UNC::Closures::clonefunction},
+
             {"newcclosure", RbxStu::StuLuau::Environment::UNC::Closures::newcclosure},
+            {"newlclosure", RbxStu::StuLuau::Environment::UNC::Closures::newlclosure},
             {nullptr, nullptr},
         };
         return closuresLib;
