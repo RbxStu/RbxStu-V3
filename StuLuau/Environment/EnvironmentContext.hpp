@@ -67,6 +67,8 @@ namespace RbxStu::StuLuau::Environment {
             parentEngine) {
         };
 
+        ~EnvironmentContext();
+
         void DefineInitScript(const std::string &scriptSource, const std::string &scriptName);
 
         void DefineLibrary(const std::shared_ptr<RbxStu::StuLuau::Environment::Library> &library);

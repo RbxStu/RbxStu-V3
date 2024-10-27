@@ -49,6 +49,14 @@ namespace RbxStu::StuLuau::Environment {
             "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
     }
 
+    EnvironmentContext::~EnvironmentContext() {
+        this->m_newcclosures.clear();
+        this->m_functionHooks.clear();
+        this->m_initScripts.clear();
+        this->m_unhookableClosures.clear();
+        this->m_parentEngine = nullptr;
+    }
+
     void EnvironmentContext::DefineInitScript(const std::string &scriptSource, const std::string &scriptName) {
         this->m_initScripts.emplace_back(scriptSource, scriptName);
     }
@@ -166,12 +174,10 @@ namespace RbxStu::StuLuau::Environment {
 
             lua_setglobal(L, lib->GetLibraryName());
 
-            lua_pop(L, 1);
-
             if (lib->PushToGlobals()) {
                 lua_pushvalue(L, LUA_GLOBALSINDEX);
                 luaL_register(L, nullptr, envGlobals);
-                lua_pop(L, 1);
+                lua_pop(L, 1); // Does not pop stack, must do it ourselves.
             }
         }
 
