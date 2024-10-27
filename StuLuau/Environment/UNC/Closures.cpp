@@ -88,24 +88,47 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         lua_insert(L, 1);
 
-        const auto status = static_cast<lua_Status>(lua_pcall(L, nargs, LUA_MULTRET, 0));
+        const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
+            RbxStuOffsets::GetSingleton()->
+            GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
 
-        if (status != LUA_OK && status != LUA_YIELD) {
-            const auto errorString = lua_tostring(L, -1);
-            if (strcmp(errorString, "attempt to yield across metamethod/C-call boundary") == 0 || strcmp(
-                    errorString, "thread is not yieldable") == 0)
-                return lua_yield(L, 0);
-        }
+        lua_pushcclosure(L, task_defer, nullptr, 0);
+        lua_insert(L, 1);
 
-        if (status != LUA_OK) {
-            const auto errorString = lua_tostring(L, -1);
-            const auto realError = Utilities::GetSingleton()->FromLuaErrorMessageToCErrorMessage(errorString);
+        const auto status = static_cast<lua_Status>(lua_pcall(L, nargs + 1 /* func is an arg for defer */, LUA_MULTRET,
+                                                              0));
 
-            lua_pushstring(L, realError.c_str());
-            lua_error(L);
-        }
+        const auto nL = lua_tothread(L, -1);
+        nL->namecall = L->namecall; // Preserve namecall
 
-        return lua_gettop(L);
+        executionEngine->YieldThread(L, [nL, L](const std::shared_ptr<YieldRequest> &yieldContext) {
+            while (nL->isactive || (nL->status == LUA_YIELD)) {
+                _mm_pause();
+                std::this_thread::yield();
+            }
+
+            yieldContext->fpCompletionCallback = [nL, L]() {
+                const bool success = nL->status == LUA_OK;
+                if (success) {
+                    luaC_threadbarrier(L);
+                    luaC_threadbarrier(nL);
+                    lua_xmove(nL, L, lua_gettop(nL));
+                } else {
+                    lua_xmove(nL, L, 1); // Move error message
+
+                    const auto realError = Utilities::GetSingleton()->FromLuaErrorMessageToCErrorMessage(
+                        lua_tostring(L, -1));
+                    lua_pop(L, 1);
+                    lua_pushstring(L, realError.c_str());
+                }
+
+                return YieldResult{success, lua_gettop(L), !success ? lua_tostring(L, -1) : nullptr};
+            };
+
+            yieldContext->bIsReady = true;
+        }, false);
+
+        return lua_yield(L, 0);
     }
 
     int Closures::newcclosure(lua_State *L) {
