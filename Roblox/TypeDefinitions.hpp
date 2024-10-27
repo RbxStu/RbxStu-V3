@@ -736,11 +736,11 @@ namespace RBX {
     template<typename T>
     class PointerOffsetEncryption final {
     public:
-        std::uintptr_t address = 0;
-        std::uintptr_t offset = 0;
+        std::intptr_t address = 0;
+        std::intptr_t offset = 0;
 
-        PointerOffsetEncryption(void *address, std::uintptr_t offset) {
-            this->address = reinterpret_cast<std::uintptr_t>(address);
+        PointerOffsetEncryption(void *address, std::intptr_t offset) {
+            this->address = reinterpret_cast<std::intptr_t>(address);
             this->offset = offset;
         }
 

@@ -43,6 +43,7 @@ namespace RbxStu::StuLuau {
 
     struct ExecuteRequest {
         bool bGenerateNativeCode;
+        bool bCreateNewThread;
         std::string szLuauCode;
         RbxStu::StuLuau::ExecutionSecurity executeWithSecurity;
     };
@@ -69,15 +70,19 @@ namespace RbxStu::StuLuau {
 
         void StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType);
 
+        void ResumeThread(lua_State *L, int nret);
+
         void YieldThread(lua_State *L,
-                         std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield);
+                         std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield, bool bRunInParallel);
 
         void SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared);
 
         void ScheduleExecute(
             bool bGenerateNativeCode,
             std::string_view szLuauCode,
-            RbxStu::StuLuau::ExecutionSecurity executeWithSecurity
+            RbxStu::StuLuau::ExecutionSecurity executeWithSecurity, bool bCreateNewThread
         );
+
+        std::shared_ptr<Environment::EnvironmentContext> GetEnvironmentContext();
     };
 } // RbxStu::Luau

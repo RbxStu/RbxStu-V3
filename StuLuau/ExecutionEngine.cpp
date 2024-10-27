@@ -4,6 +4,7 @@
 
 #include "ExecutionEngine.hpp"
 
+#include <future>
 #include <Logger.hpp>
 #include <string>
 
@@ -51,9 +52,14 @@ namespace RbxStu::StuLuau {
 
         const auto L = this->GetInitializationInformation()->executorState;
 
-        const auto nL = lua_newthread(L);
-        lua_pop(L, 1);
-        luaL_sandboxthread(nL);
+        lua_State *nL = nullptr;
+        if (executeRequest.bCreateNewThread) {
+            nL = lua_newthread(L);
+            lua_pop(L, 1);
+            luaL_sandboxthread(nL);
+        } else {
+            nL = L;
+        }
 
         luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity, true);
 
@@ -64,7 +70,6 @@ namespace RbxStu::StuLuau {
         auto opts = Luau::CompileOptions{};
         opts.debugLevel = 2;
         opts.optimizationLevel = 1;
-
 
         const auto bytecode = Luau::compile(executeRequest.szLuauCode.data(), opts);
 
@@ -121,7 +126,8 @@ namespace RbxStu::StuLuau {
                 const auto completionResults = frontYield->fpCompletionCallback();
 
                 this->m_executionEngineState->scriptContext->ResumeThread(&frontYield->threadRef, completionResults);
-
+                this->m_yieldQueue.pop(); // Remove yield frame.
+                frontYield.reset();
                 break;
             }
 
@@ -144,8 +150,26 @@ namespace RbxStu::StuLuau {
         }
     }
 
+    void ExecutionEngine::ResumeThread(lua_State *L, int nret) {
+        lua_pushthread(L);
+        const auto threadRef = lua_ref(L, -1);
+        lua_pop(L, 1);
+
+        auto yieldRequest = std::make_shared<RbxStu::StuLuau::YieldRequest>(RbxStu::StuLuau::YieldRequest{
+                true, L, {0, L, threadRef, 0}, [nret] {
+                    return YieldResult{
+                        true, nret, {}
+                    };
+                }
+            }
+        );
+
+        this->m_yieldQueue.emplace(yieldRequest);
+    }
+
     void ExecutionEngine::YieldThread(lua_State *L,
-                                      std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield) {
+                                      std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield,
+                                      bool bRunInParallel) {
         lua_pushthread(L);
         const auto threadRef = lua_ref(L, -1);
         lua_pop(L, 1);
@@ -157,7 +181,11 @@ namespace RbxStu::StuLuau {
 
         this->m_yieldQueue.emplace(yieldRequest);
 
-        std::thread(runForYield, yieldRequest).detach();
+        if (bRunInParallel)
+            // ReSharper disable once CppNoDiscardExpression
+            std::async(std::launch::async, runForYield, yieldRequest);
+        else
+            runForYield(yieldRequest);
     }
 
     void ExecutionEngine::SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared) {
@@ -165,7 +193,12 @@ namespace RbxStu::StuLuau {
     }
 
     void ExecutionEngine::ScheduleExecute(bool bGenerateNativeCode, const std::string_view szLuauCode,
-                                          RbxStu::StuLuau::ExecutionSecurity executeWithSecurity) {
-        this->m_executeQueue.emplace(bGenerateNativeCode, szLuauCode.data(), executeWithSecurity);
+                                          RbxStu::StuLuau::ExecutionSecurity executeWithSecurity,
+                                          bool bCreateNewThread) {
+        this->m_executeQueue.emplace(bGenerateNativeCode, bCreateNewThread, szLuauCode.data(), executeWithSecurity);
+    }
+
+    std::shared_ptr<Environment::EnvironmentContext> ExecutionEngine::GetEnvironmentContext() {
+        return this->m_environmentContext;
     }
 } // RbxStu::Luau

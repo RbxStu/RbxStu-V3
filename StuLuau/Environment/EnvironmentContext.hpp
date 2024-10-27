@@ -7,6 +7,7 @@
 #include <functional>
 #include <Logger.hpp>
 #include <utility>
+#include <optional>
 #include <lstate.h>
 
 #include "Library.hpp"
@@ -23,6 +24,33 @@ namespace RbxStu::StuLuau::Environment {
         std::string scriptName;
     };
 
+    struct HookInformation {
+        Closure *original;
+    };
+
+    template<typename T, ::lua_Type U>
+    struct ReferencedLuauObject {
+        int luaRef;
+
+        std::optional<T> GetReferencedObject(lua_State *L) {
+            try {
+                lua_getref(L, luaRef);
+                if (lua_type(L, -1) != U) {
+                    lua_pop(L, 1);
+                    return {};
+                }
+
+                const auto ptr = lua_topointer(L, -1);
+                lua_pop(L, 1);
+                return reinterpret_cast<T>(const_cast<void *>(ptr));
+            } catch (const std::exception &ex) {
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::Anonymous,
+                          std::format("Invalid ref? Cxx exception: {}", ex.what()));
+                return {};
+            }
+        }
+    };
+
     class EnvironmentContext final {
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_parentEngine;
 
@@ -31,6 +59,9 @@ namespace RbxStu::StuLuau::Environment {
         std::vector<Closure *> m_unhookableClosures;
 
     public:
+        std::map<Closure *, HookInformation> m_functionHooks;
+        std::map<Closure *, ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> > m_newcclosures;
+
         explicit EnvironmentContext(
             const std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> &parentEngine) : m_parentEngine(
             parentEngine) {

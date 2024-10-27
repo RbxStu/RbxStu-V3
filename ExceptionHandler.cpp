@@ -50,7 +50,7 @@ static void *pOriginalRbxCrash{};
 
 void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crashDescription) {
     RbxStuLog(RbxStu::LogType::Error, RbxStu::RBXCRASH,
-              "-- RbxStu V3 -- RBXCRASH HAS BEEN INVOKED --");
+              "-- RbxStu V3 -- RBXCRASH [CAUSED BY ROBLOX CODE] HAS BEEN INVOKED --");
 
     if (crashType == nullptr)
         crashType = "Crash Type Not Specified";
@@ -59,12 +59,121 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
         crashDescription = "Crash Not Described";
 
     RbxStuLog(RbxStu::LogType::Error, RbxStu::RBXCRASH,
-              std::format("Crash Type: {}; Crash Description: {}; Triggering SEH for further analysis...", crashType,
+              std::format("Crash Type: {}; Crash Description: {}; Proceeding crash analysis...", crashType,
                   crashDescription));
 
-    throw std::exception(std::format("RBXCRASH->CxxEH->SEH transition. Crash Type: {}, Crash Description: {}.",
-                                     crashType,
-                                     crashDescription).c_str());
+    /*
+     *  Update this with SEH code, i love SEH!
+     */
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH,
+              "-- Obtaining callstack...");
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH,
+              "-- Walking Stack...");
+
+    const auto disassembler = RbxStu::Analysis::Disassembler::GetSingleton();
+
+    void *stack[256];
+    const auto frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
+    const auto callstack = std::vector<void *>(stack, stack + frameCount);
+
+    // auto hasFramePassed = false;
+    for (auto call: callstack) {
+        const auto functionStart = disassembler->GetFunctionStart(call);
+        std::string belongsTo = "Unknown Origin";
+
+        void *targetModuleBaseAddress = nullptr;
+        auto lookupResults = RbxStu::ExceptionHandler::LookupAddress(call);
+        if (lookupResults.has_value()) {
+            belongsTo = lookupResults.value().first;
+            targetModuleBaseAddress = lookupResults.value().second;
+        }
+
+        auto message = std::format("-> sub_{:X}() + {}, belonging to {}",
+                                   reinterpret_cast<std::intptr_t>(functionStart),
+                                   reinterpret_cast<void *>(max(
+                                       reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
+                                       ::intptr_t>(call),
+                                       reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
+                                           functionStart))),
+                                   belongsTo);
+
+        if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+                      std::format("{}; Cannot trace back to any module :(", message));
+        } else {
+#if RBXSTU_REBASE_STACKTRACE_ON_SEH
+            const auto base = 0x180000000;
+#else
+            const auto base = 0x0;
+#endif
+
+            // if (hasFramePassed) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
+                      std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(
+                          reinterpret_cast<
+                          std::uintptr_t>(call) -
+                          reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
+        }
+    }
+
+    // Analyse step.
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+              "-- Analysing the Stack Trace for common exception patterns...");
+
+    /*
+     *  Stack Overflow Analysis (Flags possibly-recursing function)
+     */
+    while (true) {
+        std::unordered_set<void *> nestedCalls{};
+        nestedCalls.reserve(frameCount / 2);
+        for (const auto call: callstack) {
+            const auto functionStart = disassembler->GetFunctionStart(call);
+            auto count = 0;
+
+            for (const auto callAgain: callstack) {
+                if (callAgain == call) {
+                    count++;
+                }
+            }
+
+            if (count > 3 && !nestedCalls.contains(call)) {
+                nestedCalls.insert(call);
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
+                          std::format(
+                              "sub_{}() + {} is present many times on the call-stack (Possibly a Recursive sub-routine)"
+                              ,
+                              functionStart, reinterpret_cast<void *>(max(
+                                  reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
+                                  ::intptr_t>(call),
+                                  reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
+                                      functionStart)))));
+            }
+        }
+        break;
+    }
+
+    /*
+     *  CALL into nullptr, cannot be traced :(
+     */
+    while (true) {
+        if (callstack.size() < 5) {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
+                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) violation?)");
+        }
+
+        break;
+    }
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
+              "-- Stack Trace analysis complete.");
+
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 RBXCRASH -- End");
+
+    MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
 }
 
 
@@ -94,7 +203,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     void *stack[256];
     const auto frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
     // +6 due to the fact that the stack trace includes NTDLL code and whatnot.
-    const auto callstack = std::vector<void *>(frameCount > 6 ? stack + 6 : stack, stack + frameCount);
+    const auto callstack = std::vector<void *>(frameCount > 7 ? stack + 7 : stack, stack + frameCount);
 
     // auto hasFramePassed = false;
     for (auto call: callstack) {
@@ -215,9 +324,12 @@ void RbxStu::ExceptionHandler::InstallHandler() {
         RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
                   "Attempted to the top level SEH, but the top level SEH was ALREADY our exception handler! Did you by mistake call RbxStu::ExceptionHandler::InstallHandler twice?");
     }
+}
 
+void RbxStu::ExceptionHandler::OverrideRBXCRASH() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
               "Attempting to hook RBXCRASH to monitor ROBLOX-sided crashes...");
+
     MH_Initialize();
 
     MH_CreateHook(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBXCRASH),

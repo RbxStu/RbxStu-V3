@@ -14,8 +14,14 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int islclosure(lua_State *L);
 
+        static int clonefunction(lua_State *L);
+
+        static int newcclosure(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;
 
-        const char *GetLibraryName() override;;
+        bool PushToGlobals() override;
+
+        const char *GetLibraryName() override;
     };
 } // RbxStu::StuLuau::Environment::UNC

@@ -41,6 +41,16 @@ namespace RbxStu::Roblox {
         return this->m_pDataModel;
     }
 
+    void DataModel::SetDataModelLock(const bool newState) const {
+        // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
+        *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x678) = newState;
+    }
+
+    bool DataModel::GetDataModelLock() const {
+        // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
+        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x678);
+    }
+
     std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromJob(void *robloxJob) {
         /*
          * Jobs always have a pointer to a fake Datamodel and that fake data model has pointer to a real Datamodel
@@ -60,6 +70,11 @@ namespace RbxStu::Roblox {
         }
 
         return std::make_shared<RbxStu::Roblox::DataModel>(nullptr);
+    }
+
+    bool DataModel::IsParallel() {
+        // find RBX::ScriptContext::validateThreadAccess, bottom dereference with a comparison to 0 in two variables is the offset you're after.
+        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x418);
     }
 
     bool DataModel::IsDataModelOpen() const {

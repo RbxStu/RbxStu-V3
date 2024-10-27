@@ -43,7 +43,7 @@ void RbxStu::Scheduling::TaskScheduler::ResetExecutionEngine(const RBX::DataMode
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
-    const RBX::DataModelType dataModelType)  {
+    const RBX::DataModelType dataModelType) {
     if (!this->m_executionEngines.contains(dataModelType)) {
         return nullptr;
     }

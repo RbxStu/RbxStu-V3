@@ -81,6 +81,9 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Scanning for ROBLOX...");
     RbxStu::Scanners::RBX::GetSingleton();
 
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Hooking RBXCRASH...");
+    RbxStu::ExceptionHandler::OverrideRBXCRASH();
+
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing TaskSchedulerOrchestrator...");
     const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
     const auto scheduler = orchestrator->GetTaskScheduler();
@@ -91,8 +94,7 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
-    /*
-        // Test exec.
+    // Test exec.
     while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) == nullptr)
         _mm_pause();
 
@@ -103,11 +105,20 @@ void Entry() {
                 print(getfenv(0))
                 print(getgenv())
                 print(getrenv())
-            )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+                print(closures.newcclosure(function() end))
+                local cPrint = closures.clonefunction(print)
+                cPrint(httpget("https://google.com"))
+                --[[ closures.newcclosure(function(arg1, arg2)
+                    cPrint("Attempting native ROBLOX (Powering Imagination:tm:) yield.");
+                    task.wait();
+                    cPrint("ok cooked");
+                    cPrint(httpget("https://google.com"))
+                    cPrint(arg1, arg2, "Hello from newcclosure")
+                    end)("hello", "bye") ]]
+            )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
         }
         Sleep(2000);
     }
-     */
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

@@ -9,12 +9,15 @@
 #include <Utilities.hpp>
 #include <Scanners/Rbx.hpp>
 
+#include "DataModel.hpp"
 #include "TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::Roblox {
     std::shared_ptr<RbxStu::Roblox::ScriptContext> ScriptContext::FromWaitingHybridScriptsJob(
         void *waitingHybridScriptsJob) {
+        ;
         if (!Utilities::IsPointerValid(
                 reinterpret_cast<void ***>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8)) ||
             !Utilities::IsPointerValid(
@@ -25,11 +28,17 @@ namespace RbxStu::Roblox {
         }
 
         return std::make_shared<RbxStu::Roblox::ScriptContext>(
-            *reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8));
+            *reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(waitingHybridScriptsJob) + 0x1F8),
+            waitingHybridScriptsJob);
     }
 
     ScriptContext::ScriptContext(void *scriptContext) {
         this->m_pScriptContext = scriptContext;
+    }
+
+    ScriptContext::ScriptContext(void *scriptContext, void *backingJob) {
+        this->m_pScriptContext = scriptContext;
+        this->m_pBackingJob = backingJob;
     }
 
     void *ScriptContext::GetRbxPointer() const {
@@ -51,7 +60,7 @@ namespace RbxStu::Roblox {
     }
 
     void ScriptContext::ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext,
-                                     const StuLuau::YieldResult &YieldResult) {
+                                     const StuLuau::YieldResult &YieldResult) const {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext,
                   std::format(
                       "Performing yield using RBX::ScriptContext::resume; Yield Information: nRet: {}; targetL: {}; successful: {}; errorMessage: {}"
@@ -67,16 +76,53 @@ namespace RbxStu::Roblox {
         const auto pointerOffset = RbxStu::Scanners::RBX::GetSingleton()->GetRbxPointerOffset(
             RbxStu::Scanners::RBX::PointerOffsets::RBX_ScriptContext_resume);
 
-        if (!pointerOffset.has_value())
+        if (!pointerOffset.has_value()) {
+            RbxStuLog(RbxStu::LogType::Error, RbxStu::Roblox_ScriptContext,
+                      "FAILED TO FIND POINTER OFFSET FOR RESUME???????????????????????");
             throw std::exception("How did you even get here? This should NOT happen, it is IMPOSSIBLE buddy.");
+        }
 
-        std::int64_t status[0x2];
+        std::int64_t status[0x2]{0, 0};
 
-        std::string errorMessage = "No error from RbxStu::StuLuau";
-        if (!YieldResult.szErrorMessage.has_value())
+        std::string errorMessage = {};
+
+        if (YieldResult.szErrorMessage.has_value())
             errorMessage = YieldResult.szErrorMessage.value();
 
-        resume(this->GetRbxPointer(), status, &resumptionContext, YieldResult.dwNumberOfReturns, YieldResult.bIsSuccess,
-               errorMessage.c_str());
+        if (!YieldResult.bIsSuccess && errorMessage.empty())
+            errorMessage = std::string("No error from RbxStu::StuLuau");
+
+        if (!YieldResult.bIsSuccess)
+            lua_pushlstring(resumptionContext->thread, errorMessage.c_str(), errorMessage.size());
+        // ROBLOX when resuming will check the stack top for the error message, we don't know why the hell they keep an argument for an error message if they won't use it, lol.
+
+        RBX::PointerOffsetEncryption<void> decryptor{
+            this->GetRbxPointer(),
+            // StuLuau::LuauSecurity::GetThreadExtraspace(resumptionContext->thread)->sharedExtraSpace->scriptContext
+            pointerOffset.value().offset
+        };
+
+        const auto lockViolationCrash = ::RbxStu::Scanners::RBX::GetSingleton()->GetFastFlag<bool *>(
+            "LockViolationScriptCrash");
+        const auto old = *lockViolationCrash;
+        *lockViolationCrash = false;
+        // Disable thread access checks for this time, the operation we are doing is safe, but ROBLOX does not trust us.
+
+        resume(decryptor.DecodePointerWithOffsetEncryption(pointerOffset.value().encryption), status,
+               &resumptionContext, YieldResult.dwNumberOfReturns, !YieldResult.bIsSuccess,
+               errorMessage.empty() ? nullptr : errorMessage.c_str());
+
+        *lockViolationCrash = old;
+
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext,
+                  std::format(
+                      "RBX::ScriptContext::resume -> status[0x0] = {}; status[0x1] = {};"
+                      , status[0], status[1]));
+
+        if (status[0] == 0) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext, "Yield resumption successful.");
+        } else if (status[0] == 2) {
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext, "coroutine is dead?");
+        }
     }
 }

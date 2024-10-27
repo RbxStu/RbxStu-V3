@@ -264,7 +264,7 @@ bool RbxStu::Scanners::RBX::IsInitialized() {
 
 std::optional<RbxStu::Scanners::RBX::PointerOffsetInformation> RbxStu::Scanners::RBX::GetRbxPointerOffset(
     const RbxStu::Scanners::RBX::PointerOffsets offset) {
-    if (this->m_pointerObfuscation.contains(offset))
+    if (!this->m_pointerObfuscation.contains(offset))
         return {};
 
     return this->m_pointerObfuscation.at(offset);

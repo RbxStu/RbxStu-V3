@@ -162,24 +162,30 @@ namespace RbxStu::StuLuau::Environment {
                           ,
                           lib->GetLibraryName()));
 
+            lua_pop(L, 1); // pop prev lua_getglobal.
+
             lua_setglobal(L, lib->GetLibraryName());
+
+            lua_pop(L, 1);
 
             if (lib->PushToGlobals()) {
                 lua_pushvalue(L, LUA_GLOBALSINDEX);
                 luaL_register(L, nullptr, envGlobals);
+                lua_pop(L, 1);
             }
         }
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Normalizing Luau Stack.");
-        lua_settop(this->m_parentEngine->GetInitializationInformation()->executorState, oldTop);
+        lua_settop(L, oldTop);
 
         RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext, "Executing Init Scripts...");
 
         for (const auto &init: this->m_initScripts) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
-                      std::format("- RbxStuV3/init/{}.luau", init));
+                      std::format("- RbxStuV3/init/{}.luau", init.scriptName));
 
-            m_parentEngine->Execute({true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
+            m_parentEngine->Execute(
+                {true, false, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
         }
     }
 } // RbxStu::StuLuau::Environment

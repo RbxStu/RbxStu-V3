@@ -15,7 +15,7 @@ namespace RbxStu::Scheduling::Jobs {
 
     bool ResumeYieldedThreadsJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
-        return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
+        return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob && !Roblox::DataModel::FromJob(job)->IsParallel();   // We do not want to resume in parallel, that is dangerous.
     }
 
     void ResumeYieldedThreadsJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,

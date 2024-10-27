@@ -35,7 +35,7 @@ namespace RbxStu::Communication {
             if (const auto executionEngine = TaskScheduler->GetExecutionEngine(receivedDatamodelType);
                 executionEngine != nullptr) {
                 executionEngine->ScheduleExecute(generateNativeCode, scriptSource,
-                                                 RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+                                                 RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
                 /*
                  *  Without this wait, it will not get scheduled,
                  *  Honestly, I have no clue why

@@ -15,17 +15,19 @@ namespace RbxStu::StuLuau {
 namespace RbxStu::Roblox {
     class ScriptContext final {
         void *m_pScriptContext;
+        void *m_pBackingJob;
 
     public:
         static std::shared_ptr<RbxStu::Roblox::ScriptContext>
         FromWaitingHybridScriptsJob(void *waitingHybridScriptsJob);
 
         explicit ScriptContext(void *scriptContext);
+        explicit ScriptContext(void *scriptContext, void*backingJob);
 
         [[nodiscard]] void *GetRbxPointer() const;
 
         lua_State *GetGlobalState();
 
-        void ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult);
+        void ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult) const;
     };
 } // RbxStu::Roblox

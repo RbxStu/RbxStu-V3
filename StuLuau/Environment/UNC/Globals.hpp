@@ -14,6 +14,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int gettenv(lua_State *L);
 
+        static int httpget(lua_State *L);
+
         ~Globals() override = default;
 
         const luaL_Reg *GetFunctionRegistry() override;

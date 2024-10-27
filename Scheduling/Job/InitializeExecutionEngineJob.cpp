@@ -129,7 +129,8 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
 
         envContext->DefineInitScript(R"(
-
+            print(getgenv())
+            print(getrenv())
 
         )", "InstanceFunctionIntialization");
 

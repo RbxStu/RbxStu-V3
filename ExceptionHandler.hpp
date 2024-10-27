@@ -18,5 +18,7 @@ namespace RbxStu {
 
     public:
         static void InstallHandler();
+
+        static void OverrideRBXCRASH();
     };
 };

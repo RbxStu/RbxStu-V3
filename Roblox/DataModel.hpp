@@ -28,7 +28,13 @@ namespace RbxStu::Roblox {
 
         [[nodiscard]] RBX::DataModel *GetRbxPointer() const;
 
+        void SetDataModelLock(bool newState) const;
+
+        bool GetDataModelLock() const;
+
         static std::shared_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
+
+        bool IsParallel();
 
         bool IsDataModelOpen() const;
 
