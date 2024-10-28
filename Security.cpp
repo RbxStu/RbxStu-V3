@@ -50,11 +50,11 @@ const char *RbxStu::Security::GetHashedMemory() const {
             std::thread([] {
                         MessageBoxA(nullptr, oxorany_converted("Bad Boy"),
                                     oxorany_converted("You were caught by Hyperion V6"),
-                                    MB_OK);
+                                    MB_OK | MB_TOPMOST);
                     })
                     .
                     detach();
-            Sleep(oxorany(5000));
+            Sleep(oxorany(1000));
 
             if (oxorany(1) == oxorany(1))
                 TerminateProcess(GetCurrentProcess(), 0);
@@ -63,7 +63,7 @@ const char *RbxStu::Security::GetHashedMemory() const {
         if (oxorany(1) == oxorany(1)) {
             if (oxorany(1) == oxorany(1)) {
                 if (oxorany(1) == oxorany(1))
-                    Sleep(oxorany(10000));
+                    Sleep(oxorany(5000));
                 else if (oxorany(1) != oxorany(1))
                     if (oxorany(1) != oxorany(1) && oxorany(1) == oxorany(1))
                         Sleep(oxorany(-1));
