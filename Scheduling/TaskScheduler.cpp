@@ -25,6 +25,7 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
         auto prev = this->m_executionEngines[dataModelType];
         auto newObj = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
         this->m_executionEngines[dataModelType].swap(newObj);
+        prev->DestroyEngine();
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
                   std::format("Execution Engine for DataModel {} Swapped.", RBX::DataModelTypeToString(dataModelType)));
     }
@@ -43,8 +44,8 @@ void RbxStu::Scheduling::TaskScheduler::ResetExecutionEngine(const RBX::DataMode
                   std::format("ExecutionEngine for DataModel {} has been reset to nullptr.", RBX::DataModelTypeToString(
                       dataModelType)));
         auto execEngine = this->m_executionEngines.at(dataModelType);
+        execEngine->DestroyEngine();
         this->m_executionEngines.erase(dataModelType);
-        execEngine.reset();
     }
 }
 

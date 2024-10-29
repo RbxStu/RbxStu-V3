@@ -43,10 +43,13 @@ namespace RbxStu::StuLuau {
         this->m_bCanUseCodeGeneration = this->m_executionEngineState->executorState->global->ecb.context == nullptr;
     }
 
-    ExecutionEngine::~ExecutionEngine() {
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Tainting engine...");
+    void ExecutionEngine::DestroyEngine() {
+        if (this->m_bIsDestroyed) return;
 
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
+                  "Tainting ExecutionEngine...");
+
+        this->m_bIsDestroyed = true;
         this->m_bIsReadyStepping = false;
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
@@ -81,7 +84,11 @@ namespace RbxStu::StuLuau {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
                   "Freeing associated EnvironmentContext");
 
-        this->m_environmentContext.reset();
+        this->m_environmentContext->DestroyContext();
+    }
+
+    ExecutionEngine::~ExecutionEngine() {
+        this->DestroyEngine();
     }
 
     std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> ExecutionEngine::

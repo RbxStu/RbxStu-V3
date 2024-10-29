@@ -58,6 +58,8 @@ namespace RbxStu::StuLuau::Environment {
         std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library> > m_libraries;
         std::vector<Closure *> m_unhookableClosures;
 
+        std::atomic_bool m_bIsDestroyed;
+
     public:
         std::map<Closure *, HookInformation> m_functionHooks;
         std::map<Closure *, ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> > m_newcclosures;
@@ -68,6 +70,8 @@ namespace RbxStu::StuLuau::Environment {
         };
 
         ~EnvironmentContext();
+
+        void DestroyContext();
 
         void DefineInitScript(const std::string &scriptSource, const std::string &scriptName);
 

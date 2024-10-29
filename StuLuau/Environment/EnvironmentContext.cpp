@@ -50,11 +50,25 @@ namespace RbxStu::StuLuau::Environment {
     }
 
     EnvironmentContext::~EnvironmentContext() {
+        this->DestroyContext();
+    }
+
+    void EnvironmentContext::DestroyContext() {
+        if (this->m_bIsDestroyed) return;
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Tainting EnvironmentContext...");
+        this->m_bIsDestroyed = true;
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing newcclosures...");
         this->m_newcclosures.clear();
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing function hooks...");
         this->m_functionHooks.clear();
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing initscript chain...");
         this->m_initScripts.clear();
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing unhookable closures...");
         this->m_unhookableClosures.clear();
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Unreferencing parent engine...");
         this->m_parentEngine = nullptr;
+
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "EnvironmentContext Destroyed!");
     }
 
     void EnvironmentContext::DefineInitScript(const std::string &scriptSource, const std::string &scriptName) {

@@ -73,10 +73,13 @@ namespace RbxStu::StuLuau {
         std::int8_t m_firstStepsCount;
         std::queue<RbxStu::StuLuau::DispatchRequest> m_synchronizedDispatch;
         lua_State *m_pDispatchThread;
+        std::atomic_bool m_bIsDestroyed;
 
     public:
         explicit ExecutionEngine(
             std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
+
+        void DestroyEngine();
 
         ~ExecutionEngine();
 
