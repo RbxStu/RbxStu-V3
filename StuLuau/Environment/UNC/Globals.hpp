@@ -20,6 +20,27 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int checkcallstack(lua_State *L);
 
+        static int getreg(lua_State *L);
+
+        static int identifyexecutor(lua_State *L);
+
+        static int lz4compress(lua_State *L);
+
+        static int lz4decompress(lua_State *L);
+
+        static int isscriptable(lua_State *L);
+
+        static int setscriptable(lua_State *L);
+
+        static int gethiddenproperty(lua_State *L);
+
+        static int sethiddenproperty(lua_State *L);
+
+        static int getfpscap(lua_State *L);
+
+        static int setfpscap(lua_State *L);
+
+
         ~Globals() override = default;
 
         const luaL_Reg *GetFunctionRegistry() override;

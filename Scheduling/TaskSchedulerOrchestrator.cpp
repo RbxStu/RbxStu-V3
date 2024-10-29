@@ -114,12 +114,6 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
     const auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
         RBX::DataModelJobVFTable **>(self)]; // VFtable.
 
-    if (!Roblox::DataModel::FromJob(self)->IsDataModelOpen()) {
-        // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-        //           "Cowardly refusing to step on a closed DataModel");
-        return jobOriginal->original(self, timeMetrics);
-    }
-
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 
     if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {

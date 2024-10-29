@@ -7,14 +7,17 @@
 #include <Logger.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
+#include "ltable.h"
 #include "lualib.h"
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/Environment/EnvironmentContext.hpp"
+#include "StuLuau/Environment/Custom/Memory.hpp"
 
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
+#include "StuLuau/Environment/UNC/WebSocket.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
@@ -24,21 +27,16 @@ namespace RbxStu::Scheduling::Jobs {
             const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
             const auto engine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
 
-            if (!dataModel->IsDataModelOpen()) {
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                          "Not stepping on a closed DataModel pointer.");
-                taskScheduler->ResetExecutionEngine(dataModel->GetDataModelType());
-                return false; // if DataModel is closed, we should not step this job.
-            }
-
-
             if (engine != nullptr) {
                 const auto engineDataModel = engine->GetInitializationInformation()->dataModel;
-
 
                 if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() && engineDataModel->
                     GetRbxPointer()
                     != dataModel->GetRbxPointer()) {
+                    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
+                              std::format("DataModel re-initialized to {} from {}", (void*)dataModel->GetRbxPointer(),
+                                  (void*)engineDataModel->GetRbxPointer()));
+
                     // DataModel has re-initialized.
                     taskScheduler->ResetExecutionEngine(dataModel->GetDataModelType());
                     return jobKind == RbxStu::Scheduling::JobKind::WaitingHybridScriptsJob;
@@ -63,15 +61,7 @@ namespace RbxStu::Scheduling::Jobs {
     void InitializeExecutionEngineJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
                                             RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
-
-        if (!dataModel->IsDataModelOpen()) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                      "Dropping Initialization on closed DataModel pointer.");
-            return; // if DataModel is closed, we should not step this job, REGARDLESS.
-        }
-
-        const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
-        const auto engine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
+        const auto engine = scheduler->GetExecutionEngine(dataModel->GetDataModelType());
 
         /*
          *  We make a few assumptions here:
@@ -103,14 +93,22 @@ namespace RbxStu::Scheduling::Jobs {
 
         luaL_sandboxthread(nL); // Sandbox to make renv != genv.
 
+        lua_newtable(nL);
+        lua_setglobal(nL, "_G");
+        lua_getglobal(nL, "_G"); // isolate shared and _G.
+        lua_setglobal(nL, "shared");
+
+        lua_pushvalue(nL, LUA_GLOBALSINDEX);
+        lua_setglobal(nL, "_ENV");
+
         const auto initData = std::make_shared<ExecutionEngineInitializationInformation>();
         initData->globalState = rL;
         initData->executorState = nL;
         initData->scriptContext = scriptContext;
         initData->dataModel = dataModel;
 
-        taskScheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
-        const auto executionEngine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
+        scheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
+        const auto executionEngine = scheduler->GetExecutionEngine(dataModel->GetDataModelType());
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
                   std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
                       DataModelTypeToString(
@@ -127,11 +125,74 @@ namespace RbxStu::Scheduling::Jobs {
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
+
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
 
         envContext->DefineInitScript(R"(
-            print(getgenv())
-            print(getrenv())
+            local newcclosure = closures.clonefunction(closures.newcclosure)
+            local getgenv = closures.clonefunction(rbxstu.getgenv)
+            local typeof = closures.clonefunction(typeof)
 
+            local function getInstanceList(idx: number)
+                if not idx then idx = 0 end
+                if idx > 30 then
+                    -- If this occurs, the DataModel is likely an EDIT or STANDALONE, which means they don't hold a map like this.
+                    return game:GetDescendants()
+                end
+
+                local part = Instance.new("Part")
+                for _, obj in rbxstu.getreg() do
+                    if typeof(obj) == "table" and rawget(obj, "__mode") == "kvs" then
+			            for idx_, inst in obj do
+				            if inst == part then
+					            part:Destroy()
+					            instanceList = obj
+                                return instanceList
+				            end
+			            end
+		            end
+                end
+                part:Destroy()
+
+                task.wait() -- Not much choice, a yield may help us find the instance list
+                return getInstanceList(idx + 1)
+            end
+
+            getgenv().getinstances = newcclosure(function()
+                local x = {}
+
+                for _, insn in getInstanceList() do
+                    if typeof(insn) == "Instance" and insn.Parent then
+                        table.insert(x, insn)
+                    end
+                end
+
+                return x
+            end)
+            getgenv().getscripts = newcclosure(function()
+                local x = {}
+                for _, insn in getInstanceList() do
+                    if typeof(insn) == "Instance" and insn:IsA("LuaSourceContainer") then
+                        table.insert(x, insn)
+                    end
+                end
+
+                return x
+            end)
+
+            getgenv().getnilinstances = newcclosure(function()
+                local x = {}
+
+                for _, insn in getInstanceList() do
+                    if typeof(insn) == "Instance" and insn.Parent then
+                        continue
+                    end
+                    table.insert(x, insn)
+                end
+
+                return x
+            end)
         )", "InstanceFunctionIntialization");
 
         envContext->PushEnviornment();

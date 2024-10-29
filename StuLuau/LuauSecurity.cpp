@@ -208,27 +208,36 @@ namespace RbxStu::StuLuau {
         return qwCapabilities;
     }
 
+    RBX::Security::Permissions LuauSecurity::GetIdentityFromExecutionSecurity(
+        const RbxStu::StuLuau::ExecutionSecurity executionSecurity) {
+        switch (executionSecurity) {
+            case RbxStu::StuLuau::ExecutionSecurity::LocalScript:
+                return RBX::Security::Permissions::LocalUserPermission;
+            case RbxStu::StuLuau::ExecutionSecurity::RobloxScript:
+                return RBX::Security::Permissions::RobloxScriptPermission;
+            case RbxStu::StuLuau::ExecutionSecurity::Plugin:
+                return RBX::Security::Permissions::PluginPermission;
+            case RbxStu::StuLuau::ExecutionSecurity::RobloxPlugin:
+                return RBX::Security::Permissions::PluginPermission;
+            case RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor:
+                return RBX::Security::Permissions::ExecutorLevelPermission;
+        }
+
+        return RBX::Security::Permissions::NotAccessiblePermission;
+    }
+
     void LuauSecurity::MarkThread(lua_State *L) {
-        GetThreadExtraspace(L)->capabilities |= 1ull << 48ull;
+        GetThreadExtraspace(L)->capabilities |= 1ull << 63ull;
     }
 
     bool LuauSecurity::IsMarkedThread(lua_State *L) {
-        return (GetThreadExtraspace(L)->capabilities & 1ull << 48ull) == 1ull << 48ull;
+        return (GetThreadExtraspace(L)->capabilities & 1ull << 63ull) != 0;
     }
 
     bool LuauSecurity::IsOurThread(lua_State *L) {
-        if (const auto extraSpace = GetThreadExtraspace(L); !extraSpace->script.expired()) {
-            // Script ptr is not expired, we can access it.
-            const auto locked = extraSpace->script.lock();
-
-            const auto isOurThread = locked.get() == nullptr || LuauSecurity::IsMarkedThread(L);
-
-            GetThreadExtraspace(L)->script.reset();
-            return isOurThread;
-        }
-
-        // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is unaccessible.
-        return LuauSecurity::IsMarkedThread(L);
+        // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is inaccessible.
+        const auto isExpired = GetThreadExtraspace(L)->script.expired();
+        return isExpired || GetThreadExtraspace(L)->script.use_count() == 0 || LuauSecurity::IsMarkedThread(L);
     }
 
     static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
@@ -252,7 +261,7 @@ namespace RbxStu::StuLuau {
          *  We modify the Luau Closures we push with their line defined to be -1.
          */
         if (!closure->isC)
-            return true;
+            return closure->l.p->linedefined == -1;
 
         /*
          *  We check if the c.f is our newcclosure stub, for other functions, we just check how close the memory address is to ROBLOXs .text section,
@@ -281,6 +290,7 @@ namespace RbxStu::StuLuau {
         const std::int64_t executorSecurity = this->ToCapabilitiesFlags(executionSecurity);
 
         extraSpace->capabilities = executorSecurity;
+        extraSpace->contextInformation.identity = this->GetIdentityFromExecutionSecurity(executionSecurity);
 
         if (markThread) this->MarkThread(L);
     }

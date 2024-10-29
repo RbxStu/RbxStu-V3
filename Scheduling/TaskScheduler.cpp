@@ -10,10 +10,13 @@
 #include "Roblox/TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
+std::recursive_mutex executionEngineMutex{};
+
 void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataModelType dataModelType,
                                                               const std::shared_ptr<
                                                                   ExecutionEngineInitializationInformation> &
                                                               initInfo) {
+    std::scoped_lock lg{executionEngineMutex};
     if (this->m_executionEngines.contains(dataModelType)) {
         // If it is the first load, then it will be false.
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
@@ -34,39 +37,32 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
 }
 
 void RbxStu::Scheduling::TaskScheduler::ResetExecutionEngine(const RBX::DataModelType dataModelType) {
+    std::scoped_lock lg{executionEngineMutex};
     if (this->m_executionEngines.contains(dataModelType)) {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
                   std::format("ExecutionEngine for DataModel {} has been reset to nullptr.", RBX::DataModelTypeToString(
                       dataModelType)));
+        auto execEngine = this->m_executionEngines.at(dataModelType);
         this->m_executionEngines.erase(dataModelType);
+        execEngine.reset();
     }
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
     const RBX::DataModelType dataModelType) {
+    std::scoped_lock lg{executionEngineMutex};
     if (!this->m_executionEngines.contains(dataModelType)) {
         return nullptr;
     }
 
     auto currentEngine = this->m_executionEngines.at(dataModelType);
 
-    if (currentEngine == nullptr || currentEngine->GetInitializationInformation() == nullptr || !currentEngine->
-        GetInitializationInformation()->dataModel->IsDataModelOpen() || !currentEngine->
-        GetInitializationInformation()->dataModel->CheckPointer()) {
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
-                  std::format(
-                      "DataModel is closed for Execution Engine {}, it's pointer is invalid or it has been swapped whilst requesting information. Resetting for next call"
-                      , RBX::DataModelTypeToString(
-                          dataModelType)));
-        this->ResetExecutionEngine(dataModelType);
-        return nullptr;
-    }
-
     return currentEngine;
 }
 
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
     lua_State *L) const {
+    std::scoped_lock lg{executionEngineMutex};
     for (const auto &engine: this->m_executionEngines | std::views::values) {
         if (lua_mainthread(engine->GetInitializationInformation()->globalState) == lua_mainthread(L))
             return engine;
@@ -89,13 +85,16 @@ std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskS
 
 void RbxStu::Scheduling::TaskScheduler::Step(const RbxStu::Scheduling::JobKind jobType, void *robloxJob,
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
-    if (!Roblox::DataModel::FromJob(robloxJob)->IsDataModelOpen())
-        return; // TaskScheduler should not step on DataModel's which have been closed.
+    auto dataModel = Roblox::DataModel::FromJob(robloxJob);
+
+    // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+    //           std::format("Job for {} is running! DataModel: {} & IsOpen: {}", RBX::DataModelTypeToString(dataModel->
+    //               GetDataModelType
+    //               ()), (void*)dataModel->GetRbxPointer(), dataModel->IsDataModelOpen()));
 
     for (const auto &job: this->m_jobList) {
         // Step all jobs that wish to run.
-        if (job->ShouldStep(jobType, robloxJob, jobStats)) {
+        if (job->ShouldStep(jobType, robloxJob, jobStats))
             job->Step(robloxJob, jobStats, this);
-        }
     }
 }

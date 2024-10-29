@@ -191,7 +191,7 @@ namespace RbxStu::StuLuau::Environment {
                       std::format("- RbxStuV3/init/{}.luau", init.scriptName));
 
             m_parentEngine->Execute(
-                {true, false, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
+                {true, true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
         }
     }
 } // RbxStu::StuLuau::Environment

@@ -23,8 +23,10 @@
 #include "Security.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
+#include "Scheduling/Job/DataModelWatcherJob.hpp"
 #include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
+#include "Scheduling/Job/SynchronizedDispatchJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
 void Entry() {
@@ -89,23 +91,27 @@ void Entry() {
     const auto scheduler = orchestrator->GetTaskScheduler();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::InitializeExecutionEngineJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecuteScriptJob>();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::SynchronizedDispatchJob>();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::DataModelWatcherJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ResumeYieldedThreadsJob>();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
     // Test exec.
-    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) == nullptr)
+    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
         _mm_pause();
 
+    auto execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
     while (true) {
-        Sleep(200);
-        if (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit) != nullptr) {
-            scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_Edit)->ScheduleExecute(false, R"(
-
+        if (execEngine != nullptr) {
+            execEngine->ScheduleExecute(false, R"(
+                closures.loadstring(httpget("https://gist.githubusercontent.com/SecondNewtonLaw/f1514b759d27bfe5656157ead201b618/raw/026a65b6ea0c88dcb3e097b26f81731da0fc33ac/UNCheckEnv.lua"), "UNC_CheckEnv")()
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
+        } else {
+            execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
         }
-        Sleep(1000);
+        Sleep(12000);
     }
 }
 

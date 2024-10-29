@@ -14,13 +14,21 @@
 #include <Dependencies/HttpStatus.hpp>
 
 #include <cpr/cpr.h>
+#include <lz4.h>
+#include <Scanners/Rbx.hpp>
 
+#include "lmem.h"
 #include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Globals::getgenv(lua_State *L) {
         const auto mainState = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
                 GetExecutionEngine(L)->GetInitializationInformation()->executorState;
+
+        if (mainState == L) {
+            lua_pushvalue(L, LUA_GLOBALSINDEX); // We are parent thread.
+            return 1;
+        }
 
         if (!mainState->isactive)
             luaC_threadbarrier(mainState);
@@ -133,6 +141,165 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Globals::getreg(lua_State *L) {
+        lua_pushvalue(L, LUA_REGISTRYINDEX);
+        return 1;
+    }
+
+    int Globals::identifyexecutor(lua_State *L) {
+        lua_pushstring(L, "RbxStu");
+        lua_pushstring(L, "V3");
+        return 2;
+    }
+
+    int Globals::lz4compress(lua_State *L) {
+        luaL_checktype(L, 1, LUA_TSTRING);
+        const char *data = lua_tostring(L, 1);
+        const int iMaxCompressedSize = LZ4_compressBound(strlen(data));
+        const auto pszCompressedBuffer = new char[iMaxCompressedSize];
+        memset(pszCompressedBuffer, 0, iMaxCompressedSize);
+
+        LZ4_compress_default(data, pszCompressedBuffer, strlen(data), iMaxCompressedSize);
+        lua_pushlstring(L, pszCompressedBuffer, iMaxCompressedSize);
+        return 1;
+    }
+
+    int Globals::lz4decompress(lua_State *L) {
+        luaL_checktype(L, 1, LUA_TSTRING);
+        luaL_checktype(L, 2, LUA_TNUMBER);
+
+        const char *data = lua_tostring(L, 1);
+        const int data_size = lua_tointeger(L, 2);
+
+        auto *pszUncompressedBuffer = new char[data_size];
+
+        memset(pszUncompressedBuffer, 0, data_size);
+
+        LZ4_decompress_safe(data, pszUncompressedBuffer, strlen(data), data_size);
+        lua_pushlstring(L, pszUncompressedBuffer, data_size);
+        return 1;
+    }
+
+    int Globals::isscriptable(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+        const auto propName = std::string(luaL_checkstring(L, 2));
+
+        for (const auto instance = *static_cast<RBX::Instance **>(lua_touserdata(L, 1));
+             const auto &prop: instance->classDescriptor->propertyDescriptors.descriptors) {
+            if (prop->name == propName) {
+                lua_pushboolean(L, prop->IsScriptable());
+            }
+        }
+        if (lua_type(L, -1) != lua_Type::LUA_TBOOLEAN)
+            lua_pushnil(L);
+
+        return 1;
+    }
+
+    int Globals::setscriptable(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+        const auto propName = std::string(luaL_checkstring(L, 2));
+        const bool newScriptable = luaL_checkboolean(L, 3);
+
+        for (const auto instance = *static_cast<RBX::Instance **>(lua_touserdata(L, 1));
+             const auto &prop: instance->classDescriptor->propertyDescriptors.descriptors) {
+            if (prop->name == propName) {
+                lua_pushboolean(L, prop->IsScriptable());
+                prop->SetScriptable(newScriptable);
+            }
+        }
+        if (lua_gettop(L) == 3)
+            luaL_argerror(L, 2,
+                      std::format("userdata<{}> does not have the property '{}'.",
+                          Utilities::getInstanceType(L, 1).second, propName)
+                      .c_str());
+
+        return 1;
+    }
+
+    int Globals::gethiddenproperty(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+        const auto propName = std::string(luaL_checkstring(L, 2));
+
+        bool isPublic = false;
+        for (const auto instance = *static_cast<RBX::Instance **>(lua_touserdata(L, 1));
+             const auto &prop: instance->classDescriptor->propertyDescriptors.descriptors) {
+            if (prop->name == propName) {
+                isPublic = prop->IsPublic();
+                const auto isScriptable = prop->IsScriptable();
+                prop->SetIsPublic(true);
+                prop->SetScriptable(true);
+                lua_getfield(L, 1, propName.c_str());
+                prop->SetScriptable(isScriptable);
+                prop->SetIsPublic(isPublic);
+            }
+        }
+        if (lua_gettop(L) == 2)
+            luaL_argerror(L, 2,
+                      std::format("userdata<{}> does not have the property '{}'.",
+                          Utilities::getInstanceType(L, 1).second, propName)
+                      .c_str());
+
+        lua_pushboolean(L, !isPublic);
+        return 2;
+    }
+
+    int Globals::sethiddenproperty(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+        const auto propName = std::string(luaL_checkstring(L, 2));
+        luaL_checkany(L, 3);
+
+        bool isPublic = false;
+        for (const auto instance = *static_cast<RBX::Instance **>(lua_touserdata(L, 1));
+             const auto &prop: instance->classDescriptor->propertyDescriptors.descriptors) {
+            if (prop->name == propName) {
+                isPublic = prop->IsPublic();
+                const auto isScriptable = prop->IsScriptable();
+                prop->SetIsPublic(true);
+                prop->SetScriptable(true);
+                lua_setfield(L, 1, propName.c_str());
+                prop->SetScriptable(isScriptable);
+                prop->SetIsPublic(isPublic);
+            }
+        }
+        if (lua_gettop(L) == 3) // lua_setfield will pop the new value of the property.
+            luaL_argerror(L, 2,
+                      std::format("userdata<{}> does not have the property '{}'.",
+                          Utilities::getInstanceType(L, 1).second, propName)
+                      .c_str());
+
+        lua_pushboolean(L, !isPublic);
+        return 1;
+    }
+
+    int Globals::getfpscap(lua_State *L) {
+        const auto fflag = Scanners::RBX::GetSingleton()->GetFastFlag<std::int32_t *>("TaskSchedulerTargetFps");
+
+        if (nullptr == fflag)
+            luaL_error(L, "cannot getfpscap: could not find TaskSchedulerTargetFps during analysis stage.");
+
+        lua_pushinteger(L, *fflag);
+        return 1;
+    }
+
+    int Globals::setfpscap(lua_State *L) {
+        luaL_checkinteger(L, 1);
+
+        auto newFps = luaL_optinteger(L, 1, 60);
+
+        if (newFps <= 0)
+            newFps = 1000;
+
+        const auto fflag = Scanners::RBX::GetSingleton()->GetFastFlag<std::int32_t *>("TaskSchedulerTargetFps");
+
+        if (nullptr == fflag)
+            luaL_error(L, "cannot setfpscap: could not find TaskSchedulerTargetFps during analysis stage.");
+
+        *fflag = newFps;
+
+        return 0;
+    }
+
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
@@ -142,6 +309,22 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             {"checkcallstack", RbxStu::StuLuau::Environment::UNC::Globals::checkcallstack},
             {"checkcaller", RbxStu::StuLuau::Environment::UNC::Globals::checkcaller},
+
+            {"getreg", RbxStu::StuLuau::Environment::UNC::Globals::getreg},
+
+            {"identifyexecutor", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
+
+            {"lz4compress", RbxStu::StuLuau::Environment::UNC::Globals::lz4compress},
+            {"lz4decompress", RbxStu::StuLuau::Environment::UNC::Globals::lz4decompress},
+
+            {"isscriptable", RbxStu::StuLuau::Environment::UNC::Globals::isscriptable},
+            {"setscriptable", RbxStu::StuLuau::Environment::UNC::Globals::setscriptable},
+
+            {"gethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::gethiddenproperty},
+            {"sethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::sethiddenproperty},
+
+            {"getfpscap", RbxStu::StuLuau::Environment::UNC::Globals::getfpscap},
+            {"setfpscap", RbxStu::StuLuau::Environment::UNC::Globals::setfpscap},
 
             {nullptr, nullptr}
         };

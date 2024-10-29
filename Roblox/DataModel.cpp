@@ -73,6 +73,8 @@ namespace RbxStu::Roblox {
     }
 
     bool DataModel::IsParallel() {
+        if (!this->CheckPointer()) return false;
+
         // find RBX::ScriptContext::validateThreadAccess, bottom dereference with a comparison to 0 in two variables is the offset you're after.
         return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x418);
     }
@@ -81,12 +83,13 @@ namespace RbxStu::Roblox {
         if (!this->CheckPointer()) return false;
 
         // Check for strings mentioning a closed DataModel to update offset
-        return this->GetDataModelType() != RBX::DataModelType_Null && *reinterpret_cast<uint8_t *>(
-                   reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561) != 0;
+        return this->GetDataModelType() != RBX::DataModelType_Null && *reinterpret_cast<bool *>(
+                   reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561);
     }
 
     bool DataModel::CheckPointer() const {
-        return this->GetRbxPointer() != nullptr && Utilities::IsPointerValid(this->GetRbxPointer());
+        auto ptr = this->GetRbxPointer() != nullptr && Utilities::IsPointerValid(this->GetRbxPointer());
+        return ptr;
     }
 
     RBX::DataModelType DataModel::GetDataModelType() const {

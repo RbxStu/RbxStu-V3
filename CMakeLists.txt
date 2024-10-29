@@ -105,6 +105,15 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Globals.cpp
         StuLuau/Environment/UNC/Globals.hpp
 
+        StuLuau/Environment/Custom/Memory.cpp
+        StuLuau/Environment/Custom/Memory.hpp
+        StuLuau/Environment/UNC/WebSocket.cpp
+        StuLuau/Environment/UNC/WebSocket.hpp
+        Scheduling/Job/SynchronizedDispatchJob.cpp
+        Scheduling/Job/SynchronizedDispatchJob.hpp
+        Scheduling/Job/DataModelWatcherJob.cpp
+        Scheduling/Job/DataModelWatcherJob.hpp
+
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")

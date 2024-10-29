@@ -90,19 +90,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         lua_insert(L, 1);
 
-        const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
-            RbxStuOffsets::GetSingleton()->
-            GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
+        // const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
+        //     RbxStuOffsets::GetSingleton()->
+        //     GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
 
-        lua_pushcclosure(L, task_defer, nullptr, 0);
-        lua_insert(L, 1);
+        // lua_pushcclosure(L, task_defer, nullptr, 0);
+        // lua_insert(L, 1);
 
-        const auto status = static_cast<lua_Status>(lua_pcall(L, nargs + 1 /* func is an arg for defer */, LUA_MULTRET,
+        L->baseCcalls++;
+
+        const auto status = static_cast<lua_Status>(lua_pcall(L, nargs, LUA_MULTRET,
                                                               0));
 
-        const auto nL = lua_tothread(L, -1);
-        nL->namecall = L->namecall; // Preserve namecall
+        L->baseCcalls--;
 
+        // const auto nL = lua_tothread(L, -1);
+        // nL->namecall = L->namecall; // Preserve namecall
+
+        /*
         executionEngine->YieldThread(L, [nL, L](const std::shared_ptr<YieldRequest> &yieldContext) {
             while (nL->isactive || (nL->status == LUA_YIELD)) {
                 _mm_pause();
@@ -131,6 +136,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }, false);
 
         return lua_yield(L, 0);
+        */
+
+        if (status != LUA_OK && status != LUA_YIELD) {
+            const auto errorString = lua_tostring(L, -1);
+            if (strcmp(errorString, "attempt to yield across metamethod/C-call boundary") == 0 || strcmp(
+                    errorString, "thread is not yieldable") == 0)
+                return lua_yield(L, 0);
+        }
+
+        if (status != LUA_OK) {
+            const auto errorString = lua_tostring(L, -1);
+            const auto realError = Utilities::GetSingleton()->FromLuaErrorMessageToCErrorMessage(errorString);
+
+            lua_pushstring(L, realError.c_str());
+            lua_error(L);
+        }
+
+        return lua_gettop(L);
+
+        return lua_gettop(L);
     }
 
     int Closures::newcclosure(lua_State *L) {
@@ -185,6 +210,25 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Closures::loadstring(lua_State *L) {
+        const auto luauCode = luaL_checkstring(L, 1);
+        const auto chunkName = luaL_optstring(L, 2, "=loadstring");
+        constexpr auto compileOpts = Luau::CompileOptions{1, 2};
+        const auto bytecode = Luau::compile(luauCode, compileOpts);
+
+        if (luau_load(L, chunkName, bytecode.c_str(), bytecode.size(), 0) != lua_Status::LUA_OK) {
+            lua_pushnil(L);
+            lua_pushvalue(L, -2);
+            return 2;
+        }
+
+        LuauSecurity::GetSingleton()->ElevateClosure(
+            lua_toclosure(L, -1), RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+
+        lua_setsafeenv(L, LUA_GLOBALSINDEX, false); // env is not safe anymore.
+        return 1;
+    }
+
     const luaL_Reg *Closures::GetFunctionRegistry() {
         static luaL_Reg closuresLib[] = {
             {"isourclosure", RbxStu::StuLuau::Environment::UNC::Closures::isourclosure},
@@ -194,6 +238,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             {"clonefunction", RbxStu::StuLuau::Environment::UNC::Closures::clonefunction},
 
+            {"loadstring", RbxStu::StuLuau::Environment::UNC::Closures::loadstring},
             {"newcclosure", RbxStu::StuLuau::Environment::UNC::Closures::newcclosure},
             {"newlclosure", RbxStu::StuLuau::Environment::UNC::Closures::newlclosure},
             {nullptr, nullptr},
@@ -201,7 +246,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return closuresLib;
     }
 
-    bool Closures::PushToGlobals() { return false; }
+    bool Closures::PushToGlobals() { return true; }
 
     const char *Closures::GetLibraryName() {
         return "closures";

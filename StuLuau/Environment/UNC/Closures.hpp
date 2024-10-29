@@ -24,6 +24,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int isourclosure(lua_State *L);
 
+        static int loadstring(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;
 
         bool PushToGlobals() override;

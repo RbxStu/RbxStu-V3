@@ -84,6 +84,9 @@ namespace RbxStu {
     DefineSectionName(Analysis_XrefSearcher, "RbxStuV3::Analysis::XrefSearcher");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
 
+    DefineSectionName(Scheduling_Jobs_DataModelWatcherJob,
+                      "RbxStuV3::Scheduling::Jobs::DataModelWatcherJob");
+
     DefineSectionName(Scheduling_Jobs_InitializeExecutionEngineJob,
                       "RbxStuV3::Scheduling::Jobs::InitializeExecutionEngineJob");
     DefineSectionName(Scheduling_Jobs_ExecuteScriptJob, "RbxStuV3::Scheduling::Jobs::ExecuteScriptJob");

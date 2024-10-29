@@ -123,6 +123,17 @@ namespace RbxStu {
             return {true, className};
         }
 
+        __forceinline static void createInstance(lua_State *L, const std::string_view className,
+                                                 const std::string_view instanceName) {
+            lua_getglobal(L, "Instance");
+            lua_getfield(L, -1, "new");
+            lua_remove(L, -2);
+            lua_pushstring(L, className.data());
+            lua_call(L, 1, 1);
+            lua_pushstring(L, instanceName.data());
+            lua_setfield(L, -2, "Name");
+        }
+
         __forceinline static void checkInstance(lua_State *L, const int index, const char *expectedClassname) {
             luaL_checktype(L, index, LUA_TUSERDATA);
 
