@@ -86,11 +86,8 @@ namespace RbxStu {
 
     DefineSectionName(Scheduling_Jobs_DataModelWatcherJob,
                       "RbxStuV3::Scheduling::Jobs::DataModelWatcherJob");
-
     DefineSectionName(Scheduling_Jobs_InitializeExecutionEngineJob,
                       "RbxStuV3::Scheduling::Jobs::InitializeExecutionEngineJob");
-    DefineSectionName(Scheduling_Jobs_ExecuteScriptJob, "RbxStuV3::Scheduling::Jobs::ExecuteScriptJob");
-    DefineSectionName(Scheduling_Jobs_ResumeYieldedThreadsJob, "RbxStuV3::Scheduling::Jobs::ResumeYieldedThreadsJob");
     DefineSectionName(Scheduling_TaskSchedulerOrchestrator, "RbxStuV3::Scheduling::TaskSchedulerOrchestrator");
     DefineSectionName(Scheduling_TaskScheduler, "RbxStuV3::Scheduling::TaskScheduler");
 

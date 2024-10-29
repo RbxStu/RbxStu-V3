@@ -255,8 +255,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
                         lua_getfield(L, -1, "Fire");
                         lua_pushvalue(L, -2);
+                        lua_remove(L, 1);
                         lua_pushlstring(L, msg.c_str(), msg.length());
                         lua_pcall(L, 2, 0, 0);
+
+                        if (lua_gettop(L) > 1)
+                            printf("%s", lua_tostring(L, -1));
                     });
 
                     break;
@@ -327,8 +331,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
             });
 
             auto result = this->m_backingSocket.connect(static_cast<int>(timeout.count()));
-            this->m_backingSocket.start();
             return result;
+        }
+
+        void CompleteConnect() {
+            this->m_backingSocket.start();
         }
 
         void DeclareDependency() const {

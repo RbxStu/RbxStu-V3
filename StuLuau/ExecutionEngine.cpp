@@ -167,25 +167,29 @@ namespace RbxStu::StuLuau {
         switch (stepType) {
             case ExecutionEngineStep::SynchronizedDispatch: {
                 if (this->m_synchronizedDispatch.empty()) break;
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Dispatching synchronized call...");
-                const auto dispatch = this->m_synchronizedDispatch.front();
-                LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread, dispatch.executionSecurity,
-                                                                true);
-                dispatch.execute(this->m_pDispatchThread);
+                while (!this->m_synchronizedDispatch.empty()) {
+                    RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Dispatching synchronized call...");
+                    const auto currentDispatch = this->m_synchronizedDispatch.front();
+                    LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread,
+                                                                    currentDispatch.executionSecurity,
+                                                                    true);
+                    currentDispatch.execute(this->m_pDispatchThread);
 
-                if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {
-                    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
-                              "Synchronized dispatch callback failed to execute successfully!");
-
-                    if (lua_type(this->m_pDispatchThread, -1) == ::lua_Type::LUA_TSTRING) {
+                    if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {
                         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
-                                  std::format( "Error string on callstack {}", lua_tostring(this->m_pDispatchThread, -1)
-                                  ));
-                    }
-                }
+                                  "Synchronized dispatch callback failed to execute successfully!");
 
-                lua_resetthread(this->m_pDispatchThread);
-                this->m_synchronizedDispatch.pop();
+                        if (lua_type(this->m_pDispatchThread, -1) == ::lua_Type::LUA_TSTRING) {
+                            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                                      std::format( "Error string on callstack {}", lua_tostring(this->m_pDispatchThread,
+                                              -1)
+                                      ));
+                        }
+                    }
+
+                    lua_resetthread(this->m_pDispatchThread);
+                    this->m_synchronizedDispatch.pop();
+                }
                 break;
             }
 
@@ -194,8 +198,6 @@ namespace RbxStu::StuLuau {
                 // dequeue the next yielding step, if it is not ready we want to reschedule (if there is no other job on the queue we want to leave it be for performance reasons)
 
                 if (this->m_yieldQueue.empty()) break; // Nothing to yield.
-
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Performing yield...");
 
                 auto frontYield = this->m_yieldQueue.front();
 
@@ -211,7 +213,6 @@ namespace RbxStu::StuLuau {
 
                 // The yield is ready, we must resume.
                 const auto completionResults = frontYield->fpCompletionCallback();
-
                 this->m_executionEngineState->scriptContext->ResumeThread(&frontYield->threadRef, completionResults);
                 this->m_yieldQueue.pop(); // Remove yield frame.
                 frontYield.reset();

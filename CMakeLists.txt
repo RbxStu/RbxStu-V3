@@ -58,8 +58,6 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/TaskScheduler.cpp
         Scheduling/TaskSchedulerOrchestrator.cpp
 
-        Scheduling/Job/ResumeYieldedThreadsJob.cpp
-
         Scheduling/Job.cpp
 
         # RbxStu V3/Scanners
@@ -92,8 +90,6 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/LuauSecurity.cpp
         StuLuau/LuauSecurity.hpp
 
-        Scheduling/Job/ExecuteScriptJob.cpp
-        Scheduling/Job/ExecuteScriptJob.hpp
         Scheduling/Job/InitializeExecutionEngineJob.cpp
         Scheduling/Job/InitializeExecutionEngineJob.hpp
         StuLuau/Environment/EnvironmentContext.cpp
@@ -109,8 +105,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/Custom/Memory.hpp
         StuLuau/Environment/UNC/WebSocket.cpp
         StuLuau/Environment/UNC/WebSocket.hpp
-        Scheduling/Job/SynchronizedDispatchJob.cpp
-        Scheduling/Job/SynchronizedDispatchJob.hpp
+        Scheduling/Job/ExecutionEngineStepJob.cpp
+        Scheduling/Job/ExecutionEngineStepJob.hpp
         Scheduling/Job/DataModelWatcherJob.cpp
         Scheduling/Job/DataModelWatcherJob.hpp
 

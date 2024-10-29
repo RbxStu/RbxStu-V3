@@ -6,7 +6,6 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Communication/PacketBase.hpp"
-#include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "ixwebsocket/IXHttpServer.h"
 #include "StuLuau/ExecutionEngine.hpp"
 

@@ -18,15 +18,13 @@
 #include <Scanners/Luau.hpp>
 #include <Scanners/Rbx.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
-#include <Scheduling/Job/ResumeYieldedThreadsJob.hpp>
+#include <Scheduling/Job/ExecutionEngineStepJob.hpp>
 
 #include "Security.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
 #include "Scheduling/Job/DataModelWatcherJob.hpp"
-#include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
-#include "Scheduling/Job/SynchronizedDispatchJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
 void Entry() {
@@ -90,10 +88,8 @@ void Entry() {
     const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton();
     const auto scheduler = orchestrator->GetTaskScheduler();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::InitializeExecutionEngineJob>();
-    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecuteScriptJob>();
-    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::SynchronizedDispatchJob>();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecutionEngineStepJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::DataModelWatcherJob>();
-    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ResumeYieldedThreadsJob>();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
@@ -133,7 +129,9 @@ void Entry() {
 		                assert(type(ws[k]) == v, "Did not return a " .. v .. " for " .. k .. " (a " .. type(ws[k]) .. ") ")
 	                end
                 end
-
+                task.wait(1)
+                print("Hello, world!")
+                task.wait(1)
                 ws:Close()
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
         } else {

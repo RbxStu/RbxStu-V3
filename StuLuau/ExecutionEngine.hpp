@@ -5,10 +5,10 @@
 #pragma once
 #include <functional>
 #include <future>
+#include <queue>
 #include <nlohmann/json.hpp>
 
 #include "Environment/EnvironmentContext.hpp"
-#include "Scheduling/Job/ExecuteScriptJob.hpp"
 
 namespace RbxStu::Scheduling {
     struct ExecutionEngineInitializationInformation;

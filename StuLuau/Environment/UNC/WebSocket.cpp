@@ -48,6 +48,7 @@ int RbxStu::StuLuau::Environment::UNC::WebSocket::connect(lua_State *L) {
                 pWebsocket->DeclareDependency();
                 return YieldResult{true, 1, {}}; // WebSocket instance is on the stack.
             };
+            pWebsocket->CompleteConnect();
             yieldRequest->bIsReady = true;
         }, true);
 

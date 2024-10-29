@@ -2,7 +2,7 @@
 // Created by Dottik on 27/10/2024.
 //
 
-#include "SynchronizedDispatchJob.hpp"
+#include "ExecutionEngineStepJob.hpp"
 
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
@@ -11,7 +11,7 @@
 #include "StuLuau/ExecutionEngine.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
-    bool SynchronizedDispatchJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
+    bool ExecutionEngineStepJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                              RBX::TaskScheduler::Job::Stats *jobStats) {
         const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
@@ -22,11 +22,11 @@ namespace RbxStu::Scheduling::Jobs {
                dataModel->GetRbxPointer();
     }
 
-    Jobs::AvailableJobs SynchronizedDispatchJob::GetJobIdentifier() {
+    Jobs::AvailableJobs ExecutionEngineStepJob::GetJobIdentifier() {
         return RbxStu::Scheduling::Jobs::AvailableJobs::SynchronizedDispatchJob;
     }
 
-    void SynchronizedDispatchJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
+    void ExecutionEngineStepJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
                                        RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
@@ -43,6 +43,14 @@ namespace RbxStu::Scheduling::Jobs {
         // DataModel is different, ExecutionEngine is out-of-date, reset required by InitializeExecutionEngineJob.
 
 
-        currentExecutionEngine->StepExecutionEngine(StuLuau::ExecutionEngineStep::SynchronizedDispatch);
+        /*
+         *  Execution Step ordering:
+         *      - Synchronized Dispatch
+         *      - Execution
+         *      - Yielding
+         */
+        currentExecutionEngine->StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep::SynchronizedDispatch);
+        currentExecutionEngine->StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep::ExecuteStep);
+        currentExecutionEngine->StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep::YieldStep);
     }
 }

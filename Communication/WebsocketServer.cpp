@@ -7,7 +7,6 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "PacketManager.hpp"
-#include "Scheduling/Job/ExecuteScriptJob.hpp"
 #include "ixwebsocket/IXWebSocketServer.h"
 
 std::shared_ptr<RbxStu::Communication::WebsocketServer> RbxStu::Communication::WebsocketServer::pInstance;

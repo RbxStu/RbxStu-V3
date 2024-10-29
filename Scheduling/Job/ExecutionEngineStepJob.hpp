@@ -7,9 +7,9 @@
 #include "Scheduling/Job.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
-    class SynchronizedDispatchJob final : public RbxStu::Scheduling::Job {
+    class ExecutionEngineStepJob final : public RbxStu::Scheduling::Job {
     public:
-        ~SynchronizedDispatchJob() override = default;
+        ~ExecutionEngineStepJob() override = default;
 
         bool ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                         RBX::TaskScheduler::Job::Stats *jobStats) override;
