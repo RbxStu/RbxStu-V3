@@ -109,6 +109,8 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/Job/ExecutionEngineStepJob.hpp
         Scheduling/Job/DataModelWatcherJob.cpp
         Scheduling/Job/DataModelWatcherJob.hpp
+        StuLuau/Interop/NativeObject.cpp
+        StuLuau/Interop/NativeObject.hpp
 
 )
 
