@@ -15,6 +15,14 @@ namespace RbxStu::Scheduling {
 }
 
 namespace RbxStu::StuLuau {
+    enum class ExecutionSecurity {
+        LocalScript,
+        RobloxScript,
+        Plugin,
+        RobloxPlugin,
+        RobloxExecutor
+    };
+
     enum class ExecutionEngineStep : std::int32_t {
         YieldStep,
         ExecuteStep,
@@ -27,15 +35,9 @@ namespace RbxStu::StuLuau {
 
     struct DispatchRequest {
         std::function<void(lua_State *L)> execute;
+        RbxStu::StuLuau::ExecutionSecurity executionSecurity;
     };
 
-    enum class ExecutionSecurity {
-        LocalScript,
-        RobloxScript,
-        Plugin,
-        RobloxPlugin,
-        RobloxExecutor
-    };
 
     struct YieldResult {
         bool bIsSuccess{};
@@ -66,7 +68,7 @@ namespace RbxStu::StuLuau {
         std::queue<RbxStu::StuLuau::ExecuteRequest> m_executeQueue;
         std::shared_ptr<Environment::EnvironmentContext> m_environmentContext;
 
-        std::vector<std::shared_ptr<AssociatedObject>> m_associatedObjects;
+        std::vector<std::shared_ptr<AssociatedObject> > m_associatedObjects;
 
         std::atomic_bool m_bIsReadyStepping;
         bool m_bCanUseCodeGeneration;

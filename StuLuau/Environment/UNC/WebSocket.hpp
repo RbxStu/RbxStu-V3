@@ -134,6 +134,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (!ppSocket->CheckLifetime())
                 luaL_argerror(L, 1, "the websocket is no longer valid.");
 
+            if (!ppSocket->IsOpen())
+                luaL_argerror(L, 1, "the websocket is not open for communication.");
+
             const auto pPayload = &(L->top - 1)->value.gc->ts;
 
             if (pPayload->len >= WEBSOCKET_MAX_PAYLOAD_SENDSIZE)
@@ -148,9 +151,37 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         void CleanUp(lua_State *L) {
-            lua_unref(L, this->m_dwOnMessageEventRef);
-            lua_unref(L, this->m_dwOnCloseEventRef);
+            if (this->m_backingSocket.getReadyState() != ix::ReadyState::Closed) {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Closing WebSocket...");
+                this->m_backingSocket.close(ix::WebSocketCloseConstants::kNormalClosureCode,
+                                            ix::WebSocketCloseConstants::kNormalClosureMessage);
+            }
+            // nullptr == L => ~WebSocketInstance is our caller.
+            if (L != nullptr) {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Signaling Luau OnClose...");
+
+                lua_getref(L, this->m_dwOnCloseEventRef);
+                if (lua_type(L, -1) == LUA_TNIL) {
+                    RbxStuLog(RbxStu::LogType::Warning, RbxStu::Anonymous,
+                              "WARNING! Failed to notify of message event to Luau! The reference to OnMessage was lost?");
+                    return;
+                }
+
+                lua_getfield(L, -1, "Fire");
+                lua_pushvalue(L, -2);
+                lua_pcall(L, 1, 0, 0);
+
+                lua_unref(L, this->m_dwOnMessageEventRef);
+                this->m_dwOnMessageEventRef = LUA_REFNIL;
+                lua_unref(L, this->m_dwOnCloseEventRef);
+                this->m_dwOnCloseEventRef = LUA_REFNIL;
+            }
+
             this->m_bIsUsable = false;
+        };
+
+        bool IsOpen() {
+            return this->CheckLifetime() && this->m_backingSocket.getReadyState() == ix::ReadyState::Open;
         };
 
         static int _Close(lua_State *L) {
@@ -161,10 +192,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (!ppSocket->CheckLifetime())
                 luaL_argerror(L, 1, "the websocket is no longer valid.");
 
-            if (ppSocket->m_backingSocket.getReadyState() != ix::ReadyState::Open)
+            if (!ppSocket->IsOpen())
                 luaL_argerror(L, 1, "the websocket is not open for communication.");
 
-            ppSocket->m_backingSocket.close();
             ppSocket->CleanUp(L);
 
             return 0;
@@ -175,11 +205,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             const auto ppSocket = *static_cast<WebSocketInstance **>(lua_touserdata(L, 1));
 
-
             if (!ppSocket->CheckLifetime())
                 luaL_argerror(L, 1, "the websocket is no longer valid.");
 
             lua_getref(L, ppSocket->m_dwOnMessageEventRef);
+            lua_getfield(L, -1, "Event");
             return 1;
         }
 
@@ -192,12 +222,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 luaL_argerror(L, 1, "the websocket is no longer valid.");
 
             lua_getref(L, ppSocket->m_dwOnCloseEventRef);
+            lua_getfield(L, -1, "Event");
             return 1;
         }
 
         void OnMessageReceived(const ix::WebSocketMessagePtr &message) {
-            const auto msg = std::make_shared<ix::WebSocketMessage>(
-                *const_cast<ix::WebSocketMessagePtr &>(message));
+            auto msg = std::string(message->str.begin(), message->str.end());
             switch (message->type) {
                 case ix::WebSocketMessageType::Message:
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
@@ -210,7 +240,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
                                       , message->str.size(), WEBSOCKET_MAX_PAYLOAD_RECVSIZE));
                         return;
                     }
-                    this->m_ParentExecutionEngine->DispatchSynchronized([this,msg](lua_State *L) {
+
+
+                    this->m_ParentExecutionEngine->DispatchSynchronized([this, msg](lua_State *L) {
                         lua_getref(L, this->m_dwOnMessageEventRef);
                         if (lua_type(L, -1) == LUA_TNIL) {
                             RbxStuLog(RbxStu::LogType::Warning, RbxStu::Anonymous,
@@ -218,9 +250,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
                             return;
                         }
 
+                        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                                  std::format( "WebSocket message received! Msg: '{}'", msg));
+
                         lua_getfield(L, -1, "Fire");
-                        lua_pushlstring(L, msg->str.c_str(), msg->str.length());
-                        lua_pcall(L, 1, 0, 0);
+                        lua_pushvalue(L, -2);
+                        lua_pushlstring(L, msg.c_str(), msg.length());
+                        lua_pcall(L, 2, 0, 0);
                     });
 
                     break;
@@ -238,7 +274,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                         }
 
                         lua_getfield(L, -1, "Fire");
-                        lua_pcall(L, 0, 0, 0);
+                        lua_pushvalue(L, -2);
+                        lua_pcall(L, 1, 0, 0);
                     });
                     break;
                 case ix::WebSocketMessageType::Error:
@@ -254,11 +291,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     public:
         ~WebSocketInstance() {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Closing leftover WebSocket connection...");
-
-            if (this->m_backingSocket.getReadyState() == ix::ReadyState::Open)
-                this->m_backingSocket.close(ix::WebSocketCloseConstants::kNormalClosureCode,
-                                            ix::WebSocketCloseConstants::kNormalClosureMessage);
+            this->CleanUp(nullptr);
         }
 
         explicit WebSocketInstance(lua_State *parentState) {
@@ -293,7 +326,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 return this->OnMessageReceived(msg);
             });
 
-            return this->m_backingSocket.connect(static_cast<int>(timeout.count()));
+            auto result = this->m_backingSocket.connect(static_cast<int>(timeout.count()));
+            this->m_backingSocket.start();
+            return result;
         }
 
         void DeclareDependency() const {

@@ -168,8 +168,22 @@ namespace RbxStu::StuLuau {
             case ExecutionEngineStep::SynchronizedDispatch: {
                 if (this->m_synchronizedDispatch.empty()) break;
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Dispatching synchronized call...");
-                const auto [callback] = this->m_synchronizedDispatch.front();
-                callback(this->m_pDispatchThread);
+                const auto dispatch = this->m_synchronizedDispatch.front();
+                LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread, dispatch.executionSecurity,
+                                                                true);
+                dispatch.execute(this->m_pDispatchThread);
+
+                if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {
+                    RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                              "Synchronized dispatch callback failed to execute successfully!");
+
+                    if (lua_type(this->m_pDispatchThread, -1) == ::lua_Type::LUA_TSTRING) {
+                        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                                  std::format( "Error string on callstack {}", lua_tostring(this->m_pDispatchThread, -1)
+                                  ));
+                    }
+                }
+
                 lua_resetthread(this->m_pDispatchThread);
                 this->m_synchronizedDispatch.pop();
                 break;

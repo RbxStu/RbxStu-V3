@@ -106,7 +106,35 @@ void Entry() {
     while (true) {
         if (execEngine != nullptr) {
             execEngine->ScheduleExecute(false, R"(
-                closures.loadstring(httpget("https://gist.githubusercontent.com/SecondNewtonLaw/f1514b759d27bfe5656157ead201b618/raw/026a65b6ea0c88dcb3e097b26f81731da0fc33ac/UNCheckEnv.lua"), "UNC_CheckEnv")()
+                local types = {
+	                Send = "function",
+	                Close = "function",
+	                OnMessage = { "table", "userdata" },
+	                OnClose = { "table", "userdata" },
+                }
+                local ws = WebSocket.connect("ws://echo.websocket.events")
+                ws.OnMessage:Connect(function(...)
+	                print(...)
+                end)
+
+                ws.OnClose:Connect(function()
+	                print("WebSocket is being closed.")
+                end)
+
+                assert(type(ws) == "table" or type(ws) == "userdata", "Did not return a table or userdata")
+
+                for k, v in pairs(types) do
+	                if type(v) == "table" then
+		                assert(
+			                table.find(v, type(ws[k])),
+			                "Did not return a " .. table.concat(v, ", ") .. " for " .. k .. " (a " .. type(ws[k]) .. ") "
+		                )
+	                else
+		                assert(type(ws[k]) == v, "Did not return a " .. v .. " for " .. k .. " (a " .. type(ws[k]) .. ") ")
+	                end
+                end
+
+                ws:Close()
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
         } else {
             execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
