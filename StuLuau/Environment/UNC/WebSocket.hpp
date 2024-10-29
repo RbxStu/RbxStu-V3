@@ -196,9 +196,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         void OnMessageReceived(const ix::WebSocketMessagePtr &message) {
-            // TODO: FIX YOU FUCKING IDIOT YOU LEFT IT BROKEN
-            // - to dottik from dottik.
-
             const auto msg = std::make_shared<ix::WebSocketMessage>(
                 *const_cast<ix::WebSocketMessagePtr &>(message));
             switch (message->type) {
