@@ -41,6 +41,7 @@ s_CapabilityMap = {
             ::RBX::Security::CapabilityPermissions::Animation,
             ::RBX::Security::CapabilityPermissions::Avatar,
             ::RBX::Security::CapabilityPermissions::RemoteEvent,
+            ::RBX::Security::CapabilityPermissions::LegacySound,
 
             ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
         }
@@ -77,6 +78,7 @@ s_CapabilityMap = {
             ::RBX::Security::CapabilityPermissions::Animation,
             ::RBX::Security::CapabilityPermissions::Avatar,
             ::RBX::Security::CapabilityPermissions::RemoteEvent,
+            ::RBX::Security::CapabilityPermissions::LegacySound,
 
             ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
         }
@@ -108,6 +110,7 @@ s_CapabilityMap = {
             ::RBX::Security::CapabilityPermissions::Animation,
             ::RBX::Security::CapabilityPermissions::Avatar,
             ::RBX::Security::CapabilityPermissions::RemoteEvent,
+            ::RBX::Security::CapabilityPermissions::LegacySound,
 
         }
     },
@@ -140,6 +143,7 @@ s_CapabilityMap = {
             ::RBX::Security::CapabilityPermissions::Animation,
             ::RBX::Security::CapabilityPermissions::Avatar,
             ::RBX::Security::CapabilityPermissions::RemoteEvent,
+            ::RBX::Security::CapabilityPermissions::LegacySound,
 
         }
     },
@@ -178,6 +182,7 @@ s_CapabilityMap = {
             ::RBX::Security::CapabilityPermissions::Avatar,
 
             ::RBX::Security::CapabilityPermissions::RemoteEvent,
+            ::RBX::Security::CapabilityPermissions::LegacySound,
 
             ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
             ::RBX::Security::CapabilityPermissions::Assistant
@@ -200,7 +205,7 @@ namespace RbxStu::StuLuau {
     }
 
     std::int64_t LuauSecurity::ToCapabilitiesFlags(const RbxStu::StuLuau::ExecutionSecurity executionSecurity) {
-        std::int64_t qwCapabilities = 0x1FFFFFF00ull; // Base Check (Without it, we are banned from roblox APIs)
+        std::int64_t qwCapabilities = 0x3FFFFFF00ull; // Base Check (Without it, we are banned from roblox APIs)
 
         for (const auto &capabilitySet: s_CapabilityMap.at(executionSecurity))
             qwCapabilities |= static_cast<std::int64_t>(capabilitySet);
