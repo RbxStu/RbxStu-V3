@@ -4,7 +4,6 @@
 
 #include "TaskScheduler.hpp"
 #include "Job.hpp"
-#include "Job/ExecutionEngineStepJob.hpp"
 #include "Job/InitializeExecutionEngineJob.hpp"
 #include "Roblox/DataModel.hpp"
 #include "Roblox/TypeDefinitions.hpp"
@@ -23,9 +22,9 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
                   std::format("Swapping Execution Engine for DataModel {}...", RBX::DataModelTypeToString(dataModelType)
                   ));
         auto prev = this->m_executionEngines[dataModelType];
+        prev->DestroyEngine();
         auto newObj = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
         this->m_executionEngines[dataModelType].swap(newObj);
-        prev->DestroyEngine();
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
                   std::format("Execution Engine for DataModel {} Swapped.", RBX::DataModelTypeToString(dataModelType)));
     }
