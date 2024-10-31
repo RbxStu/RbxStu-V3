@@ -111,6 +111,8 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/Job/DataModelWatcherJob.hpp
         StuLuau/Interop/NativeObject.cpp
         StuLuau/Interop/NativeObject.hpp
+        StuLuau/Environment/Custom/NewGlobals.cpp
+        StuLuau/Environment/Custom/NewGlobals.hpp
 
 )
 
