@@ -14,6 +14,8 @@
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/Environment/EnvironmentContext.hpp"
 #include "StuLuau/Environment/Custom/Memory.hpp"
+#include "StuLuau/Environment/Custom/NewGlobals.hpp"
+#include "StuLuau/Environment/UNC/Cache.hpp"
 
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
@@ -123,11 +125,13 @@ namespace RbxStu::Scheduling::Jobs {
         const auto envContext = std::make_shared<StuLuau::Environment::EnvironmentContext>(executionEngine);
         executionEngine->SetEnvironmentContext(envContext);
 
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Cache>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
 
         envContext->DefineInitScript(R"(
             local newcclosure = closures.clonefunction(closures.newcclosure)
