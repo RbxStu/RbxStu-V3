@@ -14,7 +14,8 @@
 
 struct HookChainInformation {
     std::shared_ptr<RbxStu::Roblox::DataModel> executionEngineDataModel;
-    std::map<Closure *, std::list<std::function<std::int32_t(lua_State *)> > >
+    std::map<Closure *, std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
+        const RbxStu::StuLuau::Environment::HookInputState &state)> > >
     hookMap;
     std::map<Closure *, lua_CFunction> originalChain;
     lua_State *mainthread;
@@ -25,9 +26,8 @@ std::map<RBX::DataModelType, HookChainInformation> s_hookChain;
 namespace RbxStu::StuLuau::Environment {
     static int metamethod_thunk(lua_State *L) {
         const auto main = lua_mainthread(L);
+        const auto currentFunction = clvalue(L->ci->func);
 
-        const auto currentFunction = static_cast<Closure *>(L->ci->func->value.p);
-        lua_pop(L, 1);
         for (auto &[_dataModelType, hookChainInfo]: s_hookChain) {
             if (main != hookChainInfo.mainthread) {
                 continue;
@@ -36,9 +36,19 @@ namespace RbxStu::StuLuau::Environment {
             for (const auto &next: hookChainInfo.hookMap[currentFunction]) {
                 // Traverse hook chain from head to bottom, executing every call on the defined order, allows for hooks to be many, whilst simple.
                 const auto previousStackSize = lua_gettop(L);
-                next(L);
+                const auto hkInfo = next(RbxStu::StuLuau::Environment::HookInputState{
+                    L, hookChainInfo.originalChain[currentFunction]
+                });
+
                 // Reset Stack.
-                lua_settop(L, previousStackSize);
+                if (hkInfo.bContinueNextHook)
+                    lua_settop(L, previousStackSize); // Reset stack for next hook
+                else {
+                    if (hkInfo.bInvokeLuaYield)
+                        return lua_yield(L, hkInfo.returnCount);
+
+                    return hkInfo.returnCount;
+                }
             }
 
             // Call and return with original call.
@@ -90,8 +100,8 @@ namespace RbxStu::StuLuau::Environment {
 
     // It is not really const, modifies static mutable state, shut up ReSharper++ :)
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void EnvironmentContext::DefineDataModelHook(std::string_view szMetamethodName,
-                                                 std::function<std::int32_t(lua_State *)>
+    void EnvironmentContext::DefineDataModelHook(const std::string_view szMetamethodName,
+                                                 std::function<HookReturnState(const HookInputState &)>
                                                  func) {
         /*
          *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is running on.
@@ -125,6 +135,7 @@ namespace RbxStu::StuLuau::Environment {
 
         lua_getglobal(initInfo->executorState, "game");
         lua_getmetatable(initInfo->executorState, -1);
+        lua_remove(initInfo->executorState, -2);
 
         if (lua_getfield(initInfo->executorState, -1, szMetamethodName.data()) != ::lua_Type::LUA_TFUNCTION) {
             lua_pop(initInfo->executorState, 2); // pop mt + nil
@@ -134,26 +145,33 @@ namespace RbxStu::StuLuau::Environment {
         }
 
         const auto closure = lua_toclosure(initInfo->executorState, -1);
-        lua_pop(initInfo->executorState, 1); // Leave only mt on stack.
 
         if (!s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap.contains(closure)) {
             /*
              *  The hook map has not been initialized for this metamethod, this means there is no hook implace to restore the original, we must do it ourselves.
              */
 
-            if (!lua_iscfunction(initInfo->executorState, -1)) {
+            auto iscclosure = lua_iscfunction(initInfo->executorState, -1);
+
+            if (!iscclosure) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
                           "Cannot establish hook-chain: Metamethod is not a C closure, calling it will result on the call-stack becoming messed up.");
                 return;
             }
 
-
             s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[closure] = closure->c.f;
 
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
+                      "Hijacked Roblox's metamethod with a Proxy!");
             closure->c.f = metamethod_thunk;
         }
 
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
+                  "Pushed new hook to the hook chain...");
+
         s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure].emplace_back(func);
+
+        lua_pop(initInfo->executorState, 2); // Leave nothing on the lua stack.
     }
 
     void EnvironmentContext::MakeUnhookable(Closure *closure) {

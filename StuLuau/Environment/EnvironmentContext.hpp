@@ -19,6 +19,17 @@ namespace RbxStu::StuLuau {
 namespace RbxStu::StuLuau::Environment {
     class Library abstract;
 
+    struct HookInputState {
+        lua_State *L;
+        lua_CFunction original;
+    };
+
+    struct HookReturnState {
+        bool bContinueNextHook;
+        bool bInvokeLuaYield;
+        std::int32_t returnCount;
+    };
+
     struct InitScript {
         std::string scriptSource;
         std::string scriptName;
@@ -95,7 +106,7 @@ namespace RbxStu::StuLuau::Environment {
         }
 
         void DefineDataModelHook(std::string_view szMetamethodName,
-                                 std::function<std::int32_t(lua_State *)> func);
+                                 std::function<HookReturnState(const HookInputState &)> func);
 
         void MakeUnhookable(Closure *closure);
 
