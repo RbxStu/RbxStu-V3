@@ -102,37 +102,7 @@ void Entry() {
     while (true) {
         if (execEngine != nullptr) {
             execEngine->ScheduleExecute(false, R"(
-                local types = {
-	                Send = "function",
-	                Close = "function",
-	                OnMessage = { "table", "userdata" },
-	                OnClose = { "table", "userdata" },
-                }
-                local ws = WebSocket.connect("ws://echo.websocket.events")
-                ws.OnMessage:Connect(function(...)
-	                print(...)
-                end)
-
-                ws.OnClose:Connect(function()
-	                print("WebSocket is being closed.")
-                end)
-
-                assert(type(ws) == "table" or type(ws) == "userdata", "Did not return a table or userdata")
-
-                for k, v in pairs(types) do
-	                if type(v) == "table" then
-		                assert(
-			                table.find(v, type(ws[k])),
-			                "Did not return a " .. table.concat(v, ", ") .. " for " .. k .. " (a " .. type(ws[k]) .. ") "
-		                )
-	                else
-		                assert(type(ws[k]) == v, "Did not return a " .. v .. " for " .. k .. " (a " .. type(ws[k]) .. ") ")
-	                end
-                end
-                task.wait(1)
-                print("Hello, world!")
-                task.wait(1)
-                ws:Close()
+                closures.loadstring(httpget("https://gitlab.com/sens3/nebunu/-/raw/main/HummingBird8's_sUNC_yes_i_moved_to_gitlab_because_my_github_acc_got_brickedd/sUNCm0m3n7.lua"))()
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
         } else {
             execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
