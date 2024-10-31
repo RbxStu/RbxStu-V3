@@ -18,6 +18,7 @@
 #include <Scanners/Rbx.hpp>
 
 #include "lmem.h"
+#include "lstring.h"
 #include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
@@ -300,6 +301,63 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 0;
     }
 
+    int Globals::isluau(lua_State *L) {
+        lua_pushboolean(L, true);
+        return 1;
+    }
+
+    int Globals::getrawmetatable(lua_State *L) {
+        luaL_checkany(L, 1);
+
+        if (!lua_getmetatable(L, 1))
+            lua_pushnil(L);
+
+        return 1;
+    }
+
+    int Globals::setrawmetatable(lua_State *L) {
+        luaL_checkany(L, 1);
+        luaL_checktype(L, 2, ::lua_Type::LUA_TTABLE);
+
+        // There may be more elements on the lua stack, this is stupid, but if we don't we will probably cause issues.
+        if (lua_gettop(L) != 2)
+            lua_pushvalue(L, 2);
+
+        return lua_setmetatable(L, 1);
+    }
+
+    int Globals::getnamecallmethod(lua_State *L) {
+        const auto szNamecall = lua_namecallatom(L, nullptr);
+
+        if (szNamecall == nullptr)
+            lua_pushnil(L);
+        else
+            lua_pushstring(L, szNamecall);
+
+        return 1;
+    }
+
+    int Globals::setnamecallmethod(lua_State *L) {
+        if (L->namecall != nullptr)
+            L->namecall = luaS_new(L, luaL_checkstring(L, 1));
+
+        return 0;
+    }
+
+    int Globals::setreadonly(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TTABLE);
+        const bool bIsReadOnly = luaL_optboolean(L, 2, false);
+        lua_setreadonly(L, 1, bIsReadOnly);
+
+        return 0;
+    }
+
+    int Globals::isreadonly(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TTABLE);
+        lua_pushboolean(L, lua_getreadonly(L, 1));
+        return 1;
+    }
+
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
@@ -326,6 +384,17 @@ namespace RbxStu::StuLuau::Environment::UNC {
             {"getfpscap", RbxStu::StuLuau::Environment::UNC::Globals::getfpscap},
             {"setfpscap", RbxStu::StuLuau::Environment::UNC::Globals::setfpscap},
 
+            {"isluau", RbxStu::StuLuau::Environment::UNC::Globals::isluau},
+
+            {"getrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::getrawmetatable},
+            {"setrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::setrawmetatable},
+
+            {"getnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::getnamecallmethod},
+            {"setnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::setnamecallmethod},
+
+            {"setreadonly", RbxStu::StuLuau::Environment::UNC::Globals::setreadonly},
+            {"isreadonly", RbxStu::StuLuau::Environment::UNC::Globals::isreadonly},
+
             {nullptr, nullptr}
         };
 
@@ -334,5 +403,5 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     bool Globals::PushToGlobals() { return true; }
 
-    const char *Globals::GetLibraryName() { return "rbxstu"; }
+    const char *Globals::GetLibraryName() { return "uncrbxstu"; }
 }

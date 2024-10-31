@@ -40,6 +40,20 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int setfpscap(lua_State *L);
 
+        static int isluau(lua_State *L);
+
+        static int getrawmetatable(lua_State *L);
+
+        static int setrawmetatable(lua_State *L);
+
+        static int getnamecallmethod(lua_State *L);
+
+        static int setnamecallmethod(lua_State *L);
+
+        static int setreadonly(lua_State *L);
+
+        static int isreadonly(lua_State *L);
+
 
         ~Globals() override = default;
 

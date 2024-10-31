@@ -131,7 +131,7 @@ namespace RbxStu::Scheduling::Jobs {
 
         envContext->DefineInitScript(R"(
             local newcclosure = closures.clonefunction(closures.newcclosure)
-            local getgenv = closures.clonefunction(rbxstu.getgenv)
+            local getgenv = closures.clonefunction(uncrbxstu.getgenv)
             local typeof = closures.clonefunction(typeof)
 
             local function getInstanceList(idx: number)
@@ -142,7 +142,7 @@ namespace RbxStu::Scheduling::Jobs {
                 end
 
                 local part = Instance.new("Part")
-                for _, obj in rbxstu.getreg() do
+                for _, obj in uncrbxstu.getreg() do
                     if typeof(obj) == "table" and rawget(obj, "__mode") == "kvs" then
 			            for idx_, inst in obj do
 				            if inst == part then
