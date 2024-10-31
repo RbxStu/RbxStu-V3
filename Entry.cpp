@@ -107,7 +107,7 @@ void Entry() {
         } else {
             execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
         }
-        Sleep(12000);
+        Sleep(24000);
     }
 }
 
