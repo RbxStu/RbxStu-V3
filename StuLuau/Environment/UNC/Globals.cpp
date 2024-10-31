@@ -358,8 +358,199 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Globals::cloneref(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+
+        const auto userdata = lua_touserdata(L, 1);
+        const auto rawUserdata = *static_cast<void **>(userdata);
+
+        const auto rbxPushInstance = RbxStuOffsets::GetSingleton()->GetOffset(
+            RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+
+        if (rbxPushInstance == nullptr) {
+            RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
+                      "Cannot perform cloneref: Failed to find RBX::Instance::pushInstance, a stub will be in place.");
+            lua_pushvalue(L, 1);
+            return 1;
+        }
+
+        lua_pushlightuserdata(L, rbxPushInstance);
+
+        lua_rawget(L, LUA_REGISTRYINDEX);
+
+        lua_pushlightuserdata(L, rawUserdata);
+        lua_rawget(L, -2);
+
+        lua_pushlightuserdata(L, rawUserdata);
+        lua_pushnil(L);
+        lua_rawset(L, -4);
+
+        reinterpret_cast<r_RBX_Instance_pushInstance>(rbxPushInstance)(L,
+                                                                       userdata);
+        lua_pushlightuserdata(L, rawUserdata);
+        lua_pushvalue(L, -3);
+        lua_rawset(L, -5);
+        return 1;
+    }
+
+    int Globals::compareinstances(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ANY");
+        Utilities::checkInstance(L, 2, "ANY");
+
+        lua_pushboolean(L, *static_cast<const std::uintptr_t *>(lua_touserdata(L, 1)) ==
+                           *static_cast<const std::uintptr_t *>(lua_touserdata(L, 2)));
+
+        return 1;
+    }
+
+    int Globals::getcallingscript(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
+        try {
+            auto nL = lua_tothread(L, 1);
+
+            if (!nL->isactive)
+                luaC_threadbarrier(nL);
+
+            lua_getglobal(nL, "script");
+
+            lua_xmove(nL, L, 1);
+        } catch (...) {
+            lua_pushnil(L);
+        }
+
+        return 1;
+    }
+
+    int Globals::gethui(lua_State *L) {
+        // Equivalent to cloneref(cloneref(cloneref(game):GetService("CoreGui")).RobloxGui)
+        // Excessive clonereffing, I made the cloneref, i will use all of it!
+        // - Dottik
+        lua_getglobal(L, "cloneref");
+        lua_getglobal(L, "game");
+        lua_call(L, 1, 1);
+        lua_getfield(L, -1, "GetService");
+        lua_pushvalue(L, -2);
+        lua_pushstring(L, "CoreGui");
+        lua_call(L, 2, 1);
+        lua_remove(L, 1); // CoreGui is alone on the stack.
+        lua_getglobal(L, "cloneref");
+        lua_pushvalue(L, 1);
+        lua_call(L, 1, 1);
+        lua_getfield(L, -1, "RobloxGui");
+        lua_getglobal(L, "cloneref");
+        lua_pushvalue(L, -2);
+        lua_call(L, 1, 1);
+        return 1;
+    }
+
+    int Globals::isnetworkowner(lua_State *L) {
+        Utilities::checkInstance(L, 1, "BasePart");
+        auto part = *static_cast<void **>(lua_touserdata(L, 1));
+
+        /*
+         *  Quick rundown due to the hack around this function.
+         *  We would normally access remoteId/peerId, but due to the fact that we are WE, we don't have that
+         *  privilage, instead we must get the peerId of a part we ACTUALLY own, this wouldn't be that complicated.
+         *
+         *  But what is to be noted is the following:
+         *      - On Local clients, RemoteId/PeerId is unreachable, PeerId == -1    (uint32_t max [underflowing]).
+         *      - Anchored/Bound by a physics constraint/welded, PeerId == 2        (After trial and error)
+         *
+         *  Thus, the hack around this behaviour is to create a part ourselves. Parts created by ourselves that are
+         *  parented to workspace are automatically simulated by our player, this means we really don't need
+         *  anything else, and we can obtain our remote PeerId that way. This COULD be hardcoded, but then team
+         *  tests would not work as expected. (PeerId appears to start at 4). We _cannot_ rely on HumanoidRootPart,
+         *  as it can be owned by the server if the game developer desiers it.
+         */
+
+        auto partSystemAddress = RBX::SystemAddress{0};
+        auto localPlayerAddress = RBX::SystemAddress{0};
+        reinterpret_cast<::r_RBX_BasePart_getNetworkOwner>(
+            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(
+            part, &partSystemAddress);
+
+        lua_getglobal(L, "Instance");
+        lua_getfield(L, -1, "new");
+        lua_pushstring(L, "Part");
+        lua_getglobal(L, "workspace");
+        lua_pcall(L, 2, 1, 0);
+        reinterpret_cast<::r_RBX_BasePart_getNetworkOwner>(
+            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(
+            *static_cast<void **>(lua_touserdata(L, -1)), &localPlayerAddress);
+
+        lua_getfield(L, -1, "Destroy");
+        lua_pushvalue(L, -2);
+        lua_pcall(L, 1, 0, 0);
+        lua_pop(L, 1);
+
+        lua_pushboolean(L, partSystemAddress.remoteId.peerId == 2 ||
+                           partSystemAddress.remoteId.peerId == localPlayerAddress.remoteId.peerId);
+        return 1;
+    }
+
+    int Globals::firetouchinterest(lua_State *L) {
+        luaL_checktype(L, 1, lua_Type::LUA_TUSERDATA);
+        luaL_checktype(L, 2, lua_Type::LUA_TUSERDATA);
+        luaL_checktype(L, 3, lua_Type::LUA_TNUMBER);
+
+        Utilities::checkInstance(L, 1, "BasePart");
+        Utilities::checkInstance(L, 2, "BasePart");
+        const auto touchType = lua_tointeger(L, 3);
+
+        if (touchType != 0 && touchType != 1)
+            luaL_argerror(L, 3, "touch type must be either Touch (Integer<0>) or TouchEnded (Integer<1>).");
+
+        // -- workspace ref not required
+        // Utilities::GetService(L, "Workspace");
+        // auto world = reinterpret_cast<void *>(lua_touserdata(L, -1));
+
+        const auto fireTouchSignals =
+                reinterpret_cast<::r_RBX_BasePart_fireTouchSignals>(
+                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals));
+
+        if (fireTouchSignals == nullptr)
+            luaL_error(L, "cannot firetouchinterest; RBX::BasePart::fireTouchSignals was not found during the "
+                   "scanning step! If you believe this was caused by an update, contact the developers!");
+
+        /*
+         *  Roblox touch signals are super fun.
+         *  we can just fake we are the server replicating touches, we just need to replicate the
+         *  RBX::fireTouchedRemotely function then, profit!
+         */
+
+        fireTouchSignals(*static_cast<void **>(lua_touserdata(L, 1)), static_cast<void **>(lua_touserdata(L, 2)),
+                         static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), false);
+
+        fireTouchSignals(*static_cast<void **>(lua_touserdata(L, 2)), static_cast<void **>(lua_touserdata(L, 1)),
+                         static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), false);
+
+        return 0;
+    }
+
+    int Globals::fireproximityprompt(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ProximityPrompt");
+
+        const auto proximityPrompt = *static_cast<std::uintptr_t **>(lua_touserdata(L, 1));
+        reinterpret_cast<::r_RBX_ProximityPrompt_onTriggered>(
+            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered))(
+            proximityPrompt);
+        return 0;
+    }
+
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
+            {"isnetworkowner", RbxStu::StuLuau::Environment::UNC::Globals::isnetworkowner},
+            {"fireproximityprompt", RbxStu::StuLuau::Environment::UNC::Globals::fireproximityprompt},
+            {"firetouchinterest", RbxStu::StuLuau::Environment::UNC::Globals::firetouchinterest},
+
+            {"gethui", RbxStu::StuLuau::Environment::UNC::Globals::gethui},
+
+            {"cloneref", RbxStu::StuLuau::Environment::UNC::Globals::cloneref},
+            {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
+
+            {"getcallingscript", RbxStu::StuLuau::Environment::UNC::Globals::getcallingscript},
+
+
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
             {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
             {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},

@@ -54,6 +54,20 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int isreadonly(lua_State *L);
 
+        static int cloneref(lua_State *L);
+
+        static int compareinstances(lua_State *L);
+
+        static int getcallingscript(lua_State *L);
+
+        static int gethui(lua_State *L);
+
+        static int isnetworkowner(lua_State *L);
+
+        static int firetouchinterest(lua_State *L);
+
+        static int fireproximityprompt(lua_State *L);
+
 
         ~Globals() override = default;
 
