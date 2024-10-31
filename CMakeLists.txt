@@ -113,6 +113,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Interop/NativeObject.hpp
         StuLuau/Environment/Custom/NewGlobals.cpp
         StuLuau/Environment/Custom/NewGlobals.hpp
+        StuLuau/Environment/UNC/Cache.cpp
+        StuLuau/Environment/UNC/Cache.hpp
 
 )
 
