@@ -50,6 +50,8 @@ public:
         RBX_BasePart_getNetworkOwner,
         RBX_BasePart_fireTouchSignals,
 
+        RBX_ProximityPrompt_onTriggered,
+
         RBXCRASH
     };
 

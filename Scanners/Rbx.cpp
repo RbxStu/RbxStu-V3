@@ -97,6 +97,14 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
             "? ? ? ? 48 8B F8 0F 57 C0 F3 0F 7F 45 ? 48 8B 90 ? ? ? ? 48 85 D2 74 15 8B 42 ?").value()
     },
 
+    // RBX::ProximityPrompt
+    {
+        RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered,
+        hat::parse_signature(
+            "48 89 5C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 E8 ? ? ? ? 48 8B F8 48 85 C0 0F 84 C6 02 00 ? 48 8B 50 ? 48 85 D2 0F 84 D4 02 00 ? 8B 42 ? 85 C0 0F 84 C9 02 00 ?"
+        )
+        .value()
+    },
 
     // Misc
     {
