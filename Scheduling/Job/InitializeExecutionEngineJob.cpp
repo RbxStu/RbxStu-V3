@@ -133,6 +133,42 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
 
+        envContext->DefineDataModelHook("__namecall",
+                                        [dataModel](const StuLuau::Environment::HookInputState &inCtx) ->
+                                    StuLuau::Environment::HookReturnState {
+                                            const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
+
+                                            if (currentNamecall == nullptr)
+                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+
+                                            if (strcmp(currentNamecall, "HttpGet") == 0) {
+                                                lua_getglobal(inCtx.L, "httpget");
+                                                lua_pushvalue(inCtx.L, 2);
+                                                lua_pcall(inCtx.L, 1, 1, 0);
+
+                                                return StuLuau::Environment::HookReturnState{false, true, 1};
+                                            }
+
+                                            return StuLuau::Environment::HookReturnState{true, false, 0};
+                                        });
+
+        envContext->DefineDataModelHook("__index",
+                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
+                                    StuLuau::Environment::HookReturnState {
+                                            if (lua_type(inCtx.L, 2) != ::lua_Type::LUA_TSTRING)
+                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+
+                                            auto idx = lua_tostring(inCtx.L, 2);
+
+                                            if (strcmp(idx, "HttpGet") == 0) {
+                                                lua_getglobal(inCtx.L, "httpget");
+                                                return StuLuau::Environment::HookReturnState{false, false, 1};
+                                            }
+
+                                            return StuLuau::Environment::HookReturnState{true, false, 0};
+                                        });
+
+
         envContext->DefineInitScript(R"(
             local newcclosure = closures.clonefunction(closures.newcclosure)
             local getgenv = closures.clonefunction(uncrbxstu.getgenv)
