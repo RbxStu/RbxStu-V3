@@ -12,6 +12,7 @@
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/LuauSecurity.hpp"
 #include "StuLuau/Environment/EnvironmentContext.hpp"
 #include "StuLuau/Environment/Custom/Memory.hpp"
 #include "StuLuau/Environment/Custom/NewGlobals.hpp"
@@ -133,8 +134,63 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
 
+        const static auto s_BannedServices = std::vector<std::string_view>{
+            "linkingservice",
+            "browserservice",
+            "httprbxapiservice",
+            "opencloudservice",
+            "messagebusservice",
+            "omnirecommendationsservice",
+            "captureservice",
+            "corepackages",
+            "animationfromvideocreatorservice",
+            "safetyservice",
+            "appupdateservice",
+            "ugcvalidationservice",
+            "accountservice",
+            "analyticsservice",
+            "ixpservice",
+            "commerceservice",
+            "sessionservice",
+            "studioservice",
+            "platformcloudstorageservice",
+            "startpageservice",
+            "scripteditorservice",
+            "avatareditorservice",
+            "webviewservice",
+            "commerceservice"
+        };
+
         envContext->DefineDataModelHook("__namecall",
-                                        [dataModel](const StuLuau::Environment::HookInputState &inCtx) ->
+                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
+                                    StuLuau::Environment::HookReturnState {
+                                            const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
+
+                                            if (currentNamecall == nullptr)
+                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+
+                                            const auto luauSecurity = StuLuau::LuauSecurity::GetSingleton();
+                                            const auto bIsServiceRetrieval =
+                                                    strcmp(currentNamecall, "GetService") == 0
+                                                    || strcmp(currentNamecall, "service") == 0
+                                                    || strcmp(currentNamecall, "FindService") == 0
+                                                    || strcmp(currentNamecall, "getService") == 0;
+
+                                            if (bIsServiceRetrieval && luauSecurity->IsOurThread(inCtx.L)) {
+                                                const auto target = Utilities::ToLower(lua_tostring(inCtx.L, 2));
+                                                for (const auto &service: s_BannedServices) {
+                                                    if (target == service)
+                                                        luaL_error(
+                                                        inCtx.L,
+                                                        "this service has been blocked for safety reasons");
+                                                }
+                                            }
+
+                                            return StuLuau::Environment::HookReturnState{true, false, 0};
+                                        });
+
+        envContext->DefineDataModelHook("__namecall",
+                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
                                     StuLuau::Environment::HookReturnState {
                                             const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
 
@@ -167,7 +223,6 @@ namespace RbxStu::Scheduling::Jobs {
 
                                             return StuLuau::Environment::HookReturnState{true, false, 0};
                                         });
-
 
         envContext->DefineInitScript(R"(
             local newcclosure = closures.clonefunction(closures.newcclosure)
