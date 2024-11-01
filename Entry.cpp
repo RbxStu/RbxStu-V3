@@ -104,6 +104,7 @@ void Entry() {
             execEngine->ScheduleExecute(false, R"(
                 closures.loadstring(httpget("https://gitlab.com/sens3/nebunu/-/raw/main/HummingBird8's_sUNC_yes_i_moved_to_gitlab_because_my_github_acc_got_brickedd/sUNCm0m3n7.lua"))()
             )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
+            break;
         } else {
             execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
         }
