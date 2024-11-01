@@ -231,6 +231,22 @@ namespace RbxStu::StuLuau {
         return RBX::Security::Permissions::NotAccessiblePermission;
     }
 
+    ExecutionSecurity LuauSecurity::GetExecutionSecurityFromIdentity(const int32_t identity) {
+        switch (identity) {
+            case RBX::Security::Permissions::LocalUserPermission:
+                return ExecutionSecurity::LocalScript;
+            case RBX::Security::Permissions::RobloxScriptPermission:
+                return ExecutionSecurity::RobloxScript;
+            case RBX::Security::PluginPermission:
+                return ExecutionSecurity::Plugin;
+            case RBX::Security::ExecutorLevelPermission:
+                return ExecutionSecurity::RobloxExecutor;
+            default:
+                return ExecutionSecurity::LocalScript;
+        }
+    }
+
+
 #define MARKED_BIT (1ull << 58ull)
 
     void LuauSecurity::MarkThread(lua_State *L) {
