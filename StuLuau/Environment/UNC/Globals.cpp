@@ -537,6 +537,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 0;
     }
 
+    int Globals::isrbxactive(lua_State *L) {
+        lua_pushboolean(L, GetForegroundWindow() == GetCurrentProcess());
+        return 1;
+    }
+
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
             {"isnetworkowner", RbxStu::StuLuau::Environment::UNC::Globals::isnetworkowner},
@@ -562,6 +567,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             {"getreg", RbxStu::StuLuau::Environment::UNC::Globals::getreg},
 
             {"identifyexecutor", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
+            {"getexecutorname", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
 
             {"lz4compress", RbxStu::StuLuau::Environment::UNC::Globals::lz4compress},
             {"lz4decompress", RbxStu::StuLuau::Environment::UNC::Globals::lz4decompress},
@@ -576,6 +582,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             {"setfpscap", RbxStu::StuLuau::Environment::UNC::Globals::setfpscap},
 
             {"isluau", RbxStu::StuLuau::Environment::UNC::Globals::isluau},
+            {"isrbxactive", RbxStu::StuLuau::Environment::UNC::Globals::isrbxactive},
 
             {"getrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::getrawmetatable},
             {"setrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::setrawmetatable},
