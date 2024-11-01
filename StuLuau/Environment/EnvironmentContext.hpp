@@ -120,7 +120,7 @@ namespace RbxStu::StuLuau::Environment {
             const auto library = std::make_shared<T>();
 
             for (const auto &lib: this->m_libraries) {
-                if (strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
+                if (strcmp(lib-> GetLibraryName(), library->GetLibraryName()) == 0) {
                     RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
                               std::format("Library already defined, ignoring re-definition. Affected Library: {}",
                                   library->

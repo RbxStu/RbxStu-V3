@@ -20,6 +20,7 @@
 
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
+#include "StuLuau/Environment/UNC/Scripts.hpp"
 #include "StuLuau/Environment/UNC/WebSocket.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
@@ -130,6 +131,7 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Scripts>());
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());

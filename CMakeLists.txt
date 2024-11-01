@@ -115,6 +115,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/Custom/NewGlobals.hpp
         StuLuau/Environment/UNC/Cache.cpp
         StuLuau/Environment/UNC/Cache.hpp
+        StuLuau/Environment/UNC/Scripts.cpp
+        StuLuau/Environment/UNC/Scripts.hpp
 
 )
 
