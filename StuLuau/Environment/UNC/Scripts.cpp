@@ -55,8 +55,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         static luaL_Reg slib[] = {
                 {"setidentity", Scripts::setidentity},
                 {"setthreadcontext", Scripts::setidentity},
+                {"setthreadidentity", Scripts::setidentity},
 
                 {"getidentity", Scripts::getidentity},
+                {"getthreadidentity", Scripts::getidentity},
                 {"getthreadcontext", Scripts::getidentity},
 
 

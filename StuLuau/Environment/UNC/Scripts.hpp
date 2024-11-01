@@ -7,7 +7,7 @@
 
 namespace RbxStu::StuLuau::Environment::UNC {
     class Scripts final : public RbxStu::StuLuau::Environment::Library {
-
+    public:
         static int setidentity(lua_State* L);
 
         static int getidentity(lua_State* L);
