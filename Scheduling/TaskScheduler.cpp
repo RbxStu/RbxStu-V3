@@ -21,10 +21,8 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
                   std::format("Swapping Execution Engine for DataModel {}...", RBX::DataModelTypeToString(dataModelType)
                   ));
-        auto prev = this->m_executionEngines[dataModelType];
+        const auto prev = this->m_executionEngines[dataModelType];
         prev->DestroyEngine();
-        auto newObj = std::make_shared<RbxStu::StuLuau::ExecutionEngine>(initInfo);
-        this->m_executionEngines[dataModelType].swap(newObj);
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
                   std::format("Execution Engine for DataModel {} Swapped.", RBX::DataModelTypeToString(dataModelType)));
     }
