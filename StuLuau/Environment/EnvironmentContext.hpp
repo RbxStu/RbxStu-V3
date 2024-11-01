@@ -35,17 +35,27 @@ namespace RbxStu::StuLuau::Environment {
         std::string scriptName;
     };
 
-    struct HookInformation {
-        Closure *original;
-    };
-
     template<typename T, ::lua_Type U>
     struct ReferencedLuauObject {
         int luaRef;
 
+        ReferencedLuauObject() {
+            this->luaRef = LUA_REFNIL;
+        }
+
+        explicit ReferencedLuauObject(int ref) {
+            this->luaRef = ref;
+        }
+
+        ReferencedLuauObject(lua_State *L, int idx) {
+            this->luaRef = lua_ref(L, idx);
+        }
+
         std::optional<T> GetReferencedObject(lua_State *L) {
             try {
-                lua_getref(L, luaRef);
+                if (this->luaRef <= LUA_REFNIL) return {};
+
+                lua_getref(L, this->luaRef);
                 if (lua_type(L, -1) != U) {
                     lua_pop(L, 1);
                     return {};
@@ -61,6 +71,21 @@ namespace RbxStu::StuLuau::Environment {
             }
         }
     };
+
+    enum class FunctionKind {
+        NewCClosure,
+        CClosure,
+        LuauClosure
+    };
+
+    struct HookInformation {
+        ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> original;
+        ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> hookedWith;
+
+        FunctionKind dwHookedType;
+        FunctionKind dwHookWithType;
+    };
+
 
     class EnvironmentContext final {
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_parentEngine;
@@ -81,6 +106,8 @@ namespace RbxStu::StuLuau::Environment {
         };
 
         ~EnvironmentContext();
+
+        void DefineNewDataModelMetaMethodClosure(Closure *originalMetamethod, Closure *func) const;
 
         void DestroyContext();
 
@@ -111,5 +138,9 @@ namespace RbxStu::StuLuau::Environment {
         void MakeUnhookable(Closure *closure);
 
         void PushEnviornment();
+
+        bool IsWrappedClosure(Closure *cl) const;
+
+        bool IsDataModelMetamethod(Closure * closure) const;;
     };
 } // RbxStu::StuLuau::Environment

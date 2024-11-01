@@ -11,13 +11,14 @@
 #include "Roblox/DataModel.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include <unordered_set>
 
 struct HookChainInformation {
     std::shared_ptr<RbxStu::Roblox::DataModel> executionEngineDataModel;
-    std::map<Closure *, std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
-        const RbxStu::StuLuau::Environment::HookInputState &state)> > >
+    std::map<Closure *, std::shared_ptr<std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
+        const RbxStu::StuLuau::Environment::HookInputState &state)> > > >
     hookMap;
-    std::map<Closure *, lua_CFunction> originalChain;
+    std::map<Closure *, std::shared_ptr<lua_CFunction> > originalChain;
     lua_State *mainthread;
 };
 
@@ -33,11 +34,11 @@ namespace RbxStu::StuLuau::Environment {
                 continue;
             }
 
-            for (const auto &next: hookChainInfo.hookMap[currentFunction]) {
+            for (const auto &next: *hookChainInfo.hookMap[currentFunction]) {
                 // Traverse hook chain from head to bottom, executing every call on the defined order, allows for hooks to be many, whilst simple.
                 const auto previousStackSize = lua_gettop(L);
                 const auto hkInfo = next(RbxStu::StuLuau::Environment::HookInputState{
-                    L, hookChainInfo.originalChain[currentFunction]
+                    L, *hookChainInfo.originalChain[currentFunction]
                 });
 
                 // Reset Stack.
@@ -52,15 +53,32 @@ namespace RbxStu::StuLuau::Environment {
             }
 
             // Call and return with original call.
-            return hookChainInfo.originalChain[currentFunction](L);
+            if (!hookChainInfo.originalChain.contains(currentFunction))
+                luaL_error(L,
+                       "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
+
+            return (*hookChainInfo.originalChain[currentFunction])(L);
         }
 
-        throw std::exception(
-            "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
+        luaL_error(L,
+                   "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
     }
 
     EnvironmentContext::~EnvironmentContext() {
         this->DestroyContext();
+    }
+
+    void EnvironmentContext::DefineNewDataModelMetaMethodClosure(Closure *originalMetamethod, Closure *func) const {
+        /*
+        *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is running on.
+        */
+        const auto initInfo = this->m_parentEngine->GetInitializationInformation();
+
+        s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[func] = s_hookChain[initInfo->dataModel->
+            GetDataModelType()].hookMap[originalMetamethod];
+
+        s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[func] = s_hookChain[initInfo->dataModel->
+            GetDataModelType()].originalChain[originalMetamethod];
     }
 
     void EnvironmentContext::DestroyContext() {
@@ -159,7 +177,12 @@ namespace RbxStu::StuLuau::Environment {
                 return;
             }
 
-            s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[closure] = closure->c.f;
+            s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure] = std::make_shared<std::list<
+                std::function<RbxStu::StuLuau::Environment::HookReturnState(
+                    const RbxStu::StuLuau::Environment::HookInputState &state)> > >();
+
+            s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[closure] = std::make_shared<
+                lua_CFunction>(closure->c.f);
 
             RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
                       "Hijacked Roblox's metamethod with a Proxy!");
@@ -169,7 +192,7 @@ namespace RbxStu::StuLuau::Environment {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
                   "Pushed new hook to the hook chain...");
 
-        s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure].emplace_back(func);
+        s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure]->emplace_back(func);
 
         lua_pop(initInfo->executorState, 2); // Leave nothing on the lua stack.
     }
@@ -225,5 +248,18 @@ namespace RbxStu::StuLuau::Environment {
             m_parentEngine->Execute(
                 {true, true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
         }
+    }
+
+    bool EnvironmentContext::IsWrappedClosure(Closure *cl) const {
+        return cl->isC && this->m_newcclosures.contains(cl);
+    }
+
+    bool EnvironmentContext::IsDataModelMetamethod(Closure *closure) const {
+        const auto initInfo = this->m_parentEngine->GetInitializationInformation();
+
+        if (!s_hookChain.contains(initInfo->dataModel->GetDataModelType()))
+            return false;
+
+        return s_hookChain.at(initInfo->dataModel->GetDataModelType()).originalChain.contains(closure);
     }
 } // RbxStu::StuLuau::Environment
