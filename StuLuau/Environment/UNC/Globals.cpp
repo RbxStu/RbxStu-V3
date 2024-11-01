@@ -404,16 +404,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getcallingscript(lua_State *L) {
-        luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
         try {
-            auto nL = lua_tothread(L, 1);
-
-            if (!nL->isactive)
-                luaC_threadbarrier(nL);
-
-            lua_getglobal(nL, "script");
-
-            lua_xmove(nL, L, 1);
+            lua_getglobal(L, "script");
         } catch (...) {
             lua_pushnil(L);
         }

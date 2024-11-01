@@ -231,18 +231,19 @@ namespace RbxStu::StuLuau {
         return RBX::Security::Permissions::NotAccessiblePermission;
     }
 
+#define MARKED_BIT (1ull << 58ull)
+
     void LuauSecurity::MarkThread(lua_State *L) {
-        GetThreadExtraspace(L)->capabilities |= 1ull << 63ull;
+        GetThreadExtraspace(L)->capabilities |= MARKED_BIT;
     }
 
     bool LuauSecurity::IsMarkedThread(lua_State *L) {
-        return (GetThreadExtraspace(L)->capabilities & 1ull << 63ull) != 0;
+        return (GetThreadExtraspace(L)->capabilities & MARKED_BIT) == MARKED_BIT;
     }
 
     bool LuauSecurity::IsOurThread(lua_State *L) {
         // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is inaccessible.
-        const auto isExpired = GetThreadExtraspace(L)->script.expired();
-        return isExpired || GetThreadExtraspace(L)->script.use_count() == 0 || LuauSecurity::IsMarkedThread(L);
+        return LuauSecurity::IsMarkedThread(L);
     }
 
     static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
