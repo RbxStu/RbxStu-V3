@@ -202,8 +202,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
     void *stack[256];
     const auto frameCount = RtlCaptureStackBackTrace(0, 255, stack, nullptr);
-    // +6 due to the fact that the stack trace includes NTDLL code and whatnot.
-    const auto callstack = std::vector<void *>(frameCount > 7 ? stack + 7 : stack, stack + frameCount);
+    const auto callstack = std::vector<void *>(stack, stack + frameCount);
 
     // auto hasFramePassed = false;
     for (auto call: callstack) {
