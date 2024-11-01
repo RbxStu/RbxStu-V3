@@ -12,7 +12,7 @@ std::shared_ptr<RbxStu::Utilities> RbxStu::Utilities::pInstance;
 
 void RbxStu::Utilities::Initialize() {
     this->m_luaErrorStringRegex =
-            std::regex(R"(.*"\]:(\d)*: )", std::regex::optimize | std::regex::icase);
+            std::regex(R"(.*:(\d)*: )", std::regex::optimize | std::regex::icase);
 }
 
 bool RbxStu::Utilities::IsInitialized() {
