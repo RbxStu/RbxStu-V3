@@ -201,7 +201,7 @@ namespace RbxStu::StuLuau::Environment {
         this->m_unhookableClosures.emplace_back(closure);
     }
 
-    void EnvironmentContext::PushEnviornment() {
+    void EnvironmentContext::PushEnvironment() {
         /*
          *  Note: Unbalanced Luau Stacks are bad. do NOT pop like an idiot, just save the previous top and then pop it all out, its MUCH easier
          *  like that, sudden crashes are crazy, though.

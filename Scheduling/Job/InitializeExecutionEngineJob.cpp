@@ -290,7 +290,7 @@ namespace RbxStu::Scheduling::Jobs {
             end)
         )", "InstanceFunctionIntialization");
 
-        envContext->PushEnviornment();
+        envContext->PushEnvironment();
 
         executionEngine->SetExecuteReady(true);
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,

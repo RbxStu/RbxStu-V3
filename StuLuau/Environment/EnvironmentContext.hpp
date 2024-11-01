@@ -137,7 +137,7 @@ namespace RbxStu::StuLuau::Environment {
 
         void MakeUnhookable(Closure *closure);
 
-        void PushEnviornment();
+        void PushEnvironment();
 
         bool IsWrappedClosure(Closure *cl) const;
 
