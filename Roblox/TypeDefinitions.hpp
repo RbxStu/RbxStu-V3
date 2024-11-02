@@ -278,13 +278,13 @@ namespace RBX {
         enum Permissions : uint32_t {
             NonePermission = 0x0,
             PluginPermission = 0x1,
-            LocalUserPermission = 0x3,
+            LocalUserPermission = 0x2,
+            GameScriptPermission = 0x3,
             WritePlayerPermission = 0x4,
             RobloxScriptPermission = 0x5,
             RobloxEnginePermission = 0x6,
             NotAccessiblePermission = 0x7,
             ExecutorLevelPermission = 0x8, // not from roblox i added lmao
-            TestLocalUserPermission = 0x3
         };
     }
 
