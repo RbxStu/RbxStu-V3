@@ -114,7 +114,7 @@ namespace RbxStu::StuLuau {
             nL = L;
         }
 
-        luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity, true);
+        luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity, 8, true);
 
         const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
             RbxStuOffsets::GetSingleton()->
@@ -130,7 +130,11 @@ namespace RbxStu::StuLuau {
             const auto error = lua_tostring(nL, -1);
             RbxStuLog(RbxStu::LogType::Error, RbxStu::ExecutionEngine,
                       std::format("Failed to load bytecode: {}", error));
-            lua_error(nL);
+            lua_pushcclosure(nL, task_defer, nullptr, 0);
+            lua_getglobal(nL, "error");
+            lua_pushvalue(nL, -2);
+            lua_call(nL, 2, 1);
+            lua_pop(nL, 1);
             return;
         }
 
@@ -172,7 +176,7 @@ namespace RbxStu::StuLuau {
                     const auto currentDispatch = this->m_synchronizedDispatch.front();
                     LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread,
                                                                     currentDispatch.executionSecurity,
-                                                                    true);
+                                                                    8, true);
                     currentDispatch.execute(this->m_pDispatchThread);
 
                     if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {
