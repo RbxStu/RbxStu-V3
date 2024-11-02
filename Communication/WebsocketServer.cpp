@@ -31,7 +31,7 @@ void RbxStu::Communication::WebsocketServer::Initialize() {
         return;
 
     std::thread([] {
-        ix::WebSocketServer server(8080);
+        ix::WebSocketServer server(7777);
         server.setOnClientMessageCallback(
                 [](const std::shared_ptr<ix::ConnectionState> &connectionState, ix::WebSocket &webSocket,
                    const ix::WebSocketMessagePtr &msg) {
