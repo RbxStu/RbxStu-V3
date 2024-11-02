@@ -234,6 +234,7 @@ namespace RbxStu::StuLuau {
     ExecutionSecurity LuauSecurity::GetExecutionSecurityFromIdentity(const int32_t identity) {
         switch (identity) {
             case RBX::Security::Permissions::LocalUserPermission:
+            case RBX::Security::Permissions::GameScriptPermission:
                 return ExecutionSecurity::LocalScript;
             case RBX::Security::Permissions::RobloxScriptPermission:
                 return ExecutionSecurity::RobloxScript;
@@ -301,6 +302,7 @@ namespace RbxStu::StuLuau {
     }
 
     void LuauSecurity::SetThreadSecurity(lua_State *L, const ExecutionSecurity executionSecurity,
+                                         const std::int32_t identity,
                                          const bool markThread) {
         const auto extraSpace = GetThreadExtraspace(L);
         if (nullptr == extraSpace)
@@ -312,7 +314,7 @@ namespace RbxStu::StuLuau {
         const std::int64_t executorSecurity = this->ToCapabilitiesFlags(executionSecurity);
 
         extraSpace->capabilities = executorSecurity;
-        extraSpace->contextInformation.identity = this->GetIdentityFromExecutionSecurity(executionSecurity);
+        extraSpace->contextInformation.identity = static_cast<RBX::Security::Permissions>(identity);
 
         if (markThread) this->MarkThread(L);
     }
