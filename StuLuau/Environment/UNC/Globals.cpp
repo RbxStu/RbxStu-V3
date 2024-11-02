@@ -155,13 +155,21 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Globals::lz4compress(lua_State *L) {
         luaL_checktype(L, 1, LUA_TSTRING);
-        const char *data = lua_tostring(L, 1);
-        const int iMaxCompressedSize = LZ4_compressBound(strlen(data));
+
+        if (lua_gettop(L) > 1)
+            lua_settop(L, 1);
+
+        auto str = &(L->top - 1)->value.gc->ts;
+        const int iMaxCompressedSize = LZ4_compressBound(str->len);
         const auto pszCompressedBuffer = new char[iMaxCompressedSize];
         memset(pszCompressedBuffer, 0, iMaxCompressedSize);
 
-        LZ4_compress_default(data, pszCompressedBuffer, strlen(data), iMaxCompressedSize);
-        lua_pushlstring(L, pszCompressedBuffer, iMaxCompressedSize);
+        const auto actualSize = LZ4_compress_default(str->data, pszCompressedBuffer, str->len, iMaxCompressedSize);
+
+        if (actualSize == 0)
+            luaL_error(L, "compression failed");
+
+        lua_pushlstring(L, pszCompressedBuffer, actualSize);
         return 1;
     }
 
@@ -169,15 +177,22 @@ namespace RbxStu::StuLuau::Environment::UNC {
         luaL_checktype(L, 1, LUA_TSTRING);
         luaL_checktype(L, 2, LUA_TNUMBER);
 
-        const char *data = lua_tostring(L, 1);
-        const int data_size = lua_tointeger(L, 2);
+        if (lua_gettop(L) > 2)
+            lua_settop(L, 2);
 
-        auto *pszUncompressedBuffer = new char[data_size];
+        auto str = &(L->top - 2)->value.gc->ts;
+        const int dataSize = lua_tointeger(L, 2) + 1;
 
-        memset(pszUncompressedBuffer, 0, data_size);
+        auto *pszUncompressedBuffer = new char[dataSize];
 
-        LZ4_decompress_safe(data, pszUncompressedBuffer, strlen(data), data_size);
-        lua_pushlstring(L, pszUncompressedBuffer, data_size);
+        memset(pszUncompressedBuffer, 0, dataSize);
+
+        const auto ret = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
+
+        if (ret < 0)
+            luaL_error(L, std::format("lz4 decompression failed. lz4 error code: {}", ret).c_str());
+
+        lua_pushlstring(L, pszUncompressedBuffer, dataSize);
         return 1;
     }
 
@@ -191,6 +206,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 lua_pushboolean(L, prop->IsScriptable());
             }
         }
+
         if (lua_type(L, -1) != lua_Type::LUA_TBOOLEAN)
             lua_pushnil(L);
 
