@@ -9,34 +9,31 @@
 #include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
-
     int Scripts::setidentity(lua_State *L) {
         luaL_checkinteger(L, 1);
-        if (lua_gettop(L) > 1)
-            luaL_errorL(L, "You only need to provide one argument!");
 
-        const auto desiredIdentity = lua_tointeger(L, 1);
+        const auto identity = lua_tointeger(L, 1);
+
+        if (identity < 0 || identity > 8)
+            luaL_error(L, "cannot set the thread's identity to invalid values.");
+
         const auto luauSecurity = LuauSecurity::GetSingleton();
-        const auto desiredExecutionContext = luauSecurity->GetExecutionSecurityFromIdentity(desiredIdentity);
+        const auto desiredExecutionContext = luauSecurity->GetExecutionSecurityFromIdentity(identity);
 
-        luauSecurity->SetThreadSecurity(L, desiredExecutionContext, true);
+        luauSecurity->SetThreadSecurity(L, desiredExecutionContext, identity, luauSecurity->IsMarkedThread(L));
 
         Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L)->YieldThread(
-                L, [](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                    yieldRequest->fpCompletionCallback = []() {
-                        return YieldResult{true, 0};
-                    };
-                    yieldRequest->bIsReady = true;
-                }, true);
+            L, [](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                yieldRequest->fpCompletionCallback = []() {
+                    return YieldResult{true, 0};
+                };
+                yieldRequest->bIsReady = true;
+            }, true);
 
         return lua_yield(L, 0);
     }
 
     int Scripts::getidentity(lua_State *L) {
-        if (lua_gettop(L) > 0)
-            luaL_errorL(L, "You don't need to provide any arguments!");
-
         const int32_t currentIdentity = LuauSecurity::GetThreadExtraspace(L)->contextInformation.identity;
         lua_pushinteger(L, currentIdentity);
         return 1;
@@ -53,18 +50,18 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     const luaL_Reg *Scripts::GetFunctionRegistry() {
         static luaL_Reg slib[] = {
-                {"setidentity", Scripts::setidentity},
-                {"setthreadcontext", Scripts::setidentity},
-                {"setthreadidentity", Scripts::setidentity},
+            {"setidentity", Scripts::setidentity},
+            {"setthreadcontext", Scripts::setidentity},
+            {"setthreadidentity", Scripts::setidentity},
 
-                {"getidentity", Scripts::getidentity},
-                {"getthreadidentity", Scripts::getidentity},
-                {"getthreadcontext", Scripts::getidentity},
+            {"getidentity", Scripts::getidentity},
+            {"getthreadidentity", Scripts::getidentity},
+            {"getthreadcontext", Scripts::getidentity},
 
 
-                {nullptr, nullptr}};
+            {nullptr, nullptr}
+        };
 
         return slib;
     }
-
 }
