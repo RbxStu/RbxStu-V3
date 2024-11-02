@@ -236,8 +236,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         luaL_checktype(L, 2, ::lua_Type::LUA_TFUNCTION);
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Hooking function");
+
         if (lua_gettop(L) > 2)
-            luaL_error(L, "You must only provide two arguments into hookfunction");
+            lua_settop(L, 2);
 
         lua_pushcclosure(L, clonefunction, nullptr, 0);
         lua_pushvalue(L, 1);
