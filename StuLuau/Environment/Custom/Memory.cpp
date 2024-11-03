@@ -21,7 +21,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
         auto gcCtx = GCOContext{L, addTables, 0};
 
         const auto ullOldThreshold = L->global->GCthreshold;
-        L->global->GCthreshold = -1;
+        L->global->GCthreshold = SIZE_MAX;
         luaM_visitgco(L, &gcCtx, [](void *ctx, lua_Page *pPage, GCObject *pGcObj) -> bool {
             const auto pCtx = static_cast<GCOContext *>(ctx);
             const auto ctxL = pCtx->pLua;
@@ -30,8 +30,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
                 return false;
 
             if (const auto gcObjType = pGcObj->gch.tt;
-                gcObjType == LUA_TFUNCTION || gcObjType == LUA_TUSERDATA || gcObjType == LUA_TBUFFER ||
-                gcObjType == LUA_TLIGHTUSERDATA || gcObjType == LUA_TTABLE && pCtx->accessTables) {
+                (gcObjType == LUA_TFUNCTION || gcObjType == LUA_TUSERDATA || gcObjType == LUA_TBUFFER ||
+                 gcObjType == LUA_TLIGHTUSERDATA) || gcObjType == LUA_TTABLE && pCtx->accessTables) {
                 ctxL->top->value.gc = pGcObj;
                 ctxL->top->tt = gcObjType;
                 ctxL->top++;

@@ -3,6 +3,8 @@
 //
 
 #pragma once
+#include <Windows.h>
+
 #include <filesystem>
 #include <hex.h>
 #include <Logger.hpp>
@@ -15,8 +17,7 @@
 #include <libhat/Scanner.hpp>
 
 #include <sstream>
-
-#include <Windows.h>
+#include <tlhelp32.h>
 
 #include "lualib.h"
 
@@ -29,6 +30,86 @@ namespace RbxStu {
         void Initialize();
 
     public:
+        struct ThreadInformation {
+            bool bWasSuspended;
+            HANDLE hThread;
+        };
+
+        enum ThreadSuspensionState {
+            SUSPENDED,
+            RESUMED,
+        };
+
+    public:
+        class RobloxThreadSuspension {
+            std::vector<ThreadInformation> threadInformation;
+            ThreadSuspensionState state;
+
+        public:
+            explicit RobloxThreadSuspension(const bool suspendOnCreate) {
+                this->state = RESUMED;
+                if (suspendOnCreate)
+                    this->SuspendThreads();
+            }
+
+            ~RobloxThreadSuspension() {
+                const auto logger = Logger::GetSingleton();
+                for (auto &[_, hThread]: this->threadInformation) {
+                    if (state == SUSPENDED)
+                        ResumeThread(hThread);
+
+                    CloseHandle(hThread);
+                }
+            }
+
+            void SuspendThreads() {
+                const auto logger = Logger::GetSingleton();
+                if (this->state != RESUMED) {
+                    return;
+                }
+                const HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+
+                if (hSnapshot == INVALID_HANDLE_VALUE || hSnapshot == nullptr) {
+                    throw std::exception("PauseRobloxThreads failed: Snapshot creation failed!");
+                }
+
+                THREADENTRY32 te{0};
+                te.dwSize = sizeof(THREADENTRY32);
+
+                if (!Thread32First(hSnapshot, &te)) {
+                    CloseHandle(hSnapshot);
+                    throw std::exception("PauseRobloxThreads failed: Thread32First failed!");
+                }
+                const auto currentPid = GetCurrentProcessId();
+                std::vector<ThreadInformation> thInfo;
+                do {
+                    if (te.th32ThreadID != GetCurrentThreadId() && te.th32OwnerProcessID == currentPid) {
+                        auto hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+
+                        auto th = ThreadInformation{false, nullptr};
+                        if (SuspendThread(hThread) > 1)
+                            th.bWasSuspended = true;
+                        th.hThread = hThread;
+                        thInfo.push_back(th);
+                    }
+                } while (Thread32Next(hSnapshot, &te));
+
+                this->threadInformation = thInfo;
+                this->state = SUSPENDED;
+            }
+
+            void ResumeThreads() {
+                const auto logger = Logger::GetSingleton();
+                if (this->state != SUSPENDED) {
+                    return;
+                }
+                for (auto &[bWasSuspended, hThread]: this->threadInformation) {
+                    ResumeThread(hThread);
+                }
+                this->state = RESUMED;
+            }
+        };
+
         bool IsInitialized();
 
         static std::shared_ptr<Utilities> GetSingleton();

@@ -117,6 +117,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Cache.hpp
         StuLuau/Environment/UNC/Scripts.cpp
         StuLuau/Environment/UNC/Scripts.hpp
+        StuLuau/Environment/UNC/Crypt.cpp
+        StuLuau/Environment/UNC/Crypt.hpp
 
 )
 

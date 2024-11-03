@@ -154,6 +154,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::lz4compress(lua_State *L) {
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+
         luaL_checktype(L, 1, LUA_TSTRING);
 
         if (lua_gettop(L) > 1)
@@ -161,6 +164,30 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         auto str = &(L->top - 1)->value.gc->ts;
         const int iMaxCompressedSize = LZ4_compressBound(str->len);
+        if (iMaxCompressedSize > 10000) {
+            executionEngine->YieldThread(
+                L, [L, str, iMaxCompressedSize](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                    const auto pszCompressedBuffer = new char[iMaxCompressedSize];
+                    memset(pszCompressedBuffer, 0, iMaxCompressedSize);
+
+                    const auto actualSize = LZ4_compress_default(str->data, pszCompressedBuffer, str->len,
+                                                                 iMaxCompressedSize);
+
+
+                    yieldRequest->fpCompletionCallback = [actualSize, L, pszCompressedBuffer, yieldRequest
+                            ]() -> RbxStu::StuLuau::YieldResult {
+                                if (actualSize != 0)
+                                    lua_pushlstring(L, pszCompressedBuffer, actualSize);
+
+                                return {actualSize != 0, 1, "compression failed"};
+                            };
+
+                    yieldRequest->bIsReady = true;
+                }, true);
+
+            return lua_yield(L, 0);
+        }
+
         const auto pszCompressedBuffer = new char[iMaxCompressedSize];
         memset(pszCompressedBuffer, 0, iMaxCompressedSize);
 
@@ -174,6 +201,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::lz4decompress(lua_State *L) {
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
         luaL_checktype(L, 1, LUA_TSTRING);
         luaL_checktype(L, 2, LUA_TNUMBER);
 
@@ -181,16 +210,41 @@ namespace RbxStu::StuLuau::Environment::UNC {
             lua_settop(L, 2);
 
         auto str = &(L->top - 2)->value.gc->ts;
-        const int dataSize = lua_tointeger(L, 2) + 1;
+        const int dataSize = lua_tointeger(L, 2);
+
+        if (dataSize > 10000 || str->len > 10000) {
+            executionEngine->YieldThread(
+                L, [dataSize, L, str](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                    auto *pszUncompressedBuffer = new char[dataSize];
+
+                    memset(pszUncompressedBuffer, 0, dataSize);
+
+                    const auto ret = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
+
+                    yieldRequest->fpCompletionCallback = [L, pszUncompressedBuffer, dataSize, ret, yieldRequest
+                            ]() -> RbxStu::StuLuau::YieldResult {
+                                if (ret > 0)
+                                    lua_pushlstring(L, pszUncompressedBuffer, dataSize);
+
+                                return {
+                                    ret > 0, 1, std::format("lz4 decompression failed. lz4 error code: {}", ret).c_str()
+                                };
+                            };
+
+                    yieldRequest->bIsReady = true;
+                }, true);
+
+            return lua_yield(L, 0);
+        }
 
         auto *pszUncompressedBuffer = new char[dataSize];
 
         memset(pszUncompressedBuffer, 0, dataSize);
 
-        const auto ret = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
+        const auto dwRetSize = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
 
-        if (ret < 0)
-            luaL_error(L, std::format("lz4 decompression failed. lz4 error code: {}", ret).c_str());
+        if (dwRetSize < 0)
+            luaL_error(L, std::format("lz4 decompression failed. lz4 error code: {}", dwRetSize).c_str());
 
         lua_pushlstring(L, pszUncompressedBuffer, dataSize);
         return 1;
@@ -433,7 +487,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         // Equivalent to cloneref(cloneref(cloneref(game):GetService("CoreGui")).RobloxGui)
         // Excessive clonereffing, I made the cloneref, i will use all of it!
         // - Dottik
-        lua_getglobal(L, "cloneref");
+        lua_settop(L, 0);
+        lua_pushcclosure(L, cloneref, nullptr, 0);
+        lua_pushvalue(L, 1);
         lua_getglobal(L, "game");
         lua_call(L, 1, 1);
         lua_getfield(L, -1, "GetService");
@@ -441,11 +497,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_pushstring(L, "CoreGui");
         lua_call(L, 2, 1);
         lua_remove(L, 1); // CoreGui is alone on the stack.
-        lua_getglobal(L, "cloneref");
+        lua_pushvalue(L, 1);
         lua_pushvalue(L, 1);
         lua_call(L, 1, 1);
         lua_getfield(L, -1, "RobloxGui");
-        lua_getglobal(L, "cloneref");
+        lua_pushvalue(L, 1);
         lua_pushvalue(L, -2);
         lua_call(L, 1, 1);
         return 1;

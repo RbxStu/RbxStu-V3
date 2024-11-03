@@ -3,6 +3,7 @@
 //
 #include <cstdlib>
 #include <cstdio>
+#include <MinHook.h>
 #include <StudioOffsets.h>
 
 #include <Windows.h>
@@ -21,11 +22,76 @@
 #include <Scheduling/Job/ExecutionEngineStepJob.hpp>
 
 #include "Security.hpp"
+#include "Analysis/StringSearcher.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketServer.hpp"
 #include "Scheduling/Job/DataModelWatcherJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+
+void EnableRobloxInternal() {
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
+              "-- Initializing RbxStu::Analysis::XrefSearcher - Complex Cross-Reference Searcher...");
+    auto xrefSearcher = RbxStu::Analysis::XrefSearcher::GetSingleton();
+    xrefSearcher->BootstrapXrefsForModule(hat::process::get_process_module());
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+              "-- Scanning for Target to enable Roblox Internal...");
+
+    const auto stringXrefSearcher = RbxStu::Analysis::StringSearcher::GetSingleton();
+
+    const auto xrefs = stringXrefSearcher->FindStringXrefsInTarget(hat::process::get_process_module(),
+                                                                   "Debugger can be attached to a script or module script");
+    if (xrefs.empty()) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Cannot enable Roblox Internal mode! Missing xref to RBX::Scripting::ScriptDebugger::setScript!");
+        return;
+    }
+
+    auto setScript = xrefs.front();
+
+    auto rbxstuDisassembler = RbxStu::Analysis::Disassembler::GetSingleton();
+    auto disassembly = rbxstuDisassembler->GetInstructions(
+        reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(setScript) - 0x30), setScript, true);
+
+    if (!disassembly.has_value()) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Cannot enable Roblox Internal mode! Failed to analyze function!");
+        return;
+    }
+
+    auto chunk = std::move(disassembly.value());
+    auto insn = chunk->GetInstructionWhichMatches("call", nullptr, true);
+
+    if (!insn.has_value()) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Cannot enable Roblox Internal mode! Failed to analyze function!");
+        return;
+    }
+
+    auto targetFunction = insn.value().detail->x86.operands->imm;
+
+    auto disassemblyAgain = rbxstuDisassembler->GetInstructions(
+        reinterpret_cast<void *>(targetFunction), reinterpret_cast<void *>(targetFunction + 0x15), true);
+
+    if (!disassemblyAgain.has_value()) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Cannot enable Roblox Internal mode! Failed to analyze function!");
+        return;
+    }
+
+    for (const auto chunkAgain = std::move(disassemblyAgain.value()); const auto &insn: chunkAgain->
+         GetInstructions()) {
+        if (insn.id == ::x86_insn::X86_INS_CMP) {
+            const auto dispFromRip = insn.detail->x86.operands->mem.disp;
+            const auto dataRef = insn.address + dispFromRip + insn.size;
+            *reinterpret_cast<bool *>(dataRef) = true; // Roblox overwrites this periodically for whatever reason.
+        }
+    }
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+              "-- Roblox Internal mode has been enabled!");
+}
 
 void Entry() {
     AllocConsole();
@@ -49,6 +115,9 @@ void Entry() {
               "Initializing RbxStu V3 -- The Roblox Studio Modification Tool");
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
+              "+ Starting Initialization Sequence! SUSPENDING ALL ROBLOX THREADS!");
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               std::format("-- RobloxStudioBeta.exe @ {}", reinterpret_cast<void *>(GetModuleHandleA(
                   "RobloxStudioBeta.exe"))));
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
@@ -67,11 +136,6 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Analysis::RTTI...");
     RbxStu::Analysis::RTTI::GetSingleton();
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
-              "-- Initializing RbxStu::Analysis::XrefSearcher - Complex Cross-Reference Searcher...");
-
-    // RbxStu::Analysis::XrefSearcher::GetSingleton()->BootstrapXrefsForModule(hat::process::get_process_module());
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Bootstrapping RbxStu V3!");
 
@@ -94,22 +158,41 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
-    // Test exec.
-    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
-        _mm_pause();
+    Sleep(100);
 
-    auto execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
-    while (true) {
-        if (execEngine != nullptr) {
-            execEngine->ScheduleExecute(false, R"(
-                closures.loadstring(httpget("https://gitlab.com/sens3/nebunu/-/raw/main/HummingBird8's_sUNC_yes_i_moved_to_gitlab_because_my_github_acc_got_brickedd/sUNCm0m3n7.lua"))()
-            )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
-            break;
-        } else {
-            execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
-        }
-        Sleep(24000);
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+              "-- Enabling Roblox Internal -- This may take a bit...");
+
+    auto tsk = std::async(std::launch::async, EnableRobloxInternal);
+
+    if (tsk.wait_for(std::chrono::microseconds{0}) == std::future_status::timeout) {
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Waiting for Roblox Internal to finish initializing...");
+        tsk.wait();
     }
+
+    // Test exec.
+    /*    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
+            _mm_pause();
+
+        auto execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
+        while (true) {
+            if (execEngine.use_count() == 1)
+                execEngine = scheduler->GetExecutionEngine(
+                    RBX::DataModelType::DataModelType_PlayClient);
+
+            if (execEngine != nullptr) {
+                execEngine->ScheduleExecute(false, R"(
+                    -- closures.loadstring(httpget("https://gist.githubusercontent.com/SecondNewtonLaw/6f25ec379740705cbd98c62a8a1b3855/raw/a185f9f203bee60478b568e5cc2cd4ef3a3caecf/Stunc.lua"))()
+                    -- closures.loadstring(httpget("https://gitlab.com/sens3/nebunu/-/raw/main/HummingBird8's_sUNC_yes_i_moved_to_gitlab_because_my_github_acc_got_brickedd/sUNCm0m3n7.lua"))()
+                )", RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);
+                break;
+            } else {
+                execEngine = scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient);
+            }
+            Sleep(24000);
+        }
+        */
 }
 
 BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID lpvReserved) {

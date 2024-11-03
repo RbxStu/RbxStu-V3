@@ -217,6 +217,7 @@ namespace RbxStu::StuLuau {
 
                 // The yield is ready, we must resume.
                 const auto completionResults = frontYield->fpCompletionCallback();
+
                 this->m_executionEngineState->scriptContext->ResumeThread(&frontYield->threadRef, completionResults);
                 this->m_yieldQueue.pop(); // Remove yield frame.
                 frontYield.reset();
