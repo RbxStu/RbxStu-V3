@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.6)
+cmake_minimum_required(VERSION 3.12)
 project(RbxStuV3)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -119,6 +119,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Scripts.hpp
         StuLuau/Environment/UNC/Crypt.cpp
         StuLuau/Environment/UNC/Crypt.hpp
+        Scheduling/Job/ImguiRenderJob.cpp
+        Scheduling/Job/ImguiRenderJob.hpp
 
 )
 
@@ -161,9 +163,17 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Capstone")
 # oxorany
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/oxorany")
 
+# kiero hook
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/kiero")
+
+# imgui
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Imgui")
+
+
 find_package(lz4 CONFIG REQUIRED)
 find_package(OpenSSL CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
@@ -184,7 +194,6 @@ target_link_libraries(${PROJECT_NAME}
         Luau.EqSat
         Luau.CodeGen
 
-
         ixwebsocket
 
         lz4::lz4
@@ -198,5 +207,11 @@ target_link_libraries(${PROJECT_NAME}
         Dbghelp.lib
 
         oxorany
+
+        # kiero
+        kiero
+
+        # Imgui
+        Imgui
 )
 
