@@ -9,6 +9,8 @@ namespace RbxStu::Scheduling {
     namespace Jobs {
         enum class AvailableJobs : std::int32_t {
             GenericJob, // Not overriden.
+            ImguiRenderJob,
+
             DataModelWatcherJob,
             SynchronizedDispatchJob,
             InitializeExecutionEngineJob,
