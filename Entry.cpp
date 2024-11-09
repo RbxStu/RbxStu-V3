@@ -158,6 +158,7 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
     RbxStu::Communication::WebsocketServer::GetSingleton();
 
+#ifdef ROBLOX_INTERNAL_ENABLED
     Sleep(100);
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
@@ -170,7 +171,7 @@ void Entry() {
                   "-- Waiting for Roblox Internal to finish initializing...");
         tsk.wait();
     }
-
+#endif
     // Test exec.
     /*    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
             _mm_pause();
