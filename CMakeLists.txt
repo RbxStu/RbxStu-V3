@@ -79,8 +79,8 @@ add_library(${PROJECT_NAME} SHARED
         Security.cpp
         Roblox/ScriptContext.cpp
         Roblox/ScriptContext.hpp
-        Communication/WebsocketServer.cpp
-        Communication/WebsocketServer.hpp
+        Communication/WebsocketCommunication.cpp
+        Communication/WebsocketCommunication.hpp
         Communication/PacketManager.cpp
         Communication/PacketManager.hpp
         Communication/PacketBase.hpp

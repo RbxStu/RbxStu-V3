@@ -3,7 +3,6 @@
 //
 #include <cstdlib>
 #include <cstdio>
-#include <MinHook.h>
 #include <StudioOffsets.h>
 
 #include <Windows.h>
@@ -21,12 +20,12 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 #include <Scheduling/Job/ExecutionEngineStepJob.hpp>
 
-#include "Security.hpp"
 #include "Analysis/StringSearcher.hpp"
 #include "Analysis/XrefSearcher.hpp"
-#include "Communication/WebsocketServer.hpp"
+#include "Communication/WebsocketCommunication.hpp"
 #include "Scheduling/Job/DataModelWatcherJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
+#include "Security.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
 void EnableRobloxInternal() {
@@ -155,8 +154,8 @@ void Entry() {
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecutionEngineStepJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::DataModelWatcherJob>();
 
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing WebsocketServer...");
-    RbxStu::Communication::WebsocketServer::GetSingleton();
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
+    RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
 #ifdef ROBLOX_INTERNAL_ENABLED
     Sleep(100);
