@@ -114,9 +114,6 @@ void Entry() {
               "Initializing RbxStu V3 -- The Roblox Studio Modification Tool");
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
-              "+ Starting Initialization Sequence! SUSPENDING ALL ROBLOX THREADS!");
-
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               std::format("-- RobloxStudioBeta.exe @ {}", reinterpret_cast<void *>(GetModuleHandleA(
                   "RobloxStudioBeta.exe"))));
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
@@ -199,8 +196,8 @@ BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hModule);
-            CreateThread(nullptr, 0x1000, reinterpret_cast<LPTHREAD_START_ROUTINE>(Entry), nullptr, 0, nullptr);
-            break;
+            std::thread(Entry).detach();
+        break;
 
         case DLL_PROCESS_DETACH:
             if (lpvReserved != nullptr) {
