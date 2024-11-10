@@ -20,6 +20,7 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 #include <Scheduling/Job/ExecutionEngineStepJob.hpp>
 
+#include "FastFlags.hpp"
 #include "Analysis/StringSearcher.hpp"
 #include "Analysis/XrefSearcher.hpp"
 #include "Communication/WebsocketCommunication.hpp"
@@ -125,6 +126,9 @@ void Entry() {
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Utilities...");
     RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
+
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::FastFlags...");
+    RbxStu::FastFlags::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::Disassembler...");

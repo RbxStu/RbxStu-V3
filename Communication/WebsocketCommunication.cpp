@@ -3,6 +3,8 @@
 //
 
 #include "WebsocketCommunication.hpp"
+
+#include "FastFlags.hpp"
 #include "PacketManager.hpp"
 #include "ixwebsocket/IXWebSocketServer.h"
 
@@ -25,6 +27,8 @@ bool RbxStu::Communication::WebsocketCommunication::IsInitialized() const { retu
 void RbxStu::Communication::WebsocketCommunication::Initialize() {
     if (this->IsInitialized())
         return;
+
+    this->websocketPort = FastFlags::GetSingleton()->GetOptionalFastFlagValue<int>("IFlagWebsocketPort", 7777);
 
     std::thread([this] {
 #if USE_WEBSOCKET_SERVER == true

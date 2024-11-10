@@ -102,6 +102,7 @@ namespace RbxStu {
     DefineSectionName(StructuredExceptionHandlerAnalysis, "RbxStuV3::StructuredExceptionHandlerAnalysis");
 
     DefineSectionName(WebsocketCommunication, "RbxStuV3::WebsocketCommunication");
+    DefineSectionName(Fast_Flags, "RbxStuV3::FastFlags");
 #undef DefineSectionName
 }; // namespace RbxStu
 

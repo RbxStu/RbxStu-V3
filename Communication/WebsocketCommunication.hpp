@@ -13,7 +13,7 @@ namespace RbxStu::Communication {
         static std::shared_ptr<WebsocketCommunication> pInstance;
         bool m_bIsInitialized = false;
 
-        int websocketPort = 7777;
+        int websocketPort = 0;
     public:
         static std::shared_ptr<WebsocketCommunication> GetSingleton();
 

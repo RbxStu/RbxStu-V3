@@ -121,6 +121,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Crypt.hpp
         Scheduling/Job/ImguiRenderJob.cpp
         Scheduling/Job/ImguiRenderJob.hpp
+        FastFlags.cpp
+        FastFlags.hpp
 
 )
 
