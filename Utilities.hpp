@@ -157,18 +157,28 @@ namespace RbxStu {
             lua_remove(L, -2);
         }
 
-        __forceinline static std::string GetDllDir() {
+        __forceinline static std::optional<std::filesystem::path> GetDllDir() {
             HMODULE hModule = nullptr;
 
-            if (char path[MAX_PATH];
-                GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                                  "RbxStuV3.dll", &hModule) &&
-                GetModuleFileNameA(hModule, path, sizeof(path))) {
-                const std::filesystem::path fullPath(path);
-                return fullPath.parent_path().string();
+            if (!GetModuleHandleEx(
+                GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                reinterpret_cast<LPCSTR>(&GetDllDir),
+                &hModule
+            )) {
+                return std::nullopt;
             }
 
-            return "";
+            char path[MAX_PATH];
+            if (!GetModuleFileNameA(hModule, path, sizeof(path))) {
+                return std::nullopt;
+            }
+
+            try {
+                const std::filesystem::path fullPath(path);
+                return fullPath.parent_path();
+            } catch (...) {
+                return std::nullopt;
+            }
         }
 
         __forceinline static std::vector<std::string> SplitBy(const std::string &target, const char split) {
