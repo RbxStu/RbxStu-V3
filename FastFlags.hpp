@@ -46,20 +46,17 @@ namespace RbxStu {
         template<typename T>
         T GetOptionalFastFlagValue(const std::string& flagName, T defaultValue) {
             if (!this->isInitialized) {
-                RbxStuLog(LogType::Information, Fast_Flags, "Not initialized, returning default");
                 return defaultValue;
             }
 
             const auto it = this->loadedFlags.find(flagName);
             if (it == this->loadedFlags.end()) {
-                RbxStuLog(LogType::Information, Fast_Flags, std::format("Couldn't find flag '{}'", flagName));
                 return defaultValue;
             }
 
             try {
                 return std::get<T>(it->second);
             } catch (const std::bad_variant_access&) {
-                RbxStuLog(LogType::Information, Fast_Flags, "Error getting fast flag");
                 return defaultValue;
             }
         }
