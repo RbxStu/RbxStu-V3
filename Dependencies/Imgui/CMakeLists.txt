@@ -5,8 +5,6 @@ project(Imgui LANGUAGES CXX)
 set(PROJECT Imgui)
 set(CMAKE_CXX_STANDARD 23)
 
-find_package(Vulkan REQUIRED)
-
 file(GLOB IMGUI_SOURCES
         *.cpp
         *.h
@@ -43,7 +41,6 @@ add_library(${PROJECT} STATIC
 target_link_libraries(${PROJECT} PUBLIC
         dxgi.lib
         d3d11.lib
-        Vulkan::Vulkan
 )
 
 target_include_directories(${PROJECT} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")

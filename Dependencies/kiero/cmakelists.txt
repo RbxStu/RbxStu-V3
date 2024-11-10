@@ -3,8 +3,6 @@ project(kiero)
 
 include_directories("..")
 
-find_package(Vulkan REQUIRED)
-
 add_library(${PROJECT_NAME} STATIC kiero.cpp)
 
 target_include_directories(${PROJECT_NAME}
@@ -16,8 +14,6 @@ target_link_libraries(${PROJECT_NAME}
         PUBLIC
         dxgi.lib
         d3d11.lib
-
-        Vulkan::Vulkan
 
         minhook
 )

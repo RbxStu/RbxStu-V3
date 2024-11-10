@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.7.2)
 project(RbxStuV3)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
@@ -173,7 +173,6 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/Dependencies/Imgui")
 find_package(lz4 CONFIG REQUIRED)
 find_package(OpenSSL CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(Vulkan REQUIRED)
 
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
