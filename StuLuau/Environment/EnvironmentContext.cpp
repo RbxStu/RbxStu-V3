@@ -200,7 +200,26 @@ namespace RbxStu::StuLuau::Environment {
     }
 
     void EnvironmentContext::MakeUnhookable(Closure *closure) {
-        this->m_unhookableClosures.emplace_back(closure);
+        this->m_unhookableClosures.insert(closure);
+    }
+
+    bool EnvironmentContext::IsUnhookable(Closure *closure) const {
+        if (this->m_unhookableClosures.contains(closure))
+            return true;
+
+        // Make a deeper check
+        for (const auto &func: this->m_unhookableClosures) {
+            if (func->isC != closure->isC)
+                continue;
+
+            if (func->isC && closure->c.f == func->c.f)
+                return true; // Main C closure is unhookable.
+
+            if (!func->isC && closure->l.p == func->l.p)
+                return true; // Main Luau closure is unhookable.
+        }
+
+        return false;
     }
 
     void EnvironmentContext::PushEnvironment() {

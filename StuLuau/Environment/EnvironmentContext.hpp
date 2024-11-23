@@ -9,6 +9,7 @@
 #include <utility>
 #include <optional>
 #include <lstate.h>
+#include <unordered_set>
 
 #include "Library.hpp"
 
@@ -92,7 +93,7 @@ namespace RbxStu::StuLuau::Environment {
 
         std::vector<InitScript> m_initScripts;
         std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library> > m_libraries;
-        std::vector<Closure *> m_unhookableClosures;
+        std::unordered_set<Closure *> m_unhookableClosures;
 
         std::atomic_bool m_bIsDestroyed;
 
@@ -120,7 +121,7 @@ namespace RbxStu::StuLuau::Environment {
             const auto library = std::make_shared<T>();
 
             for (const auto &lib: this->m_libraries) {
-                if (strcmp(lib-> GetLibraryName(), library->GetLibraryName()) == 0) {
+                if (strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
                     RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
                               std::format("Library already defined, ignoring re-definition. Affected Library: {}",
                                   library->
@@ -137,10 +138,12 @@ namespace RbxStu::StuLuau::Environment {
 
         void MakeUnhookable(Closure *closure);
 
+        bool IsUnhookable(Closure *closure) const;
+
         void PushEnvironment();
 
         bool IsWrappedClosure(Closure *cl) const;
 
-        bool IsDataModelMetamethod(Closure * closure) const;;
+        bool IsDataModelMetamethod(Closure *closure) const;;
     };
 } // RbxStu::StuLuau::Environment
