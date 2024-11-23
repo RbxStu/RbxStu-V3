@@ -302,7 +302,68 @@ namespace RbxStu::Scheduling::Jobs {
                 getgenv().debug[i] = e
             end
             setreadonly(getgenv().debug, true)
-        )", "DebugReClone");
+        )", "DebugRobloxImport");
+
+        envContext->DefineInitScript(R"(
+            makeunhookable(getgenv)
+            makeunhookable(getrenv)
+            makeunhookable(isunhookable)
+            makeunhookable(makeunhookable)
+            makeunhookable(ishooked)
+            makeunhookable(restorefunction)
+            makeunhookable(hookfunction)
+            makeunhookable(hookmetamethod)
+            makeunhookable(clonefunction)
+
+            local task_wait = clonefunction(task.wait)
+
+            local function deepclone(t, rec)
+                if rec > 20 then return t end   -- Likely ref chain.
+
+                local nTable = {}
+                for idx, val in t do
+                    if typeof(val) == "table" and val ~= t then
+                        nTable[idx] = deepclone(val, rec + 1)
+                    elseif typeof(val) == "table" then
+                        nTable[idx] = nTable
+                    end
+
+                    nTable[idx] = val
+                end
+
+                return nTable
+            end
+
+            local realGenv = deepclone(getgenv(), 0)
+            local makeunhookable = clonefunction(makeunhookable)
+
+            -- Crypt functions are unhookable by default.
+            for _, func in getgenv().crypt do
+                makeunhookable(func)
+            end
+
+            makeunhookable(httpget)
+            makeunhookable(closures.loadstring)
+
+            -- Prevent overwrites into getgenv (watcher, metamethods proved to be unwise here)
+            task.spawn(newcclosure(function()
+                while task_wait() do
+                    for idx, func in realGenv do
+                        if typeof(func) == "table" then
+                            for jdx, jfunc in realGenv[idx] do
+                                if realGenv[idx][jdx] ~= getgenv()[idx][jdx] then
+                                    getgenv()[idx][jdx] = jfunc
+                                end
+                            end
+                        end
+                        if realGenv[idx] ~= getgenv()[idx] then
+                            getgenv()[idx] = func
+                        end
+                    end
+                end
+            end))
+
+        )", "UnhookableSecurity");
 
         envContext->PushEnvironment();
 
