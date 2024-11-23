@@ -13,6 +13,8 @@
 #include "StuLuau/ExecutionEngine.hpp"
 #include <unordered_set>
 
+#include "StuLuau/Extensions/luauext.hpp"
+
 struct HookChainInformation {
     std::shared_ptr<RbxStu::Roblox::DataModel> executionEngineDataModel;
     std::map<Closure *, std::shared_ptr<std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
@@ -162,7 +164,7 @@ namespace RbxStu::StuLuau::Environment {
             return;
         }
 
-        const auto closure = lua_toclosure(initInfo->executorState, -1);
+        const auto closure = lua_tomutclosure(initInfo->executorState, -1);
 
         if (!s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap.contains(closure)) {
             /*

@@ -17,9 +17,11 @@
 #include <lz4.h>
 #include <Scanners/Rbx.hpp>
 
+#include "lapi.h"
 #include "lmem.h"
 #include "lstring.h"
 #include "StuLuau/LuauSecurity.hpp"
+#include "StuLuau/Extensions/luauext.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Globals::getgenv(lua_State *L) {
@@ -54,8 +56,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::gettenv(lua_State *L) {
+        // optional param == current thread
+        if (lua_gettop(L) == 0 || (lua_gettop(L) == 1 && lua_type(L, 1) == ::lua_Type::LUA_TNIL))
+            lua_pushthread(L);
+
         luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
-        lua_settop(L, 1);
+        lua_normalisestack(L, 1);
+
         const auto th = lua_tothread(L, 1);
 
         if (!th->isactive)
@@ -68,6 +75,27 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         lua_pushvalue(th, LUA_GLOBALSINDEX);
         lua_xmove(th, L, 1);
+        return 1;
+    }
+
+    int Globals::settenv(lua_State *L) {
+        lua_normalisestack(L, 2);
+        luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
+        luaL_checktype(L, 2, ::lua_Type::LUA_TTABLE);
+
+        const auto th = lua_tothread(L, 1);
+
+        if (!th->isactive)
+            luaC_threadbarrier(th);
+
+        if (th->gt == nullptr) {
+            lua_pushnil(L);
+        } else {
+            lua_pushvalue(th, LUA_GLOBALSINDEX);
+            lua_xmove(th, L, 1);
+        }
+
+        th->gt = &luaA_toobject(L, 2)->value.gc->h;
         return 1;
     }
 
@@ -487,23 +515,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
         // Equivalent to cloneref(cloneref(cloneref(game):GetService("CoreGui")).RobloxGui)
         // Excessive clonereffing, I made the cloneref, i will use all of it!
         // - Dottik
-        lua_settop(L, 0);
-        lua_pushcclosure(L, cloneref, nullptr, 0);
-        lua_pushvalue(L, 1);
+        lua_normalisestack(L, 0);
+
         lua_getglobal(L, "game");
-        lua_call(L, 1, 1);
         lua_getfield(L, -1, "GetService");
-        lua_pushvalue(L, -2);
+        lua_remove(L, 1);
+        lua_getglobal(L, "game");
         lua_pushstring(L, "CoreGui");
         lua_call(L, 2, 1);
-        lua_remove(L, 1); // CoreGui is alone on the stack.
-        lua_pushvalue(L, 1);
-        lua_pushvalue(L, 1);
-        lua_call(L, 1, 1);
-        lua_getfield(L, -1, "RobloxGui");
-        lua_pushvalue(L, 1);
+
+        lua_pushcclosure(L, cloneref, nullptr, 0);
         lua_pushvalue(L, -2);
         lua_call(L, 1, 1);
+
+        lua_getfield(L, -1, "RobloxGui");
+        lua_pushcclosure(L, cloneref, nullptr, 0);
+        lua_pushvalue(L, -2);
+        lua_call(L, 1, 1);
+
         return 1;
     }
 
@@ -622,7 +651,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
             {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
+
             {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},
+            {"settenv", RbxStu::StuLuau::Environment::UNC::Globals::settenv},
+
             {"httpget", RbxStu::StuLuau::Environment::UNC::Globals::httpget},
 
             {"checkcallstack", RbxStu::StuLuau::Environment::UNC::Globals::checkcallstack},

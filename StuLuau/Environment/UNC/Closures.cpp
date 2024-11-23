@@ -17,6 +17,7 @@
 #include "Luau/Compiler.h"
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/LuauSecurity.hpp"
+#include "StuLuau/Extensions/luauext.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Closures::iscclosure(lua_State *L) {
@@ -39,7 +40,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             return 1;
         }
 
-        const auto originalCl = lua_toclosure(L, 1);
+        const auto originalCl = lua_tomutclosure(L, 1);
 
         Closure *newcl = luaF_newCclosure(L, originalCl->nupvalues, originalCl->env);
 
@@ -59,11 +60,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto envContext = executionEngine->GetEnvironmentContext();
 
         // Redirect original newcclosure to the cloned one.
-        if (envContext->m_newcclosures.contains(lua_toclosure(L, 1)))
-            envContext->m_newcclosures[lua_toclosure(L, -1)] = envContext->m_newcclosures.at(lua_toclosure(L, 1));
+        if (envContext->m_newcclosures.contains(lua_tomutclosure(L, 1)))
+            envContext->m_newcclosures[lua_tomutclosure(L, -1)] = envContext->m_newcclosures.at(lua_tomutclosure(L, 1));
 
-        if (envContext->IsDataModelMetamethod(lua_toclosure(L, 1)))
-            envContext->DefineNewDataModelMetaMethodClosure(lua_toclosure(L, 1), lua_toclosure(L, -1));
+        if (envContext->IsDataModelMetamethod(lua_tomutclosure(L, 1)))
+            envContext->DefineNewDataModelMetaMethodClosure(lua_tomutclosure(L, 1), lua_tomutclosure(L, -1));
 
         return 1;
     }
@@ -89,56 +90,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         luaC_threadbarrier(L);
 
+        lua_rawcheckstack(L, 1);
+
         L->top->value.p = original.value();
         L->top->tt = ::lua_Type::LUA_TFUNCTION;
         L->top++;
 
         lua_insert(L, 1);
 
-        // const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
-        //     RbxStuOffsets::GetSingleton()->
-        //     GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
+        L->ci->flags |= LUA_CALLINFO_HANDLE;
 
-        // lua_pushcclosure(L, task_defer, nullptr, 0);
-        // lua_insert(L, 1);
+        L->baseCcalls++;
 
         const auto status = static_cast<lua_Status>(lua_pcall(L, nargs, LUA_MULTRET,
                                                               0));
+        L->baseCcalls--;
 
-
-        // const auto nL = lua_tothread(L, -1);
-        // nL->namecall = L->namecall; // Preserve namecall
-
-        /*
-        executionEngine->YieldThread(L, [nL, L](const std::shared_ptr<YieldRequest> &yieldContext) {
-            while (nL->isactive || (nL->status == LUA_YIELD)) {
-                _mm_pause();
-                std::this_thread::yield();
-            }
-
-            yieldContext->fpCompletionCallback = [nL, L]() {
-                const bool success = nL->status == LUA_OK;
-                if (success) {
-                    luaC_threadbarrier(L);
-                    luaC_threadbarrier(nL);
-                    lua_xmove(nL, L, lua_gettop(nL));
-                } else {
-                    lua_xmove(nL, L, 1); // Move error messager
-
-                    const auto realError = Utilities::GetSingleton()->FromLuaErrorMessageToCErrorMessage(
-                        lua_tostring(L, -1));
-                    lua_pop(L, 1);
-                    lua_pushstring(L, realError.c_str());
-                }
-
-                return YieldResult{success, lua_gettop(L), !success ? lua_tostring(L, -1) : nullptr};
-            };
-
-            yieldContext->bIsReady = true;
-        }, false);
-
-        return lua_yield(L, 0);
-        */
+        if (status == LUA_OK && (L->status == LUA_YIELD || L->status == LUA_BREAK))
+            return lua_yield(L, 0);
 
         if (status != LUA_OK && status != LUA_YIELD) {
             const auto errorString = lua_tostring(L, -1);
@@ -158,11 +127,25 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return lua_gettop(L);
     }
 
+    int Closures::newcclosure_stubcont(lua_State *L, int status) {
+        if (status == LUA_OK)
+            return lua_gettop(L); // Success, ret all results.
+
+        // Failure, we must clear the error message on the stack top and re-push it.
+        lua_rawcheckstack(L, 1);
+
+        const auto errorString = lua_tostring(L, -1);
+        const auto realError = Utilities::GetSingleton()->FromLuaErrorMessageToCErrorMessage(errorString);
+
+        lua_pushstring(L, realError.c_str());
+        lua_error(L);
+    }
+
     int Closures::newcclosure(lua_State *L) {
         luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
         const auto debugName = luaL_optstring(L, 2, nullptr);
 
-        lua_pushcclosure(L, newcclosure_stub, debugName, 0);
+        lua_pushcclosurek(L, newcclosure_stub, debugName, 0, newcclosure_stubcont);
 
         const auto executionEngine = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
                 GetExecutionEngine(L);
@@ -170,7 +153,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto refId = lua_ref(L, 1);
 
-        envContext->m_newcclosures[lua_toclosure(L, -1)] = ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>{
+        envContext->m_newcclosures[lua_tomutclosure(L, -1)] = ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>
+        {
             refId
         };
 
@@ -199,6 +183,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto bytecode = Luau::compile(code, compileOpts);
         luau_load(L, "=RbxStuV3_newlclosurewrapper", bytecode.c_str(), bytecode.size(), -1);
 
+        LuauSecurity::GetSingleton()->ElevateClosure(
+            lua_tomutclosure(L, -1), RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+
         lua_remove(L, lua_gettop(L) - 1); // Balance lua stack.
         return 1;
     }
@@ -206,7 +193,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     // ReSharper disable once CppDFAConstantFunctionResult
     int Closures::isourclosure(lua_State *L) {
         luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
-        const auto closure = lua_toclosure(L, 1);
+        const auto closure = lua_tomutclosure(L, 1);
 
         lua_pushboolean(L, LuauSecurity::GetSingleton()->IsOurClosure(closure));
         return 1;
@@ -225,7 +212,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         LuauSecurity::GetSingleton()->ElevateClosure(
-            lua_toclosure(L, -1), RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+            lua_tomutclosure(L, -1), RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
 
         lua_setsafeenv(L, LUA_GLOBALSINDEX, false); // env is not safe anymore.
         return 1;
@@ -243,7 +230,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_pushcclosure(L, clonefunction, nullptr, 0);
         lua_pushvalue(L, 1);
         lua_pcall(L, 1, 1, 0);
-        const auto originalCloned = lua_toclosure(L, -1);
+        const auto originalCloned = lua_tomutclosure(L, -1);
 
         lua_pushcclosure(L, clonefunction, nullptr, 0);
         lua_pushvalue(L, 1);
@@ -255,11 +242,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         // Luau closures must be referenced, else they will get collected.
         const auto hookedWithRef = lua_ref(L, 2);
-        if (environmentContext->m_functionHooks.contains(lua_toclosure(L, 1))) {
+        if (environmentContext->m_functionHooks.contains(lua_tomutclosure(L, 1))) {
             // TODO: Correctly handle hooking already hooked closures.
         } else {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Created Hook Information");
-            environmentContext->m_functionHooks[lua_toclosure(L, 1)] = HookInformation{
+            environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = HookInformation{
                 ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>{lua_ref(L, -1)},
                 ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>{hookedWithRef}
             };
@@ -277,7 +264,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
          *  C CLOSURE -> ANY
          */
         if (lua_iscfunction(L, 1)) {
-            if (!lua_iscfunction(L, 2) || !environmentContext->IsWrappedClosure(lua_toclosure(L, 2))) {
+            if (!lua_iscfunction(L, 2) || !environmentContext->IsWrappedClosure(lua_tomutclosure(L, 2))) {
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
                           "Automatically wrapping closure into NEWCCLOSURE");
                 // This function is a Luau/C function, it is simpler to wrap this Luau/C closure into a C closure using newcclosure before proceeding
@@ -290,27 +277,27 @@ namespace RbxStu::StuLuau::Environment::UNC {
             }
 
             // C function.
-            const auto bIsHookTargetWrapped = environmentContext->IsWrappedClosure(lua_toclosure(L, 1));
+            const auto bIsHookTargetWrapped = environmentContext->IsWrappedClosure(lua_tomutclosure(L, 1));
 
             // NEWCCLOSURE -> ANY
             if (bIsHookTargetWrapped) {
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
                           "NEWCCLOSURE->ANY");
                 // Both closures are newcclosure closures, this means that hooking them is a simple pointer change.
-                const auto hookWhatWrapped = environmentContext->m_newcclosures.at(lua_toclosure(L, 1));
-                const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_toclosure(L, -1));
+                const auto hookWhatWrapped = environmentContext->m_newcclosures.at(lua_tomutclosure(L, 1));
+                const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_tomutclosure(L, -1));
 
-                auto hkInfo = environmentContext->m_functionHooks[lua_toclosure(L, 1)];
+                auto hkInfo = environmentContext->m_functionHooks[lua_tomutclosure(L, 1)];
                 hkInfo.original = hookWhatWrapped;
                 hkInfo.hookedWith = hookWithWrapped;
                 hkInfo.dwHookedType = FunctionKind::NewCClosure;
                 hkInfo.dwHookWithType = FunctionKind::NewCClosure;
-                environmentContext->m_functionHooks[lua_toclosure(L, 1)] = hkInfo;
-                environmentContext->m_newcclosures[lua_toclosure(L, 1)] = hookWithWrapped;
+                environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = hkInfo;
+                environmentContext->m_newcclosures[lua_tomutclosure(L, 1)] = hookWithWrapped;
                 L->top->value.p = originalCloned;
                 L->top->tt = LUA_TFUNCTION;
                 L->top++;
-                environmentContext->m_newcclosures[lua_toclosure(L, -1)] = hookWhatWrapped;
+                environmentContext->m_newcclosures[lua_tomutclosure(L, -1)] = hookWhatWrapped;
                 // Point the cloned one to the correct original.
                 return 1;
             }
@@ -320,7 +307,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
                           "C->ANY");
                 // C -> ANY
-                const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_toclosure(L, -1));
+                const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_tomutclosure(L, -1));
 
                 // auto hkInfo = environmentContext->m_functionHooks[lua_toclosure(L, 1)];
                 // // original needn't be modified.
@@ -329,8 +316,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 // hkInfo.dwHookWithType = FunctionKind::NewCClosure;
                 // environmentContext->m_functionHooks[lua_toclosure(L, 1)] = hkInfo;
 
-                const auto hookWhat = lua_toclosure(L, 1);
-                const auto hookWith = lua_toclosure(L, -1);
+                const auto hookWhat = lua_tomutclosure(L, 1);
+                const auto hookWith = lua_tomutclosure(L, -1);
                 // Setting upvalues is not required here, as newcclosure stub doers not use them.
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
                           "Replacing native frames");
@@ -366,7 +353,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (!lua_iscfunction(L, 1)) {
             auto wrapped = false;
-            if (lua_iscfunction(L, 2) || (lua_toclosure(L, 2)->nupvalues > lua_toclosure(L, 1)->nupvalues)) {
+            if (lua_iscfunction(L, 2) || (lua_tomutclosure(L, 2)->nupvalues > lua_tomutclosure(L, 1)->nupvalues)) {
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
                           "Wrapping ANY to Luau Closure");
                 // This function is a C or has more upvalues than the target function, it is simpler to wrap this C closure into a Luau closure using newlclosure before proceeding
@@ -383,8 +370,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             /*
              *  Luau -> ANY
              */
-            const auto hookWhat = lua_toclosure(L, 1);
-            const auto hookWith = lua_toclosure(L, wrapped ? -1 : 2);
+            const auto hookWhat = lua_tomutclosure(L, 1);
+            const auto hookWith = lua_tomutclosure(L, wrapped ? -1 : 2);
 
             hookWhat->env = hookWith->env;
             hookWhat->stacksize = hookWith->stacksize;
@@ -396,13 +383,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
             hookWhat->nupvalues = hookWith->nupvalues;
             hookWhat->l.p = hookWith->l.p;
 
-            auto hkInfo = environmentContext->m_functionHooks[lua_toclosure(L, 1)];
+            auto hkInfo = environmentContext->m_functionHooks[lua_tomutclosure(L, 1)];
             // original needn't be modified.
             hkInfo.hookedWith = ReferencedLuauObject<Closure *,
                 ::lua_Type::LUA_TFUNCTION>(lua_ref(L, wrapped ? -1 : 2));
             hkInfo.dwHookedType = FunctionKind::LuauClosure;
             hkInfo.dwHookWithType = FunctionKind::NewCClosure;
-            environmentContext->m_functionHooks[lua_toclosure(L, 1)] = hkInfo;
+            environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = hkInfo;
 
             L->top->value.p = originalCloned;
             L->top->tt = LUA_TFUNCTION;
@@ -436,7 +423,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             luaL_argerror(L, 2, std::format("invalid metafield '{}'", szMetaFieldName).c_str());
 
         if (!lua_getmetatable(L, 1)) {
-            luaL_argerror(L, 2, "object has no metatable");
+            luaL_argerror(L, 1, "object has no metatable");
         } else {
             lua_setreadonly(L, -1, false);
             lua_pop(L, 1);
@@ -444,7 +431,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (!luaL_getmetafield(L, 1, szMetaFieldName))
             luaL_argerror(
-            L, 1, "cannot hookmetamethod on an object with no metatable, or that its metafield does not exist.");
+                L, 1, "cannot hookmetamethod on an object with no metatable, or that its metafield does not exist.");
+
+        if (!lua_isfunction(L, -1))
+            luaL_argerror(L, 2, "the metafield in the objects' metatable is not a function, and thus, cannot be hooked, use getrawmetatable and override it instead.");
 
         /*
          *  For an arg guard we must push a stub closure that will call the given to us, as the one given to us is a lua closure

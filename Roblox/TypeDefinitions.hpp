@@ -96,10 +96,9 @@ namespace RBX {
             RunClientScript = 0b10000000,
             RunServerScript = 0b100000000,
             AccessOutsideWrite = 0b10000000000,
-
             Unassigned = 0b100000000000000,
             AssetRequire = 0b1000000000000000,
-            LoadString = 0b10000000000000000,
+            LoadStringCapability = 0b10000000000000000,
             ScriptGlobals = 0b100000000000000000,
             CreateInstances = 0b1000000000000000000,
             Basic = 0b10000000000000000000,
@@ -374,18 +373,18 @@ namespace RBX {
 
             struct Attributes {
                 bool isDeprecated;
-                class RBX::Reflection::Descriptor *preferred;
-                enum RBX::Reflection::Descriptor::ThreadSafety threadSafety;
+                RBX::Reflection::Descriptor *preferred;
+                RBX::Reflection::Descriptor::ThreadSafety threadSafety;
             };
 
             void *vftable;
             std::string &name;
-            struct RBX::Reflection::Descriptor::Attributes attributes;
+            RBX::Reflection::Descriptor::Attributes attributes;
         };
 
         struct Type : RBX::Reflection::Descriptor {
             std::string &tag;
-            enum RBX::Reflection::ReflectionType reflectionType;
+            RBX::Reflection::ReflectionType reflectionType;
             bool isFloat;
             bool isNumber;
             bool isEnum;
@@ -400,8 +399,8 @@ namespace RBX {
 
         struct MemberDescriptor : RBX::Reflection::Descriptor {
             std::string &category;
-            class RBX::Reflection::ClassDescriptor *owner;
-            enum RBX::Security::Permissions permissions;
+            RBX::Reflection::ClassDescriptor *owner;
+            RBX::Security::Permissions permissions;
             int32_t _0; // __padding (unrepresentable);
         };
 

@@ -123,6 +123,13 @@ add_library(${PROJECT_NAME} SHARED
         Scheduling/Job/ImguiRenderJob.hpp
         FastFlags.cpp
         FastFlags.hpp
+        Communication/PipeCommunication.cpp
+        Communication/PipeCommunication.hpp
+        StuLuau/Extensions/luauext.hpp
+        StuLuau/Environment/UNC/FileSystem.cpp
+        StuLuau/Environment/UNC/FileSystem.hpp
+        StuLuau/Environment/UNC/Debug.cpp
+        StuLuau/Environment/UNC/Debug.hpp
 
 )
 

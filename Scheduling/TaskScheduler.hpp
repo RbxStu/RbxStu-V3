@@ -24,7 +24,7 @@ namespace RbxStu::Scheduling {
 }
 
 namespace RbxStu::Scheduling {
-    class __declspec(dllexport, novtable) TaskScheduler final {
+    class TaskScheduler final {
         std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > m_jobList;
         std::map<RBX::DataModelType, std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> > m_executionEngines;
 

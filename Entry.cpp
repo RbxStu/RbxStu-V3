@@ -27,6 +27,7 @@
 #include "Scheduling/Job/DataModelWatcherJob.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "Security.hpp"
+#include "Communication/PipeCommunication.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
 void EnableRobloxInternal() {
@@ -117,6 +118,7 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               std::format("-- RobloxStudioBeta.exe @ {}", reinterpret_cast<void *>(GetModuleHandleA(
                   "RobloxStudioBeta.exe"))));
+
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               std::format("-- RbxStu @ {}", reinterpret_cast<void *>(GetModuleHandleA(
                   RBXSTU_DLL_NAME))));
@@ -158,6 +160,12 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
     RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
+#if RBXSTU_ENABLE_DEBUG_LOGS
+    RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communciation [DEVELOPMENT ONLY]")
+
+    std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe").detach();
+#endif
+
 #ifdef ROBLOX_INTERNAL_ENABLED
     Sleep(100);
 
@@ -172,6 +180,7 @@ void Entry() {
         tsk.wait();
     }
 #endif
+
     // Test exec.
     /*    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
             _mm_pause();
@@ -201,7 +210,7 @@ BOOL WINAPI DllMain(const HINSTANCE hModule, const DWORD fdwReason, const LPVOID
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hModule);
             std::thread(Entry).detach();
-        break;
+            break;
 
         case DLL_PROCESS_DETACH:
             if (lpvReserved != nullptr) {

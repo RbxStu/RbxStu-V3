@@ -20,6 +20,7 @@
 
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Crypt.hpp"
+#include "StuLuau/Environment/UNC/Debug.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
 #include "StuLuau/Environment/UNC/Scripts.hpp"
 #include "StuLuau/Environment/UNC/WebSocket.hpp"
@@ -130,6 +131,7 @@ namespace RbxStu::Scheduling::Jobs {
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Cache>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Debug>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Scripts>());
@@ -293,6 +295,14 @@ namespace RbxStu::Scheduling::Jobs {
                 return x
             end)
         )", "InstanceFunctionIntialization");
+
+        envContext->DefineInitScript(R"(
+            setreadonly(getgenv().debug, false)
+            for i, e in getrenv().debug do
+                getgenv().debug[i] = e
+            end
+            setreadonly(getgenv().debug, true)
+        )", "DebugReClone");
 
         envContext->PushEnvironment();
 

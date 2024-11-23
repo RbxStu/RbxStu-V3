@@ -104,7 +104,11 @@ namespace RbxStu::Roblox {
 
         const auto lockViolationCrash = ::RbxStu::Scanners::RBX::GetSingleton()->GetFastFlag<bool *>(
             "LockViolationScriptCrash");
+        const auto renderDebugCheckThreading = ::RbxStu::Scanners::RBX::GetSingleton()->GetFastFlag<bool *>(
+            "RenderDebugCheckThreading2");
         const auto old = *lockViolationCrash;
+        const auto old1 = *renderDebugCheckThreading;
+        *renderDebugCheckThreading = false;
         *lockViolationCrash = false;
         // Disable thread access checks for this time, the operation we are doing is safe, but ROBLOX does not trust us.
 
@@ -113,6 +117,7 @@ namespace RbxStu::Roblox {
                errorMessage.empty() ? nullptr : errorMessage.c_str());
 
         *lockViolationCrash = old;
+        *renderDebugCheckThreading = old1;
 
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Roblox_ScriptContext,
                   std::format(

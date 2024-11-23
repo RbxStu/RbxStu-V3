@@ -14,6 +14,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         static int isuntouched(lua_State *L);
 
+        static int getcapabilities(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;;
 
         bool PushToGlobals() override;;

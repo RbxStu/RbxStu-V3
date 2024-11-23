@@ -2,14 +2,17 @@
 // Created by Dottik on 2/11/2024.
 //
 
+#include <Windows.h>
 #include "Crypt.hpp"
 
 #include <cryptopp/base64.h>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
-#include "lobject.h"
-#include "lstate.h"
-#include "StuLuau/ExecutionEngine.hpp"
+#include <lobject.h>
+#include <lstate.h>
+#include <StuLuau/ExecutionEngine.hpp>
+
+#include "StuLuau/Extensions/luauext.hpp"
 
 namespace RbxStu::StuLuau {
     struct YieldRequest;
@@ -20,7 +23,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
                 GetExecutionEngine(L);
         luaL_checkstring(L, 1);
-        lua_settop(L, 1);
+        lua_normalisestack(L, 1);
+
         const auto tsVal = tsvalue(L->top - 1);
 
         const auto dataSize = tsVal->len;
@@ -57,7 +61,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
                 GetExecutionEngine(L);
         luaL_checkstring(L, 1);
-        lua_settop(L, 1);
+        lua_normalisestack(L, 1);
         const auto tsVal = tsvalue(L->top - 1);
 
         const auto dataSize = tsVal->len;
@@ -91,12 +95,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Crypt::generatebytes(lua_State *L) {
+        const auto bufSize = luaL_checkinteger(L, 1);
+        lua_normalisestack(L, 1);
+
+        CryptoPP::SecByteBlock block(bufSize);
+        lua_pushlstring(L, reinterpret_cast<char *>(block.BytePtr()), block.size());
+
+        lua_pushcclosure(L, Crypt::base64encode, nullptr, 0);
+        lua_pushvalue(L, 2);
+        lua_call(L, 1, 1);
+        return 1;
+    }
+
     const luaL_Reg *Crypt::GetFunctionRegistry() {
         const static luaL_Reg funcs[] = {
             {"base64encode", RbxStu::StuLuau::Environment::UNC::Crypt::base64encode},
             {"base64_encode", RbxStu::StuLuau::Environment::UNC::Crypt::base64encode},
             {"base64decode", RbxStu::StuLuau::Environment::UNC::Crypt::base64decode},
             {"base64_decode", RbxStu::StuLuau::Environment::UNC::Crypt::base64decode},
+            {"generatebytes", RbxStu::StuLuau::Environment::UNC::Crypt::generatebytes},
             {nullptr, nullptr}
         };
 

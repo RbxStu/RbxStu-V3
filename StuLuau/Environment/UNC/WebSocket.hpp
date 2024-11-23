@@ -268,6 +268,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         bool PushToGlobals() override;
 
-        const char *GetLibraryName() override;;
+        const char *GetLibraryName() override;
     };
 }

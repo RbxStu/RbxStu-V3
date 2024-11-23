@@ -5,6 +5,7 @@
 #include "NewGlobals.hpp"
 
 #include "lobject.h"
+#include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::Custom {
     int NewGlobals::setuntouched(lua_State *L) {
@@ -23,20 +24,28 @@ namespace RbxStu::StuLuau::Environment::Custom {
         return 1;
     }
 
+    int NewGlobals::getcapabilities(lua_State *L) {
+        // Force hex format.
+        lua_pushstring(
+            L, std::format("{}", reinterpret_cast<void *>(LuauSecurity::GetThreadExtraspace(L)->capabilities)).c_str());
+        return 1;
+    }
+
     const luaL_Reg *NewGlobals::GetFunctionRegistry() {
         static luaL_Reg functions[] = {
             {"setuntouched", NewGlobals::setuntouched},
             {"isuntouched", NewGlobals::isuntouched},
+            {"getcapabilities", NewGlobals::getcapabilities},
             {nullptr, nullptr}
         };
         return functions;
     }
 
     bool NewGlobals::PushToGlobals() {
-        return false;
+        return true;
     }
 
-    const char * NewGlobals::GetLibraryName() {
+    const char *NewGlobals::GetLibraryName() {
         return "rbxstu";
     }
 }

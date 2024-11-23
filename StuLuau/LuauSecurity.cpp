@@ -7,6 +7,7 @@
 #include <libhat/Process.hpp>
 
 #include "Environment/UNC/Closures.hpp"
+#undef LoadString
 
 const static std::map<RbxStu::StuLuau::ExecutionSecurity, std::vector<RBX::Security::CapabilityPermissions> >
 s_CapabilityMap = {
@@ -27,7 +28,7 @@ s_CapabilityMap = {
 
             ::RBX::Security::CapabilityPermissions::Unassigned,
             ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadString,
+            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
             ::RBX::Security::CapabilityPermissions::ScriptGlobals,
             ::RBX::Security::CapabilityPermissions::CreateInstances,
             ::RBX::Security::CapabilityPermissions::Basic,
@@ -64,7 +65,7 @@ s_CapabilityMap = {
 
             ::RBX::Security::CapabilityPermissions::Unassigned,
             ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadString,
+            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
             ::RBX::Security::CapabilityPermissions::ScriptGlobals,
             ::RBX::Security::CapabilityPermissions::CreateInstances,
             ::RBX::Security::CapabilityPermissions::Basic,
@@ -96,7 +97,7 @@ s_CapabilityMap = {
 
             ::RBX::Security::CapabilityPermissions::Unassigned,
             ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadString,
+            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
             ::RBX::Security::CapabilityPermissions::ScriptGlobals,
             ::RBX::Security::CapabilityPermissions::CreateInstances,
             ::RBX::Security::CapabilityPermissions::Basic,
@@ -129,7 +130,7 @@ s_CapabilityMap = {
 
             ::RBX::Security::CapabilityPermissions::Unassigned,
             ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadString,
+            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
             ::RBX::Security::CapabilityPermissions::ScriptGlobals,
             ::RBX::Security::CapabilityPermissions::CreateInstances,
             ::RBX::Security::CapabilityPermissions::Basic,
@@ -167,7 +168,7 @@ s_CapabilityMap = {
 
             ::RBX::Security::CapabilityPermissions::Unassigned,
             ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadString,
+            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
             ::RBX::Security::CapabilityPermissions::ScriptGlobals,
             ::RBX::Security::CapabilityPermissions::CreateInstances,
             ::RBX::Security::CapabilityPermissions::Basic,
@@ -301,6 +302,40 @@ namespace RbxStu::StuLuau {
         return closure->c.f == RbxStu::StuLuau::Environment::UNC::Closures::newcclosure_stub || !isRobloxFunction;
     }
 
+    static void (__fastcall *ROBLOX_USERTHREAD_CALLBACKORIGINAL)(lua_State *LP, lua_State *L) = nullptr;
+
+    static void __userthread_detour(lua_State *parentL, lua_State *childL) {
+        ROBLOX_USERTHREAD_CALLBACKORIGINAL(parentL, childL); // We are a post-exec hook.
+
+        /*
+         *  If the userdata is nullptr on either of them, then this means we are probably on the initial initialization.
+         *  This means we must ignore the call, as it probably does not concern us at all.
+         */
+
+        if (parentL == nullptr || childL == nullptr) return; // We do not care.
+        if (parentL->userdata == nullptr || childL->userdata == nullptr) return;
+
+        const auto security = LuauSecurity::GetSingleton();
+        if (security->IsOurThread(parentL)) {
+            // Roblox does not maintain our magic for thread permissions, we must override it ourselves.
+            security->MarkThread(childL);
+        }
+    }
+
+    static void ReplaceUserthreadIfNotReplaced(lua_State *L) {
+        // Roblox will obviously use the same function, the address should be consistent with one another.
+
+        if (L->global->cb.userthread == nullptr)
+            return; // ???
+
+        if (ROBLOX_USERTHREAD_CALLBACKORIGINAL == nullptr)
+            ROBLOX_USERTHREAD_CALLBACKORIGINAL = L->global->cb.userthread;
+
+        // Overwrite with our detour.
+        if (L->global->cb.userthread == ROBLOX_USERTHREAD_CALLBACKORIGINAL)
+            L->global->cb.userthread = __userthread_detour;
+    }
+
     void LuauSecurity::SetThreadSecurity(lua_State *L, const ExecutionSecurity executionSecurity,
                                          const std::int32_t identity,
                                          const bool markThread) {
@@ -317,5 +352,11 @@ namespace RbxStu::StuLuau {
         extraSpace->contextInformation.identity = static_cast<RBX::Security::Permissions>(identity);
 
         if (markThread) this->MarkThread(L);
+
+        /*
+         *  Due to the nature of ROBLOX, they don't like to be cool with us. We must override the default userthread callback with a proxy call to be able to properly maintain the marked state on our lua states.
+         */
+
+        ReplaceUserthreadIfNotReplaced(L);
     }
 } // RbxStu::StuLuau

@@ -43,12 +43,12 @@ namespace RbxStu::Roblox {
 
     void DataModel::SetDataModelLock(const bool newState) const {
         // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
-        *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x678) = newState;
+        *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6B8) = newState;
     }
 
     bool DataModel::GetDataModelLock() const {
         // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
-        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x678);
+        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6B8);
     }
 
     std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromJob(void *robloxJob) {

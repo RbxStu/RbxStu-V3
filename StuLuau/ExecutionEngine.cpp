@@ -11,6 +11,7 @@
 #include "lapi.h"
 #include "lualib.h"
 #include "LuauSecurity.hpp"
+#include "Extensions/luauext.hpp"
 #include "Luau/CodeGen.h"
 #include "Luau/Compiler.h"
 #include "Luau/CodeGen/src/CodeGenContext.h"
@@ -138,7 +139,7 @@ namespace RbxStu::StuLuau {
             return;
         }
 
-        luauSecurity->ElevateClosure(lua_toclosure(nL, -1), executeRequest.executeWithSecurity);
+        luauSecurity->ElevateClosure(lua_tomutclosure(nL, -1), executeRequest.executeWithSecurity);
 
         if (executeRequest.bGenerateNativeCode) {
             Luau::CodeGen::CompilationOptions opts{};

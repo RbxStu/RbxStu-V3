@@ -18,6 +18,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int newcclosure_stub(lua_State *L);
 
+        static int newcclosure_stubcont(lua_State *L, int status);
+
         static int newcclosure(lua_State *L);
 
         static int newlclosure(lua_State *L);
