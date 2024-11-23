@@ -242,14 +242,15 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         // Luau closures must be referenced, else they will get collected.
         const auto hookedWithRef = lua_ref(L, 2);
-        if (environmentContext->m_functionHooks.contains(lua_tomutclosure(L, 1))) {
-            // TODO: Correctly handle hooking already hooked closures.
-        } else {
+        if (!environmentContext->m_functionHooks.contains(lua_tomutclosure(L, 1))) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Created Hook Information");
             environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = HookInformation{
                 ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>{lua_ref(L, -1)},
                 ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>{hookedWithRef}
             };
+        } else {
+            // We DO NOT want to modify an already defined function hook, if so, we will be unable to restore it to its original definition!
+            // This means ORIGINAL must NEVER be modified on hookfunction other than when the function hook is originally and initially defined.
         }
 
         lua_pop(L, 2);
@@ -288,7 +289,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_tomutclosure(L, -1));
 
                 auto hkInfo = environmentContext->m_functionHooks[lua_tomutclosure(L, 1)];
-                hkInfo.original = hookWhatWrapped;
                 hkInfo.hookedWith = hookWithWrapped;
                 hkInfo.dwHookedType = FunctionKind::NewCClosure;
                 hkInfo.dwHookWithType = FunctionKind::NewCClosure;
