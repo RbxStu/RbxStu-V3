@@ -20,6 +20,7 @@
 #include <tlhelp32.h>
 
 #include "lualib.h"
+#include "ludata.h"
 
 namespace RbxStu {
     class Utilities {
@@ -196,9 +197,13 @@ namespace RbxStu {
         __forceinline static std::pair<bool, std::string> getInstanceType(lua_State *L, const int index) {
             luaL_checktype(L, index, LUA_TUSERDATA);
 
+            if (lua_touserdatatagged(L, index, UTAG_PROXY) != nullptr)
+                return {false, "FAKEINSTANCE::NEWPROXY"};
+
             lua_getglobal(L, "typeof");
             lua_pushvalue(L, index);
             lua_call(L, 1, 1);
+
 
             if (const bool isInstance = (strcmp(lua_tostring(L, -1), "Instance") == 0); !isInstance) {
                 const auto str = lua_tostring(L, -1);
@@ -228,6 +233,10 @@ namespace RbxStu {
         __forceinline static void checkInstance(lua_State *L, const int index, const char *expectedClassname) {
             luaL_checktype(L, index, LUA_TUSERDATA);
 
+            if (lua_touserdatatagged(L, index, UTAG_PROXY) != nullptr)
+                luaL_argerror(
+                L, index, std::format("expected to be {}, got userdata<newproxy>", expectedClassname).c_str());
+
             lua_getglobal(L, "typeof");
             lua_pushvalue(L, index);
             lua_call(L, 1, 1);
@@ -248,7 +257,7 @@ namespace RbxStu {
             lua_pop(L, 1);
 
             if (!isExpectedClass)
-                luaL_argerror(L, index, std::format("Expected to be {}", expectedClassname).c_str());
+                luaL_argerror(L, index, std::format("expected to be {}", expectedClassname).c_str());
         }
 
         template<typename T>
