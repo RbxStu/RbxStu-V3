@@ -433,7 +433,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
             luaL_argerror(L, 1, "cannot setrawmetatable on the global environment of the executor");
 
-        return lua_setmetatable(L, 1);
+
+        lua_setmetatable(L, 1);
+        lua_pushvalue(L, 1);
+        return 1;
     }
 
     int Globals::getnamecallmethod(lua_State *L) {
