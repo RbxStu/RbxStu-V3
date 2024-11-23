@@ -309,12 +309,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 // C -> ANY
                 const auto hookWithWrapped = environmentContext->m_newcclosures.at(lua_tomutclosure(L, -1));
 
-                // auto hkInfo = environmentContext->m_functionHooks[lua_toclosure(L, 1)];
-                // // original needn't be modified.
-                // hkInfo.hookedWith = hookWithWrapped;
-                // hkInfo.dwHookedType = FunctionKind::CClosure;
-                // hkInfo.dwHookWithType = FunctionKind::NewCClosure;
-                // environmentContext->m_functionHooks[lua_toclosure(L, 1)] = hkInfo;
+                auto hkInfo = environmentContext->m_functionHooks[lua_tomutclosure(L, 1)];
+                // original needn't be modified.
+                hkInfo.hookedWith = hookWithWrapped;
+                hkInfo.dwHookedType = FunctionKind::CClosure;
+                hkInfo.dwHookWithType = FunctionKind::NewCClosure;
+                environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = hkInfo;
 
                 const auto hookWhat = lua_tomutclosure(L, 1);
                 const auto hookWith = lua_tomutclosure(L, -1);
@@ -388,7 +388,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             hkInfo.hookedWith = ReferencedLuauObject<Closure *,
                 ::lua_Type::LUA_TFUNCTION>(lua_ref(L, wrapped ? -1 : 2));
             hkInfo.dwHookedType = FunctionKind::LuauClosure;
-            hkInfo.dwHookWithType = FunctionKind::NewCClosure;
+            hkInfo.dwHookWithType = FunctionKind::LuauClosure;
             environmentContext->m_functionHooks[lua_tomutclosure(L, 1)] = hkInfo;
 
             L->top->value.p = originalCloned;
@@ -398,6 +398,98 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         luaL_error(L, "hookfunction: not supported");
+        return 0;
+    }
+
+    int Closures::ishooked(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
+
+        const auto whatClosure = lua_tomutclosure(L, 1);
+
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+        const auto environmentContext = executionEngine->GetEnvironmentContext();
+
+        lua_pushboolean(L, environmentContext->m_functionHooks.contains(whatClosure));
+
+        return 1;
+    }
+
+    int Closures::restorefunction(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
+
+        const auto unhookWhat = lua_tomutclosure(L, 1);
+
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+        const auto environmentContext = executionEngine->GetEnvironmentContext();
+
+
+        auto hookInfo = environmentContext->m_functionHooks[unhookWhat];
+
+        if (hookInfo.dwHookedType == hookInfo.dwHookWithType) {
+            // The hook in this case is a simple replace back to original.
+            if (hookInfo.original.GetReferencedObject(L).has_value()) {
+                // Original is alive.
+                if (hookInfo.original.GetReferencedObject(L).value()->isC) {
+                    // C-type unhook.
+                    if (hookInfo.dwHookedType == FunctionKind::NewCClosure) {
+                        // newcclosure -> newcclosure hooks mostly go off the grounds of newcclosure index moving.
+                        environmentContext->m_newcclosures[unhookWhat] = hookInfo.original;
+                    } else {
+                        const auto unhookWith = hookInfo.original.GetReferencedObject(L).value();
+                        unhookWhat->c.f = [](lua_State *L) { return 0; };
+                        unhookWhat->c.cont = [](lua_State *L, int status) { return 0; };
+                        unhookWhat->env = unhookWith->env;
+                        unhookWhat->stacksize = unhookWith->stacksize;
+                        unhookWhat->preload = unhookWith->preload;
+
+                        for (int i = 0; i < unhookWith->nupvalues; i++)
+                            setobj2n(L, &unhookWhat->c.upvals[i], &unhookWith->c.upvals[i]);
+
+                        unhookWhat->nupvalues = unhookWith->nupvalues;
+                        unhookWhat->c.f = unhookWith->c.f;
+                        unhookWhat->c.cont = unhookWith->c.cont;
+                    }
+                } else {
+                    // Luau->Luau unhook.
+                    const auto unhookWith = hookInfo.original.GetReferencedObject(L).value();
+                    unhookWhat->env = unhookWith->env;
+                    unhookWhat->stacksize = unhookWith->stacksize;
+                    unhookWhat->preload = unhookWith->preload;
+
+                    for (int i = 0; i < unhookWith->nupvalues; i++)
+                        setobj2n(L, &unhookWhat->l.uprefs[i], &unhookWith->l.uprefs[i]);
+
+                    unhookWhat->nupvalues = unhookWith->nupvalues;
+                    unhookWhat->l.p = unhookWith->l.p;
+                }
+            }
+        }
+
+        if (hookInfo.dwHookedType == FunctionKind::CClosure && hookInfo.dwHookWithType == FunctionKind::NewCClosure) {
+            // Wrapped C closure unhook.
+            if (environmentContext->m_newcclosures.contains(unhookWhat))
+                environmentContext->m_newcclosures.erase(unhookWhat); // Erase.
+
+            const auto originalFunction = hookInfo.original.GetReferencedObject(L).value();
+            unhookWhat->c.f = [](lua_State *L) { return 0; };
+            unhookWhat->c.cont = [](lua_State *L, int status) { return 0; };
+            unhookWhat->env = originalFunction->env;
+            unhookWhat->stacksize = originalFunction->stacksize;
+            unhookWhat->preload = originalFunction->preload;
+
+            for (int i = 0; i < originalFunction->nupvalues; i++)
+                setobj2n(L, &unhookWhat->c.upvals[i], &originalFunction->c.upvals[i]);
+
+            unhookWhat->nupvalues = originalFunction->nupvalues;
+            unhookWhat->c.f = originalFunction->c.f;
+            unhookWhat->c.cont = originalFunction->c.cont;
+        }
+
+        if (environmentContext->m_functionHooks.contains(unhookWhat))
+            environmentContext->m_functionHooks.erase(unhookWhat);
+
         return 0;
     }
 
@@ -431,10 +523,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (!luaL_getmetafield(L, 1, szMetaFieldName))
             luaL_argerror(
-                L, 1, "cannot hookmetamethod on an object with no metatable, or that its metafield does not exist.");
+            L, 1, "cannot hookmetamethod on an object with no metatable, or that its metafield does not exist.");
 
         if (!lua_isfunction(L, -1))
-            luaL_argerror(L, 2, "the metafield in the objects' metatable is not a function, and thus, cannot be hooked, use getrawmetatable and override it instead.");
+            luaL_argerror(
+            L, 2,
+            "the metafield in the objects' metatable is not a function, and thus, cannot be hooked, use getrawmetatable and override it instead.");
 
         /*
          *  For an arg guard we must push a stub closure that will call the given to us, as the one given to us is a lua closure
@@ -459,6 +553,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     const luaL_Reg *Closures::GetFunctionRegistry() {
         static luaL_Reg closuresLib[] = {
+            {"ishooked", RbxStu::StuLuau::Environment::UNC::Closures::ishooked},
+            {"restorefunction", RbxStu::StuLuau::Environment::UNC::Closures::restorefunction},
             {"hookfunction", RbxStu::StuLuau::Environment::UNC::Closures::hookfunction},
             {"hookmetamethod", RbxStu::StuLuau::Environment::UNC::Closures::hookmetamethod},
 

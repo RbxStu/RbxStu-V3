@@ -30,6 +30,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int hookfunction(lua_State *L);
 
+        static int ishooked(lua_State *L);
+
+        static int restorefunction(lua_State *L);
+
         static int hookmetamethod(lua_State *L);
 
         const luaL_Reg *GetFunctionRegistry() override;
