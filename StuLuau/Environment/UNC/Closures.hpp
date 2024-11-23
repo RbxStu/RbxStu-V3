@@ -28,6 +28,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int loadstring(lua_State *L);
 
+        static int isunhookable(lua_State *L);
+
+        static int makeunhookable(lua_State *L);
+
         static int hookfunction(lua_State *L);
 
         static int ishooked(lua_State *L);

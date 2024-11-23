@@ -15,6 +15,7 @@
 #include "lobject.h"
 #include "lstate.h"
 #include "Luau/Compiler.h"
+#include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/LuauSecurity.hpp"
 #include "StuLuau/Extensions/luauext.hpp"
@@ -218,6 +219,29 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Closures::isunhookable(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+        const auto environmentContext = executionEngine->GetEnvironmentContext();
+
+        lua_pushboolean(L, environmentContext->IsUnhookable(lua_tomutclosure(L, 1)));
+
+        return 1;
+    }
+
+    int Closures::makeunhookable(lua_State *L) {
+        luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+
+        if (const auto environmentContext = executionEngine->GetEnvironmentContext(); !environmentContext->IsUnhookable(
+            lua_tomutclosure(L, 1)))
+            environmentContext->MakeUnhookable(lua_tomutclosure(L, 1));
+
+        return 1;
+    }
+
     int Closures::hookfunction(lua_State *L) {
         luaL_checktype(L, 1, ::lua_Type::LUA_TFUNCTION);
         luaL_checktype(L, 2, ::lua_Type::LUA_TFUNCTION);
@@ -226,6 +250,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (lua_gettop(L) > 2)
             lua_settop(L, 2);
+
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+        const auto environmentContext = executionEngine->GetEnvironmentContext();
+
+        if (environmentContext->IsUnhookable(lua_tomutclosure(L, 1)))
+            luaL_argerror(L, 1, "this function cannot be hooked from Luau");
 
         lua_pushcclosure(L, clonefunction, nullptr, 0);
         lua_pushvalue(L, 1);
@@ -236,9 +267,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_pushvalue(L, 1);
         lua_pcall(L, 1, 1, 0);
 
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
-        const auto environmentContext = executionEngine->GetEnvironmentContext();
 
         // Luau closures must be referenced, else they will get collected.
         const auto hookedWithRef = lua_ref(L, 2);
@@ -424,6 +452,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 GetExecutionEngine(L);
         const auto environmentContext = executionEngine->GetEnvironmentContext();
 
+        if (!environmentContext->m_functionHooks.contains(unhookWhat))
+            return 0; // Function was not hooked.
 
         auto hookInfo = environmentContext->m_functionHooks[unhookWhat];
 
@@ -502,6 +532,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 GetExecutionEngine(L);
         const auto environmentContext = executionEngine->GetEnvironmentContext();
 
+        if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
+            luaL_argerror(L, 1, "cannot hookmetamethod on the global environment of the executor");
+
         auto found = false;
         for (auto i = luaT_eventname; i < luaT_eventname + 21; i++) {
             // 21 == sizeof(luaT_eventname)
@@ -553,6 +586,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     const luaL_Reg *Closures::GetFunctionRegistry() {
         static luaL_Reg closuresLib[] = {
+            {"isunhookable", RbxStu::StuLuau::Environment::UNC::Closures::isunhookable},
+            {"makeunhookable", RbxStu::StuLuau::Environment::UNC::Closures::makeunhookable},
             {"ishooked", RbxStu::StuLuau::Environment::UNC::Closures::ishooked},
             {"restorefunction", RbxStu::StuLuau::Environment::UNC::Closures::restorefunction},
             {"hookfunction", RbxStu::StuLuau::Environment::UNC::Closures::hookfunction},

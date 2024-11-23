@@ -410,6 +410,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!lua_getmetatable(L, 1))
             lua_pushnil(L);
 
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+
+        if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
+            luaL_argerror(L, 1, "cannot getrawmetatable on the global environment of the executor");
+
         return 1;
     }
 
@@ -420,6 +426,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         // There may be more elements on the lua stack, this is stupid, but if we don't we will probably cause issues.
         if (lua_gettop(L) != 2)
             lua_pushvalue(L, 2);
+
+        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+
+        if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
+            luaL_argerror(L, 1, "cannot setrawmetatable on the global environment of the executor");
 
         return lua_setmetatable(L, 1);
     }
@@ -647,7 +659,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
             {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
 
             {"getcallingscript", RbxStu::StuLuau::Environment::UNC::Globals::getcallingscript},
-
 
             {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
             {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
