@@ -195,7 +195,8 @@ namespace RbxStu {
         }
 
         __forceinline static std::pair<bool, std::string> getInstanceType(lua_State *L, const int index) {
-            luaL_checktype(L, index, LUA_TUSERDATA);
+            if (lua_type(L, index) != LUA_TUSERDATA)
+                return {false, luaL_typename(L, index)};
 
             if (lua_touserdatatagged(L, index, UTAG_PROXY) != nullptr)
                 return {false, "FAKEINSTANCE::NEWPROXY"};

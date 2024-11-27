@@ -14,6 +14,8 @@ namespace RbxStu::StuLuau::Environment {
 
         virtual bool PushToGlobals() { return false; }
 
-        virtual const char *GetLibraryName() { return nullptr; };
+        virtual bool PushNoTable() { return false; }
+
+        virtual const char *GetLibraryName() { return "????"; };
     };
 } // RbxStu::StuLuau::Environment

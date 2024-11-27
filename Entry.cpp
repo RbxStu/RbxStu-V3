@@ -28,6 +28,7 @@
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "Security.hpp"
 #include "Communication/PipeCommunication.hpp"
+#include "Scheduling/Job/ImguiRenderJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 
 void EnableRobloxInternal() {
@@ -156,6 +157,7 @@ void Entry() {
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::InitializeExecutionEngineJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ExecutionEngineStepJob>();
     scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::DataModelWatcherJob>();
+    scheduler->AddSchedulerJob<RbxStu::Scheduling::Jobs::ImguiRenderJob>();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
     RbxStu::Communication::WebsocketCommunication::GetSingleton();

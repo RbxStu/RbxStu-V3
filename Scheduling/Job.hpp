@@ -23,6 +23,8 @@ namespace RbxStu::Scheduling {
     public:
         virtual ~Job() = default;
 
+        virtual void OnDestroy(RbxStu::Scheduling::JobKind jobKind, void *job) { return; };
+
         /*
          *  This function must be overridden by the one who inherits from this class.
          *      - True -> Execute Step function

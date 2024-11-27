@@ -18,13 +18,6 @@
 std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator>
 RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
 
-void *originalWaitingHybridScriptsJob = nullptr;
-
-bool waitingHybridScriptsJobStep(void *self) {
-    printf("Hello, world! VFT hooked! %p\n", self);
-    return reinterpret_cast<bool(*)(void *)>(originalWaitingHybridScriptsJob)(self);
-}
-
 void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
     if (this->m_bIsInitialized) return;
 
@@ -84,12 +77,13 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
         this->m_JobHooks[vftable]->hookedJobName = demangled;
         this->m_JobHooks[vftable]->jobKind = jobKind;
 
+
         auto hookAttempt = MH_CreateHook(jobStepPointer,
                                          RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep,
                                          reinterpret_cast<void **>(&this->m_JobHooks[vftable]->original));
         if (this->m_JobHooks[vftable]->original != nullptr) {
             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
-                      std::format("Established 0x{:x} --> 0x{:x}",
+                      std::format("Established 0x{:x} --> 0x{:x} [Step]",
                           reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::
                               __Hook__GenericJobStep),
                           reinterpret_cast<uintptr_t>(this->m_JobHooks[vftable]->original)));
@@ -99,6 +93,23 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
                       std::format("Memory is not executable --> 0x{:x}", reinterpret_cast<uintptr_t>(jobStepPointer)));
         }
 
+        hookAttempt = MH_CreateHook(
+            found->pVirtualFunctionTable[0], RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__DestroyGenericJob,
+            reinterpret_cast<void **>(&this->m_JobHooks[vftable]->destroyJobOriginal));
+
+        if (this->m_JobHooks[vftable]->destroyJobOriginal != nullptr) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
+                      std::format("Established 0x{:x} --> 0x{:x} [NotifyDestroy]",
+                          reinterpret_cast<uintptr_t>(RbxStu::Scheduling::TaskSchedulerOrchestrator::
+                              __Hook__DestroyGenericJob),
+                          reinterpret_cast<uintptr_t>(this->m_JobHooks[vftable]->destroyJobOriginal)));
+            pointerList.push_back(jobStepPointer);
+        } else if (hookAttempt == MH_STATUS::MH_ERROR_NOT_EXECUTABLE) {
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskSchedulerOrchestrator,
+                      std::format("Memory is not executable --> 0x{:x}", reinterpret_cast<uintptr_t>(jobStepPointer)));
+        }
+
+
         classes[demangled] = found;
     }
 
@@ -106,6 +117,22 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::Initialize() {
         MH_EnableHook(pointer);
 
     this->m_bIsInitialized = true;
+}
+
+void RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__DestroyGenericJob(void **self) {
+    const auto orchestrator = RbxStu::Scheduling::TaskSchedulerOrchestrator::pInstance;
+    const auto jobOriginal = orchestrator->m_JobHooks[*reinterpret_cast<
+        RBX::DataModelJobVFTable **>(self)]; // VFtable.
+
+    orchestrator->GetTaskScheduler()->NotifyDestroy(jobOriginal->jobKind, self);
+
+    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
+        while (oxorany(true) == oxorany(true)) {
+            throw std::exception("RBXCRASH: whopsies");
+        }
+    }
+
+    return jobOriginal->destroyJobOriginal(self);
 }
 
 bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(

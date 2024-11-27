@@ -112,8 +112,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (status != LUA_OK && status != LUA_YIELD) {
             const auto errorString = lua_tostring(L, -1);
-            if (strcmp(errorString, "attempt to yield across metamethod/C-call boundary") == 0 || strcmp(
-                    errorString, "thread is not yieldable") == 0)
+            if (strcmp(errorString, "attempt to yield across metamethod/C-call boundary") == 0)
                 return lua_yield(L, 0);
         }
 

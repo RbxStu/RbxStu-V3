@@ -6,6 +6,7 @@
 #include "ExceptionHandler.hpp"
 
 #include <MinHook.h>
+#include <minidumpapiset.h>
 #include <print>
 #include <Psapi.h>
 #include <Windows.h>
@@ -16,21 +17,53 @@
 #include "Settings.hpp"
 #include "Analysis/Disassembler.hpp"
 
+std::string RbxStu::ExceptionHandler::LookupModuleByAddress(const void *address) {
+    const HANDLE hProcess = GetCurrentProcess();
+    DWORD Needed;
+
+    if (HMODULE phModules[1024]; EnumProcessModules(hProcess, phModules, sizeof(phModules), &Needed)) {
+        for (unsigned int i = 0; i < Needed / sizeof(HMODULE); i++) {
+            MODULEINFO moduleInfo;
+            if (GetModuleInformation(hProcess, phModules[i], &moduleInfo, sizeof(moduleInfo))) {
+                void *moduleBase = moduleInfo.lpBaseOfDll;
+                if (const std::size_t moduleSize = moduleInfo.SizeOfImage;
+                    address >= static_cast<BYTE *>(moduleBase) && address < static_cast<BYTE *>(moduleBase) +
+                    moduleSize) {
+                    if (WCHAR moduleName[MAX_PATH]; GetModuleFileNameExW(hProcess, phModules[i], moduleName,
+                                                                         sizeof(moduleName) / sizeof(WCHAR))) {
+                        const std::filesystem::path fullPath(moduleName);
+                        const std::wstring fileName = fullPath.filename();
+                        std::string moduleNameConverted = RbxStu::Utilities::WcharToString(fileName.c_str());
+
+                        return moduleNameConverted;
+                    }
+                }
+            }
+        }
+    }
+
+    char name[MAX_PATH];
+
+    GetModuleFileNameA(GetModuleHandle(nullptr), name, MAX_PATH);
+
+    return name;
+}
+
 std::optional<std::pair<std::string, void *> > RbxStu::ExceptionHandler::LookupAddress(const void *address) {
-    HMODULE processModules[1024];
+    HMODULE phModules[1024];
     HANDLE ourProcessHandle = GetCurrentProcess();
     DWORD Needed;
 
-    if (EnumProcessModules(ourProcessHandle, processModules, sizeof(processModules), &Needed)) {
+    if (EnumProcessModules(ourProcessHandle, phModules, sizeof(phModules), &Needed)) {
         for (unsigned int i = 0; i < Needed / sizeof(HMODULE); i++) {
             MODULEINFO moduleInfo;
-            if (GetModuleInformation(ourProcessHandle, processModules[i], &moduleInfo, sizeof(moduleInfo))) {
+            if (GetModuleInformation(ourProcessHandle, phModules[i], &moduleInfo, sizeof(moduleInfo))) {
                 void *moduleBase = moduleInfo.lpBaseOfDll;
-                size_t moduleSize = moduleInfo.SizeOfImage;
+                std::size_t moduleSize = moduleInfo.SizeOfImage;
                 if (address >= static_cast<BYTE *>(moduleBase) && address < static_cast<BYTE *>(moduleBase) +
                     moduleSize) {
                     WCHAR moduleName[MAX_PATH];
-                    if (GetModuleFileNameExW(ourProcessHandle, processModules[i], moduleName,
+                    if (GetModuleFileNameExW(ourProcessHandle, phModules[i], moduleName,
                                              sizeof(moduleName) / sizeof(WCHAR))) {
                         const std::filesystem::path fullPath(moduleName);
                         const std::wstring fileName = fullPath.filename();
@@ -173,9 +206,26 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 RBXCRASH -- End");
 
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+
+    EXCEPTION_POINTERS exceptionPointers{};
+
+    CONTEXT ctx{};
+    RtlCaptureContext(&ctx);
+    exceptionPointers.ContextRecord = &ctx;
+
+    EXCEPTION_RECORD exRecord;
+    exRecord.ExceptionAddress =
+            exceptionPointers.ExceptionRecord = &exRecord;
+
+    RbxStu::ExceptionHandler::CreateDump(&exceptionPointers);
+
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+
     MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
 }
-
 
 long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers) {
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
@@ -310,9 +360,63 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- End");
 
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+
+    RbxStu::ExceptionHandler::CreateDump(pExceptionPointers);
+
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+              "-- RbxStu V3 -- Dump emitted.");
+
+
     MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
     Sleep(10000);
     return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers) {
+    LoadLibraryA("DbgHelp.dll");
+
+    auto name = Utilities::GetDllDir().value().string(); {
+        SYSTEMTIME t;
+        GetSystemTime(&t);
+        name += std::format("/{}_{:4d}{:2d}{:2d}_{:2d}{:2d}{:2d}.dmp",
+                            RbxStu::ExceptionHandler::LookupModuleByAddress(
+                                reinterpret_cast<void *>(
+                                    reinterpret_cast<std::uintptr_t>(GetModuleHandle(nullptr)) + 0x8)),
+                            t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
+    }
+
+    auto hFile = CreateFileA(name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                             nullptr);
+
+    MINIDUMP_EXCEPTION_INFORMATION ex{};
+    ex.ExceptionPointers = pExceptionPointers ? pExceptionPointers : nullptr;
+    ex.ThreadId = GetCurrentThreadId();
+    ex.ClientPointers = false;
+
+    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+                      static_cast<MINIDUMP_TYPE>(::MINIDUMP_TYPE::MiniDumpNormal |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithDataSegs |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithFullMemory |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithHandleData |
+                                                 ::MINIDUMP_TYPE::MiniDumpFilterMemory |
+                                                 ::MINIDUMP_TYPE::MiniDumpScanMemory |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithUnloadedModules |
+                                                 ::MINIDUMP_TYPE::MiniDumpFilterModulePaths |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithProcessThreadData |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithoutOptionalData |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithThreadInfo |
+                                                 ::MINIDUMP_TYPE::MiniDumpWithCodeSegs
+
+                      ),
+                      &ex, nullptr,
+                      nullptr
+    );
+
+    MessageBoxA(nullptr, "Dumping Process for debugging information, please wait a bit...", "Dumpíng Process", MB_OK);
+    Sleep(15000);
 }
 
 void RbxStu::ExceptionHandler::InstallHandler() {

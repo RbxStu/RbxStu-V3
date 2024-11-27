@@ -64,6 +64,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int gethui(lua_State *L);
 
+        static int getsenv(lua_State *L);
+
         static int isnetworkowner(lua_State *L);
 
         static int firetouchinterest(lua_State *L);

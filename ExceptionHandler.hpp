@@ -12,6 +12,10 @@ namespace RbxStu {
     class ExceptionHandler final abstract {
         static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
 
+        static void CreateDump(EXCEPTION_POINTERS *pExceptionPointers);
+
+        static std::string LookupModuleByAddress(const void *address);
+
         static std::optional<std::pair<std::string, void *> > LookupAddress(const void *address);
 
         static void RBXCRASH(const char *crashType, const char *crashDescription);

@@ -16,6 +16,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         static int getcapabilities(lua_State *L);
 
+        static int getobjectaddress(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;;
 
         bool PushToGlobals() override;;

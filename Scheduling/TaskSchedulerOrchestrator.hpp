@@ -43,6 +43,8 @@ namespace RbxStu::Scheduling {
             std::string hookedJobName;
             JobKind jobKind;
             r_RBX_DataModelJob_Step original;
+
+            void (__fastcall*destroyJobOriginal)(void *);
         };
 
         static std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator> pInstance;
@@ -57,6 +59,8 @@ namespace RbxStu::Scheduling {
             std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator::DataModelJobStepHookMetadata> > m_JobHooks;
 
         void Initialize();
+
+        static void __Hook__DestroyGenericJob(void **self);
 
         static bool __Hook__GenericJobStep(void **self, RBX::TaskScheduler::Job::Stats *timeMetrics);
 

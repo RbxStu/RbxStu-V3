@@ -31,7 +31,7 @@ namespace RbxStu::Scheduling::Jobs {
 
         const auto taskScheduler = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         RBX::DataModelType dataModels[] = {
-            RBX::DataModelType::DataModelType_MainMenuStandalone, RBX::DataModelType::DataModelType_Edit,
+            RBX::DataModelType::DataModelType_Edit,
             RBX::DataModelType::DataModelType_PlayClient, RBX::DataModelType::DataModelType_PlayServer
         };
 

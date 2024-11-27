@@ -70,6 +70,7 @@ namespace RbxStu {
 
     /// @brief Defines a section for use in the logger
 #define DefineSectionName(varName, sectionName) constexpr auto varName = sectionName
+    DefineSectionName(Graphics, "RbxStuV3::D3D11");
     DefineSectionName(MainThread, "RbxStuV3::MainThread");
     DefineSectionName(SecurityName, "RbxStuV3::Security");
     DefineSectionName(Anonymous, "RbxStuV3::Anonymous");

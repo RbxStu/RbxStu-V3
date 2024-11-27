@@ -19,15 +19,23 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
     int NewGlobals::isuntouched(lua_State *L) {
         luaL_checktype(L, 1, lua_Type::LUA_TTABLE);
+        lua_rawcheckstack(L, 1);
         lua_pushboolean(L, static_cast<const Table *>(lua_topointer(L, 1))->safeenv);
-
         return 1;
     }
 
     int NewGlobals::getcapabilities(lua_State *L) {
         // Force hex format.
+        lua_rawcheckstack(L, 1);
         lua_pushstring(
             L, std::format("{}", reinterpret_cast<void *>(LuauSecurity::GetThreadExtraspace(L)->capabilities)).c_str());
+        return 1;
+    }
+
+    int NewGlobals::getobjectaddress(lua_State *L) {
+        lua_rawcheckstack(L, 1);
+        lua_pushstring(L, std::format("{}", lua_topointer(L, 1)).c_str());
+
         return 1;
     }
 
@@ -36,6 +44,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
             {"setuntouched", NewGlobals::setuntouched},
             {"isuntouched", NewGlobals::isuntouched},
             {"getcapabilities", NewGlobals::getcapabilities},
+            {"getobjectaddress", NewGlobals::getobjectaddress},
             {nullptr, nullptr}
         };
         return functions;

@@ -32,6 +32,8 @@ namespace RbxStu::Roblox {
 
         bool GetDataModelLock() const;
 
+        static std::shared_ptr<RbxStu::Roblox::DataModel> FromPointer(void *dataModel);
+
         static std::shared_ptr<RbxStu::Roblox::DataModel> FromJob(void *robloxJob);
 
         bool IsParallel();

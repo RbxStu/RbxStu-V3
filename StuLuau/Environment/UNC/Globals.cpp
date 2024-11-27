@@ -517,9 +517,28 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getcallingscript(lua_State *L) {
+        auto extraspace = LuauSecurity::GetThreadExtraspace(L);
+
         try {
-            lua_getglobal(L, "script");
-        } catch (...) {
+            const auto rbxPushInstance = reinterpret_cast<r_RBX_Instance_pushInstance>(RbxStuOffsets::GetSingleton()
+                ->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance));
+
+            if (extraspace->script == nullptr || rbxPushInstance == nullptr)
+                lua_pushnil(L);
+            else {
+                lua_pushlightuserdata(L, rbxPushInstance);
+                lua_rawget(L, LUA_REGISTRYINDEX);
+                lua_pushlightuserdata(L, extraspace->script);
+                lua_rawget(L, -2);
+                if (Utilities::getInstanceType(L, -1).first) {
+                    // userdata object, safe to cloneref.
+                    lua_pushcclosure(L, cloneref, nullptr, 0);
+                    lua_pushvalue(L, -2);
+                    lua_pcall(L, 1, 1, 0);
+                }
+            }
+        } catch (const std::exception &e) {
+            lua_pushstring(L, e.what());
             lua_pushnil(L);
         }
 
@@ -549,6 +568,82 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_call(L, 1, 1);
 
         return 1;
+    }
+
+    int Globals::getsenv(lua_State *L) {
+        lua_normalisestack(L, 1);
+        auto [isValidInstance, className] = Utilities::getInstanceType(L, 1);
+
+        if (!isValidInstance)
+            luaL_argerror(L, 1, std::format("expected ModuleScript or LocalScript, got {}", className).c_str());
+
+        const auto rawInstance = *static_cast<uintptr_t *>(lua_touserdata(L, 1));
+
+        if (className == "LocalScript") {
+            const auto threadNode = *reinterpret_cast<uintptr_t *>(rawInstance + 0x198);
+
+            if (!threadNode) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            const auto weakThreadRef = *reinterpret_cast<uintptr_t *>(threadNode + 0x8);
+            const auto firstNode = *reinterpret_cast<uintptr_t *>(weakThreadRef + 0x18);
+            const auto luaStateContainer = *reinterpret_cast<uintptr_t *>(firstNode + 0x20);
+            const auto scriptLuaState = reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(
+                luaStateContainer + 0x8));
+
+            if (!scriptLuaState) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            if (!lua_isthreadreset(scriptLuaState)) {
+                lua_pushnil(L);
+                return 1;
+            }
+            lua_rawcheckstack(L, 1);
+            L->top->value.gc = reinterpret_cast<GCObject *>(scriptLuaState->gt);
+            L->top->tt = LUA_TTABLE;
+            incr_top(L);
+            return 1;
+        }
+
+        if (className == "ModuleScript") {
+            const auto threadNode = *reinterpret_cast<uintptr_t *>(rawInstance + 0x1C0);
+
+            if (!threadNode) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            const auto firstNode = *reinterpret_cast<uintptr_t *>(threadNode);
+            if (!firstNode) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            const auto moduleScriptLuaState = reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(
+                firstNode + 0x10));
+
+            if (!moduleScriptLuaState) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            if (!lua_isthreadreset(moduleScriptLuaState)) {
+                lua_pushnil(L);
+                return 1;
+            }
+
+            lua_rawcheckstack(L, 1);
+            L->top->value.gc = reinterpret_cast<GCObject *>(moduleScriptLuaState->gt);
+            L->top->tt = LUA_TTABLE;
+            incr_top(L);
+            return 1;
+        }
+
+        return 0;
     }
 
     int Globals::isnetworkowner(lua_State *L) {
@@ -702,6 +797,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             {"setreadonly", RbxStu::StuLuau::Environment::UNC::Globals::setreadonly},
             {"isreadonly", RbxStu::StuLuau::Environment::UNC::Globals::isreadonly},
+
+            {"getsenv", RbxStu::StuLuau::Environment::UNC::Globals::getsenv},
 
             {nullptr, nullptr}
         };

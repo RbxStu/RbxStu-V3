@@ -51,6 +51,10 @@ namespace RbxStu::Roblox {
         return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6B8);
     }
 
+    std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromPointer(void *dataModel) {
+        return std::make_shared<RbxStu::Roblox::DataModel>(static_cast<RBX::DataModel *>(dataModel));
+    }
+
     std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromJob(void *robloxJob) {
         /*
          * Jobs always have a pointer to a fake Datamodel and that fake data model has pointer to a real Datamodel

@@ -139,11 +139,11 @@ namespace RBX {
         Validator *CapabilitiesValidator;
         RBX::Security::ExtendedIdentity contextInformation;
         uint64_t capabilities;
+        RBX::Script *script;
         char _50[8];
         char _58[8];
-        std::weak_ptr<RBX::Actor> actor;
+        RBX::Actor *actor;
         char _70[8];
-        std::weak_ptr<RBX::Script> script;
         char _88[8];
         bool isActorState;
         enum RBX::Luau::TaskState taskStatus;

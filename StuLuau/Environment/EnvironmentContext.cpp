@@ -107,7 +107,14 @@ namespace RbxStu::StuLuau::Environment {
 
     void EnvironmentContext::DefineLibrary(const std::shared_ptr<RbxStu::StuLuau::Environment::Library> &library) {
         for (const auto &lib: this->m_libraries) {
-            if (strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
+            if (library->GetLibraryName() == nullptr && !library->PushNoTable()) {
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
+                          "Library defined with no name, yet it has a table to push, ignoring definition. Cannot determine affected library easily (No name)");
+                return;
+            }
+
+            if (lib->GetLibraryName() != nullptr && library->GetLibraryName() != nullptr && strcmp(
+                    lib->GetLibraryName(), library->GetLibraryName()) == 0) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
                           std::format("Library already defined, ignoring re-definition. Affected Library: {}", library->
                               GetLibraryName()));
@@ -231,15 +238,20 @@ namespace RbxStu::StuLuau::Environment {
         const auto L = this->m_parentEngine->GetInitializationInformation()->executorState;
         const auto oldTop = lua_gettop(this->m_parentEngine->GetInitializationInformation()->executorState);
         for (const auto &lib: this->m_libraries) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
-                      std::format("Pushing library {} to the environment.",lib->GetLibraryName()));
+            if (lib->GetLibraryName() == nullptr) {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
+                          "Library holds no name");
+            } else {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
+                          std::format("Pushing library {} to the environment.",lib->GetLibraryName()));
+            }
 
             const auto envGlobals = lib->GetFunctionRegistry();
             lua_newtable(L);
             luaL_register(L, nullptr, envGlobals);
             lua_setreadonly(L, -1, true);
 
-            if (lua_getglobal(L, lib->GetLibraryName()) != ::lua_Type::LUA_TNIL)
+            if (lib->GetLibraryName() != nullptr && lua_getglobal(L, lib->GetLibraryName()) != ::lua_Type::LUA_TNIL)
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
                       std::format(
                           "DEV WARN: Currently over-writing already defined global library {} with a new registry, this may be intended, but this is important that if callers expect the methods of the previous library to be present scripts may not run as expected anymore!"
@@ -248,9 +260,10 @@ namespace RbxStu::StuLuau::Environment {
 
             lua_pop(L, 1); // pop prev lua_getglobal.
 
-            lua_setglobal(L, lib->GetLibraryName());
+            if (lib->GetLibraryName() != nullptr && !lib->PushNoTable())
+                lua_setglobal(L, lib->GetLibraryName());
 
-            if (lib->PushToGlobals()) {
+            if (lib->PushToGlobals() || lib->PushNoTable()) {
                 lua_pushvalue(L, LUA_GLOBALSINDEX);
                 luaL_register(L, nullptr, envGlobals);
                 lua_pop(L, 1); // Does not pop stack, must do it ourselves.

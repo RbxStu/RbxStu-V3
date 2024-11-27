@@ -59,6 +59,8 @@ namespace RbxStu::Scheduling {
         [[nodiscard]] std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > GetJobs(
             RbxStu::Scheduling::Jobs::AvailableJobs jobIdentifier) const;
 
+        void NotifyDestroy(RbxStu::Scheduling::JobKind jobType, void *robloxJob);
+
         void Step(RbxStu::Scheduling::JobKind jobType, void *robloxJob,
                   RBX::TaskScheduler::Job::Stats *jobStats);
     };

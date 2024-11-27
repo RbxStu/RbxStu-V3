@@ -61,8 +61,12 @@ std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskSchedu
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
     lua_State *L) const {
     std::scoped_lock lg{executionEngineMutex};
+
+    if (L == nullptr) return nullptr;
+
     for (const auto &engine: this->m_executionEngines | std::views::values) {
-        if (lua_mainthread(engine->GetInitializationInformation()->globalState) == lua_mainthread(L))
+        if (engine->GetInitializationInformation().get() != nullptr && lua_mainthread(
+                engine->GetInitializationInformation()->globalState) == lua_mainthread(L))
             return engine;
     }
 
@@ -79,6 +83,12 @@ std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskS
     }
 
     return jobs;
+}
+
+void RbxStu::Scheduling::TaskScheduler::NotifyDestroy(RbxStu::Scheduling::JobKind jobType, void *robloxJob) {
+    for (const auto &job: this->m_jobList) {
+        job->OnDestroy(jobType, robloxJob);
+    }
 }
 
 void RbxStu::Scheduling::TaskScheduler::Step(const RbxStu::Scheduling::JobKind jobType, void *robloxJob,

@@ -24,6 +24,7 @@
 #include "StuLuau/Environment/UNC/Globals.hpp"
 #include "StuLuau/Environment/UNC/Scripts.hpp"
 #include "StuLuau/Environment/UNC/WebSocket.hpp"
+#include "StuLuau/Environment/UNC/Miscellaneous.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
@@ -136,6 +137,7 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Scripts>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Crypt>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Miscellaneous>());
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
@@ -303,6 +305,190 @@ namespace RbxStu::Scheduling::Jobs {
             end
             setreadonly(getgenv().debug, true)
         )", "DebugRobloxImport");
+
+        // TODO: Fix safe instances, cannot even paste wave appropriately, smh.
+
+        envContext->DefineInitScript(R"(
+			local __safeInstanceMap = table.create(8)
+
+			local Instance_new = clonefunction(Instance.new)
+			local compareinstances = clonefunction(compareinstances)
+			local newcclosure = clonefunction(newcclosure)
+			local checkcaller = clonefunction(checkcaller)
+			local select = clonefunction(select)
+			local typeof = clonefunction(typeof)
+			local pcall = clonefunction(pcall)
+			local getnamecallmethod = clonefunction(getnamecallmethod)
+
+			local findFirstChild = clonefunction(game.FindFirstChild)
+			local getChildren = clonefunction(game.GetChildren)
+			local getDescendants = clonefunction(game.GetDescendants)
+
+			local findFirstChild_hk = newcclosure(function(self: Instance, childName: string, searchDescendants: boolean)
+				local child = findFirstChild(self, childName, searchDescendants)
+
+				if checkcaller() then
+					return child -- No validation applied, we are OK.
+				end
+
+				for _, insn in __safeInstanceMap do
+					if compareinstances(insn, child) then
+						return nil
+					end
+				end
+
+				return child
+			end)
+
+			local getChildren_hk = newcclosure(function(self: Instance)
+				local children = getChildren(self)
+
+				if checkcaller() then
+					return children -- No validation applied, we are OK.
+				end
+
+				local newChildren = {}
+
+				for _, insn in __safeInstanceMap do
+					for _, child in children do
+						if not compareinstances(insn, child) then
+							table.insert(newChildren, child) -- Not a protected instance.
+						end
+					end
+				end
+
+				return newChildren
+			end)
+
+			local getDescendants_hk = newcclosure(function(self: Instance)
+				local descendants = getDescendants(self)
+
+				if checkcaller() then
+					return descendants -- No validation applied, we are OK.
+				end
+
+				local newDescendants = {}
+
+				for _, insn in __safeInstanceMap do
+					for _, descendant in descendants do
+						if not compareinstances(insn, descendant) then
+							table.insert(newDescendants, descendant) -- Not a protected instance.
+						end
+					end
+				end
+
+				return newDescendants
+			end)
+
+			local oldIdx
+			oldIdx = hookmetamethod(game, "__index", function(...)
+				if select("#", ...) ~= 2 then
+					return oldIdx(...)
+				end
+				local self = select(1, ...)
+				local idx = select(2, ...)
+
+				if typeof(self) ~= "Instance" then
+					return oldIdx(...)
+				end
+
+				if idx == "FindFirstChild" then
+					return findFirstChild_hk
+				elseif idx == "GetChildren" then
+					return getChildren_hk
+				elseif idx == "GetDescendants" then
+					return getDescendants_hk
+				end
+
+				local success, isProtectedInstance = pcall(function()
+					local x = self[idx]
+
+					if typeof(x) == "Instance" then
+						for _, obj in __safeInstanceMap do
+							if compareinstances(obj, x) then
+								return true
+							end
+						end
+					end
+
+					return false
+				end)
+
+				if success and isProtectedInstance and not checkcaller() then
+					return nil
+				end
+
+				return oldIdx(...)
+			end)
+
+			local oldNamecall
+			oldNamecall = hookmetamethod(game, "__namecall", function(...)
+				if select("#", ...) == 0 then
+					return oldNamecall(...)
+				end
+				local self = select(1, ...)
+				local namecall = getnamecallmethod()
+
+				if typeof(self) ~= "Instance" then
+					return oldNamecall(...)
+				end
+
+				if namecall == "FindFirstChild" then
+					return findFirstChild_hk(...)
+				elseif namecall == "GetChildren" then
+					return getChildren_hk(...)
+				elseif namecall == "GetDescendants" then
+					return getDescendants_hk(...)
+				end
+
+				return oldNamecall(...)
+			end)
+
+			getgenv().setsecureinstance = newcclosure(function(instance: Instance)
+				for _, insn in __safeInstanceMap do
+					if compareinstances(insn, instance) then
+						return
+					end
+				end
+
+				table.insert(__safeInstanceMap, instance)
+				instance.Destroying:Connect(function()
+					getgenv().setnormalinstance(instance)
+				end)
+			end)
+
+			getgenv().issecuredinstance = newcclosure(function(instance: Instance)
+				for _, insn in __safeInstanceMap do
+					if compareinstances(insn, instance) then
+						return true
+					end
+				end
+
+				return false
+			end)
+
+			getgenv().setnormalinstance = newcclosure(function(instance: Instance)
+				for jdx, insn in __safeInstanceMap do
+					if compareinstances(insn, instance) then
+						table.remove(__safeInstanceMap, jdx)
+					end
+				end
+			end)
+
+			getgenv().createsecurefolder = newcclosure(function(instance: Instance)
+				local fd = Instance_new("Folder")
+				fd.DescendantAdded:Connect(function(descendant)
+					getgenv().setsecureinstance(descendant)
+				end)
+				fd.DescendantRemoving:Connect(function(descendant)
+					getgenv().setnormalinstance(descendant)
+				end)
+
+				getgenv().setsecureinstance(fd)
+
+				return fd
+			end)
+        )", "SecureInstances");
 
         envContext->DefineInitScript(R"(
             makeunhookable(getgenv)
