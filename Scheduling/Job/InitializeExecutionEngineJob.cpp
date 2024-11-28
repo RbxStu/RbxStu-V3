@@ -534,16 +534,17 @@ namespace RbxStu::Scheduling::Jobs {
             -- Prevent overwrites into getgenv (watcher, metamethods proved to be unwise here)
             task.spawn(newcclosure(function()
                 while task_wait() do
+					local genv = getgenv()
                     for idx, func in realGenv do
                         if typeof(func) == "table" then
                             for jdx, jfunc in realGenv[idx] do
-                                if realGenv[idx][jdx] ~= getgenv()[idx][jdx] then
-                                    getgenv()[idx][jdx] = jfunc
+                                if realGenv[idx][jdx] ~= genv[idx][jdx] then
+                                    genv[idx][jdx] = jfunc
                                 end
                             end
                         end
-                        if realGenv[idx] ~= getgenv()[idx] then
-                            getgenv()[idx] = func
+                        if realGenv[idx] ~= genv[idx] then
+                            genv[idx] = func
                         end
                     end
                 end

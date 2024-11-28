@@ -69,8 +69,15 @@ std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskSchedu
     if (!Utilities::IsPointerValid(
         reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(L) + offsetof(lua_State, global))))
         return nullptr;
+    if (!Utilities::IsPointerValid(
+        reinterpret_cast<void **>(*reinterpret_cast<std::uintptr_t **>(
+            reinterpret_cast<std::uintptr_t>(L->global) + offsetof(
+                global_State, mainthread)))))
+        return nullptr;
 
     if (L->global == nullptr) return nullptr;
+
+    // TODO: Change method of identifying the execution engine to use global_State instead of lua_State mainThread, more reliable.
 
     auto mainThread = lua_mainthread(L);
 

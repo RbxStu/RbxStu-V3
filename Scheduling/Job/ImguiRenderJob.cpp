@@ -40,8 +40,10 @@ namespace RbxStu::Scheduling::Jobs {
         return pKeyStates[static_cast<int>(key)];
     }
 
-
     LRESULT CALLBACK ImguiRenderJob::InputHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam)) // Override for user input.
+            return true;
+
         switch (uMsg) {
             case WM_LBUTTONDOWN:
                 pKeyStates[VK_LBUTTON] = true;
@@ -95,7 +97,10 @@ namespace RbxStu::Scheduling::Jobs {
                 break;
         }
 
-        return CallWindowProcW(g_pOriginalInputProcedure, hWnd, uMsg, wParam, lParam);
+        if (const auto ui = RbxStu::Render::UserInterface::GetSingleton(); !ui->IsRenderingEnabled())
+            return CallWindowProcW(g_pOriginalInputProcedure, hWnd, uMsg, wParam, lParam);
+        else
+            return 0;
     }
 
     LRESULT CALLBACK ImguiRenderJob::ImGuiHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {

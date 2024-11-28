@@ -5,8 +5,8 @@
 #include "PagedWindow.hpp"
 
 namespace RbxStu {
-namespace Render {
-namespace UI {
-} // UI
-} // Render
+    namespace Render {
+        namespace UI {
+        } // UI
+    } // Render
 } // RbxStu

@@ -149,6 +149,8 @@ add_library(${PROJECT_NAME} SHARED
         Miscellaneous/ListenableEvent.hpp
         Render/ImmediateGui/PagedWindow.cpp
         Render/ImmediateGui/PagedWindow.hpp
+        Render/UserInterface/Pages/ExecutionPage.cpp
+        Render/UserInterface/Pages/ExecutionPage.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
