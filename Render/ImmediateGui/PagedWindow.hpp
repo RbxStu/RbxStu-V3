@@ -19,7 +19,7 @@ namespace RbxStu::Render::UI {
         std::string szPageName;
     };
 
-    class PagedWindow : public RbxStu::Render::Renderable {
+    class PagedWindow final : public RbxStu::Render::Renderable {
         std::string m_szWindowName;
         int m_currentPageIndex;
         std::vector<UIPage> m_pages;
