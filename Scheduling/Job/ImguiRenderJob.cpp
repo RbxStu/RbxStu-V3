@@ -97,6 +97,12 @@ namespace RbxStu::Scheduling::Jobs {
                 break;
         }
 
+        /*
+         *  If the Edit DataModel is not active and we do not fire the window procedure, we will dead-lock ROBLOX entirely,
+         *  making it impossible to work, we must manually unlock it by permitting the procedure to be called IF the Edit DataModel is not ready, we will force the UI off if it is the case.
+         *  this is ALREADY handled on the override to IsRenderingEnabled into the UserInterface of the UI, but this note is left here to explain such behaviour.
+         */
+
         if (const auto ui = RbxStu::Render::UserInterface::GetSingleton(); !ui->IsRenderingEnabled())
             return CallWindowProcW(g_pOriginalInputProcedure, hWnd, uMsg, wParam, lParam);
         else
