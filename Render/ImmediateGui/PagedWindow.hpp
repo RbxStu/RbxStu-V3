@@ -30,7 +30,7 @@ namespace RbxStu::Render::UI {
 
         ~PagedWindow() override;
 
-        const UIPage &GetCurrentPage();
+        const UIPage &GetCurrentPage() const;
 
         void SetCurrentPage(const int newCurrentPage);
 

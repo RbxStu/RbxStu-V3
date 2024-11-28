@@ -15,8 +15,8 @@ namespace RbxStu::Render::UI {
         this->m_pages.clear();
     }
 
-    const UIPage &PagedWindow::GetCurrentPage() {
-        return this->m_pages[this->m_currentPageIndex];
+    const UIPage &PagedWindow::GetCurrentPage() const {
+        return this->m_pages.at(this->m_currentPageIndex);
     }
 
     void PagedWindow::SetCurrentPage(const int newCurrentPage) {
