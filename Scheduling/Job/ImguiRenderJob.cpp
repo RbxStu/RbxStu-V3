@@ -299,15 +299,8 @@ namespace RbxStu::Scheduling::Jobs {
 
     bool ImguiRenderJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                     RBX::TaskScheduler::Job::Stats *jobStats) {
-        /*
-         *   Requirements:
-         *      - Must be Render Job
-         */
-
-        // RenderJob for Standalone will never change, as it is always open once created, thus it is it whom we will hijack.
-
-        return jobKind == JobKind::RenderJob && RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() ==
-               RBX::DataModelType_Edit;
+        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() ==
+               RBX::DataModelType_Edit; // The edit DataModel must be active, else nothing will render to the screen, as there is no Viewport available
     }
 
     void ImguiRenderJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
