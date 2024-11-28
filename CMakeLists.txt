@@ -54,10 +54,6 @@ add_library(${PROJECT_NAME} SHARED
         Roblox/DataModel.cpp
         Roblox/DataModel.hpp
 
-        # RbxStu V3/Events
-        Events/Connection.hpp
-        Events/Event.hpp
-
         # RbxStu V3/Scheduling
         Scheduling/TaskScheduler.cpp
         Scheduling/TaskSchedulerOrchestrator.cpp
@@ -144,6 +140,15 @@ add_library(${PROJECT_NAME} SHARED
 
         Render/Renderable.cpp
         Render/Renderable.hpp
+        Render/ImmediateGui/Keycodes.hpp
+        Render/UserInterface/UserInterface.cpp
+        Render/UserInterface/UserInterface.hpp
+
+        Miscellaneous/Initializable.cpp
+        Miscellaneous/Initializable.hpp
+        Miscellaneous/ListenableEvent.hpp
+        Render/ImmediateGui/PagedWindow.cpp
+        Render/ImmediateGui/PagedWindow.hpp
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
