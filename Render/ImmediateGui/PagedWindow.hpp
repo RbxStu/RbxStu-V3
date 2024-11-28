@@ -71,7 +71,7 @@ namespace RbxStu::Render::UI {
         void Render(ImGuiContext *pContext) override {
             ImGui::Begin("RbxStu::Render::UI::PagedWindow", nullptr, ImGuiWindowFlags_NoTitleBar);
 
-            ImGui::Text(m_szWindowName.c_str());
+            ImGui::Text(this->m_szWindowName.c_str());
 
             ImGui::GetWindowDrawList()->AddLine(
                 ImVec2(ImGui::GetCursorScreenPos().x - 9999, ImGui::GetCursorScreenPos().y),
