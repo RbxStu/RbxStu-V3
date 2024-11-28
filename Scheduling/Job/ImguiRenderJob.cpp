@@ -12,6 +12,7 @@
 #include "imgui_internal.h"
 #include "backends/imgui_impl_dx11.h"
 #include "backends/imgui_impl_win32.h"
+#include "Render/UserInterface/UserInterface.hpp"
 
 #include "Roblox/DataModel.hpp"
 
@@ -24,7 +25,8 @@ namespace RbxStu::Scheduling::Jobs {
                                                       DXGI_FORMAT NewFormat,
                                                       UINT SwapChainFlags) = nullptr;
 
-    static WNDPROC g_pOriginalProcedure;
+    static WNDPROC g_pOriginalImGuiProcedure;
+    static WNDPROC g_pOriginalInputProcedure;
     static ID3D11Device *g_pDevice = nullptr;
     static ID3D11DeviceContext *g_pContext = nullptr;
     static ID3D11RenderTargetView *g_pRenderTargetView = nullptr;
@@ -32,58 +34,75 @@ namespace RbxStu::Scheduling::Jobs {
     static IDXGISwapChain *g_pCurrentSwapchain;
     static bool g_bReleasedView = false;
 
-    bool KeyListener[256] = {};
+    static bool pKeyStates[256] = {};
 
-    LRESULT __stdcall ImguiRenderJob::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-        if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
-            return true;
+    bool ImguiRenderJob::IsKeyDown(RbxStu::Render::ImmediateGui::VirtualKey key) {
+        return pKeyStates[static_cast<int>(key)];
+    }
 
+
+    LRESULT CALLBACK ImguiRenderJob::InputHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
             case WM_LBUTTONDOWN:
-                KeyListener[VK_LBUTTON] = true;
+                pKeyStates[VK_LBUTTON] = true;
                 break;
             case WM_LBUTTONUP:
-                KeyListener[VK_LBUTTON] = false;
+                pKeyStates[VK_LBUTTON] = false;
                 break;
             case WM_RBUTTONDOWN:
-                KeyListener[VK_RBUTTON] = true;
+                pKeyStates[VK_RBUTTON] = true;
                 break;
             case WM_RBUTTONUP:
-                KeyListener[VK_RBUTTON] = false;
+                pKeyStates[VK_RBUTTON] = false;
                 break;
             case WM_MBUTTONDOWN:
-                KeyListener[VK_MBUTTON] = true;
+                pKeyStates[VK_MBUTTON] = true;
                 break;
             case WM_MBUTTONUP:
-                KeyListener[VK_MBUTTON] = false;
+                pKeyStates[VK_MBUTTON] = false;
                 break;
             case WM_XBUTTONDOWN: {
                 if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
-                    KeyListener[VK_XBUTTON1] = true;
+                    pKeyStates[VK_XBUTTON1] = true;
                 } else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
-                    KeyListener[VK_XBUTTON2] = true;
+                    pKeyStates[VK_XBUTTON2] = true;
                 }
                 break;
             }
             case WM_XBUTTONUP: {
                 if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) {
-                    KeyListener[VK_XBUTTON1] = false;
+                    pKeyStates[VK_XBUTTON1] = false;
                 } else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) {
-                    KeyListener[VK_XBUTTON2] = false;
+                    pKeyStates[VK_XBUTTON2] = false;
                 }
                 break;
             }
             case WM_KEYDOWN:
-                KeyListener[wParam] = true;
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
+                          std::format("Firing key event: DOWN {}", (void*)wParam))
+                pKeyStates[wParam] = true;
+                ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
+                    static_cast<Render::ImmediateGui::VirtualKey>(wParam), true);
                 break;
             case WM_KEYUP:
-                KeyListener[wParam] = false;
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
+                          std::format("Firing key event: UP {}", (void*)wParam))
+                pKeyStates[wParam] = false;
+                ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
+                    static_cast<Render::ImmediateGui::VirtualKey>(wParam), false);
                 break;
             default:
                 break;
         }
 
-        return CallWindowProcW(g_pOriginalProcedure, hWnd, uMsg, wParam, lParam);
+        return CallWindowProcW(g_pOriginalInputProcedure, hWnd, uMsg, wParam, lParam);
+    }
+
+    LRESULT CALLBACK ImguiRenderJob::ImGuiHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+        if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+            return true;
+
+        return CallWindowProcW(g_pOriginalImGuiProcedure, hWnd, uMsg, wParam, lParam);
     }
 
     static void ReleaseRenderView() {
@@ -144,6 +163,17 @@ namespace RbxStu::Scheduling::Jobs {
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
+        auto imguiContext = ImGui::GetCurrentContext();
+
+        for (auto &renderable: ImguiRenderJob::Singleton->m_renderList) {
+            if (renderable->IsRenderingEnabled())
+                renderable->Render(imguiContext);
+        }
+
+        auto ui = RbxStu::Render::UserInterface::GetSingleton();
+
+        if (ui->IsRenderingEnabled())
+            ui->Render(imguiContext);
 
         ImGui::Render();
 
@@ -166,8 +196,17 @@ namespace RbxStu::Scheduling::Jobs {
         }
 
         if (!g_bInitializedImGuiHook) {
-            g_pOriginalProcedure = reinterpret_cast<WNDPROC>(SetWindowLongPtr(g_hWnd, GWLP_WNDPROC,
-                                                                              reinterpret_cast<LONG_PTR>(WndProc)));
+            /*
+             *  Due to the fact roblox holds multiple hWnd, we must hook the main ancestor of them all to get all required input events.
+             *  this is kind of nasty, and may result in some bugs down the line, but it is this or either modifying the hWnd hook to separate them correctly and appropriately.
+             */
+            g_pOriginalInputProcedure = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+                GetAncestor(g_hWnd, GA_ROOTOWNER), GWLP_WNDPROC,
+                reinterpret_cast<LONG_PTR>(InputHwndProcedure)));
+
+            g_pOriginalImGuiProcedure = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+                g_hWnd, GWLP_WNDPROC,
+                reinterpret_cast<LONG_PTR>(ImGuiHwndProcedure)));
 
             pSelf->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void **>(&g_pDevice));
             g_pDevice->GetImmediateContext(&g_pContext);
@@ -226,6 +265,25 @@ namespace RbxStu::Scheduling::Jobs {
     ImguiRenderJob::ImguiRenderJob() {
         ImguiRenderJob::Singleton = this; // Required due to hooking, nasty shit.
         this->m_bIsInitialized = false;
+    }
+
+    void ImguiRenderJob::FireKeyEventToRenderableObjects(RbxStu::Render::ImmediateGui::VirtualKey key,
+                                                         bool bIsDown) const {
+        // The RbxStu UI is not considered a normal Render object on the Render List due to it having the top priority.
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, std::format("Firing key event {}", (void *)key))
+        const auto ui = RbxStu::Render::UserInterface::GetSingleton();
+
+        if (bIsDown)
+            ui->OnKeyPressed(key);
+        else
+            ui->OnKeyReleased(key);
+
+        for (auto &renderable: this->m_renderList) {
+            if (bIsDown)
+                renderable->OnKeyPressed(key);
+            else
+                renderable->OnKeyReleased(key);
+        }
     }
 
     bool ImguiRenderJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,

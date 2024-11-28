@@ -4,15 +4,25 @@
 
 #pragma once
 #include <dxgi.h>
+#include <list>
 #include <Scheduling/Job.hpp>
+
+#include "Render/Renderable.hpp"
+
+namespace RbxStu::Render::ImmediateGui {
+    enum class VirtualKey;
+}
 
 namespace RbxStu::Scheduling::Jobs {
     class ImguiRenderJob final : public Job {
         static ImguiRenderJob *Singleton;
 
         std::atomic_bool m_bIsInitialized;
+        std::list<std::shared_ptr<Render::Renderable> > m_renderList;
 
-        static LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        static LRESULT InputHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wPram, LPARAM lParam);
+
+        static LRESULT ImGuiHwndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         static HRESULT __stdcall hkPresent(IDXGISwapChain *pSwapchain,
                                            UINT dwSyncInterval,
@@ -27,6 +37,11 @@ namespace RbxStu::Scheduling::Jobs {
 
     public:
         ImguiRenderJob();
+
+        bool IsKeyDown(RbxStu::Render::ImmediateGui::VirtualKey key);
+
+
+        void FireKeyEventToRenderableObjects(RbxStu::Render::ImmediateGui::VirtualKey key, bool bIsDown) const;
 
         bool ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                         RBX::TaskScheduler::Job::Stats *jobStats) override;
