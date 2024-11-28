@@ -26,6 +26,7 @@ void RbxStu::Scheduling::TaskScheduler::CreateExecutionEngine(const RBX::DataMod
                   ));
         const auto prev = this->m_executionEngines[dataModelType];
         prev->DestroyEngine();
+        this->m_executionEngines.erase(dataModelType);
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_TaskScheduler,
                   std::format("Execution Engine for DataModel {} Swapped.", RBX::DataModelTypeToString(dataModelType)));
     }
@@ -52,7 +53,8 @@ void RbxStu::Scheduling::TaskScheduler::ResetExecutionEngine(const RBX::DataMode
 std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskScheduler::GetExecutionEngine(
     const RBX::DataModelType dataModelType) {
     std::scoped_lock lg{executionEngineMutex};
-    if (!this->m_executionEngines.contains(dataModelType)) {
+    if (!this->m_executionEngines.contains(dataModelType) || this->m_executionEngines.at(dataModelType)->
+        IsDestroyed()) {
         return nullptr;
     }
 
@@ -66,29 +68,22 @@ std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskSchedu
     std::scoped_lock lg{executionEngineMutex};
 
     if (L == nullptr) return nullptr;
-    if (!Utilities::IsPointerValid(
-        reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(L) + offsetof(lua_State, global))))
-        return nullptr;
-    if (!Utilities::IsPointerValid(
-        reinterpret_cast<void **>(*reinterpret_cast<std::uintptr_t **>(
-            reinterpret_cast<std::uintptr_t>(L->global) + offsetof(
-                global_State, mainthread)))))
-        return nullptr;
-
     if (L->global == nullptr) return nullptr;
 
     // TODO: Change method of identifying the execution engine to use global_State instead of lua_State mainThread, more reliable.
 
-    auto mainThread = lua_mainthread(L);
-
     for (const auto &engine: this->m_executionEngines | std::views::values) {
-        if (engine->GetInitializationInformation() != nullptr && L->global != nullptr &&
-            lua_mainthread(
-                engine->GetInitializationInformation()->globalState) == mainThread)
+        if (!engine->IsDestroyed() && engine->GetInitializationInformation() != nullptr && reinterpret_cast<
+                std::uintptr_t>(engine->
+                GetInitializationInformation()->Lglobal) == reinterpret_cast<std::uintptr_t>(L->global))
             return engine;
     }
 
     return nullptr;
+}
+
+bool RbxStu::Scheduling::TaskScheduler::IsDataModelActive(const RBX::DataModelType dataModelType) {
+    return GetExecutionEngine(dataModelType) != nullptr;
 }
 
 std::vector<std::shared_ptr<RbxStu::Scheduling::Job> > RbxStu::Scheduling::TaskScheduler::GetJobs(

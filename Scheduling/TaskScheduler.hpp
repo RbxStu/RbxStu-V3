@@ -41,6 +41,8 @@ namespace RbxStu::Scheduling {
 
         [[nodiscard]] std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> GetExecutionEngine(lua_State *L) const;
 
+        [[nodiscard]] bool IsDataModelActive(RBX::DataModelType dataModelType);;
+
         template<Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
         __forceinline void AddSchedulerJob() {
             m_jobList.push_back(std::make_shared<T>());

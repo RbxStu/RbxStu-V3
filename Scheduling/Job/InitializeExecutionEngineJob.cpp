@@ -109,6 +109,7 @@ namespace RbxStu::Scheduling::Jobs {
         lua_setglobal(nL, "_ENV");
 
         const auto initData = std::make_shared<ExecutionEngineInitializationInformation>();
+        initData->Lglobal = rL->global;
         initData->globalState = rL;
         initData->executorState = nL;
         initData->scriptContext = scriptContext;

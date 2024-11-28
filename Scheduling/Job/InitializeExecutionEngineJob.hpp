@@ -13,6 +13,7 @@ namespace RbxStu::Roblox {
 
 namespace RbxStu::Scheduling {
     struct ExecutionEngineInitializationInformation {
+        global_State *Lglobal;
         lua_State *globalState;
         lua_State *executorState;
         std::shared_ptr<RbxStu::Roblox::ScriptContext> scriptContext;
