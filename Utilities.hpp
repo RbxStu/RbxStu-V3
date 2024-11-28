@@ -325,7 +325,7 @@ namespace RbxStu {
                 return false; // Allocated region is too small to fit type T inside.
             }
 
-            if (buf.State & MEM_FREE == MEM_FREE) {
+            if ((buf.State & MEM_FREE) == MEM_FREE) {
                 return false; // The memory is not owned by the process, no need to do anything, we can already assume
                 // we cannot read it.
             }
