@@ -3,6 +3,9 @@
 //
 
 #include "TaskScheduler.hpp"
+
+#include <Utilities.hpp>
+
 #include "Job.hpp"
 #include "Job/InitializeExecutionEngineJob.hpp"
 #include "Roblox/DataModel.hpp"
@@ -63,10 +66,18 @@ std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> RbxStu::Scheduling::TaskSchedu
     std::scoped_lock lg{executionEngineMutex};
 
     if (L == nullptr) return nullptr;
+    if (!Utilities::IsPointerValid(
+        reinterpret_cast<void **>(reinterpret_cast<std::uintptr_t>(L) + offsetof(lua_State, global))))
+        return nullptr;
+
+    if (L->global == nullptr) return nullptr;
+
+    auto mainThread = lua_mainthread(L);
 
     for (const auto &engine: this->m_executionEngines | std::views::values) {
-        if (engine->GetInitializationInformation().get() != nullptr && lua_mainthread(
-                engine->GetInitializationInformation()->globalState) == lua_mainthread(L))
+        if (engine->GetInitializationInformation() != nullptr && L->global != nullptr &&
+            lua_mainthread(
+                engine->GetInitializationInformation()->globalState) == mainThread)
             return engine;
     }
 

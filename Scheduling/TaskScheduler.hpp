@@ -8,6 +8,7 @@
 
 #include "Roblox/TypeDefinitions.hpp"
 
+#undef GetJob
 namespace RbxStu::StuLuau {
     class ExecutionEngine;
 }
@@ -46,7 +47,7 @@ namespace RbxStu::Scheduling {
         };
 
         template<RbxStu::Concepts::TypeConstraint<RbxStu::Scheduling::Job> T>
-        std::optional<std::shared_ptr<T> > GetJob(const Jobs::AvailableJobs jobIdentifier) {
+        std::optional<std::shared_ptr<T> > GetSchedulerJob(const Jobs::AvailableJobs jobIdentifier) {
             for (const auto &job: this->m_jobList) {
                 if (job->GetJobIdentifier() == jobIdentifier) {
                     return std::dynamic_pointer_cast<T>(job);
