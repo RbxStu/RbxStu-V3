@@ -115,7 +115,9 @@ namespace RbxStu::StuLuau {
             nL = L;
         }
 
-        luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity, 8, true);
+        luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity,
+                                        luauSecurity->GetIdentityFromExecutionSecurity(
+                                            executeRequest.executeWithSecurity), true);
 
         const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
             RbxStuOffsets::GetSingleton()->
@@ -139,7 +141,7 @@ namespace RbxStu::StuLuau {
             return;
         }
 
-        luauSecurity->ElevateClosure(lua_tomutclosure(nL, -1), executeRequest.executeWithSecurity);
+        luauSecurity->ElevateClosure(lua_tomutclosure(nL, -1), ExecutionSecurity::RobloxExecutor);
 
         if (executeRequest.bGenerateNativeCode) {
             Luau::CodeGen::CompilationOptions opts{};
@@ -155,19 +157,8 @@ namespace RbxStu::StuLuau {
     }
 
     void ExecutionEngine::ExecutionEngine::StepExecutionEngine(RbxStu::StuLuau::ExecutionEngineStep stepType) {
-        if (!this->m_bIsReadyStepping)
+        if (!this->m_bIsReadyStepping || this->m_bIsDestroyed)
             return;
-
-        if (this->m_firstStepsCount > 3) {
-            this->m_firstStepsCount++;
-            return; // Stepping to early will cause a crash, thank you ROBLOX!
-        }
-
-        if (!this->GetInitializationInformation()->dataModel->IsDataModelOpen()) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                      "ExecutionEngine being stepped on a closed DataModel!");
-            return; // DataModel closed.
-        }
 
         switch (stepType) {
             case ExecutionEngineStep::SynchronizedDispatch: {
@@ -299,5 +290,9 @@ namespace RbxStu::StuLuau {
 
     std::shared_ptr<Environment::EnvironmentContext> ExecutionEngine::GetEnvironmentContext() {
         return this->m_environmentContext;
+    }
+
+    bool ExecutionEngine::IsDestroyed() {
+        return this->m_bIsDestroyed;
     }
 } // RbxStu::Luau

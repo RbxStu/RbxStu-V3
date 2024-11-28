@@ -112,5 +112,7 @@ namespace RbxStu::StuLuau {
         );
 
         std::shared_ptr<Environment::EnvironmentContext> GetEnvironmentContext();
+
+        bool IsDestroyed();
     };
 } // RbxStu::Luau
