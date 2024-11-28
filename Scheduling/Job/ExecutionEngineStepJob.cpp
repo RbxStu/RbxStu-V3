@@ -12,7 +12,7 @@
 
 namespace RbxStu::Scheduling::Jobs {
     bool ExecutionEngineStepJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
-                                             RBX::TaskScheduler::Job::Stats *jobStats) {
+                                            RBX::TaskScheduler::Job::Stats *jobStats) {
         const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
         const auto execEngine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
@@ -27,7 +27,7 @@ namespace RbxStu::Scheduling::Jobs {
     }
 
     void ExecutionEngineStepJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
-                                       RbxStu::Scheduling::TaskScheduler *scheduler) {
+                                      RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto taskScheduler = TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
         const auto currentExecutionEngine = taskScheduler->GetExecutionEngine(dataModel->GetDataModelType());
@@ -37,8 +37,7 @@ namespace RbxStu::Scheduling::Jobs {
 
 
         if (const auto execEngineDataModel = currentExecutionEngine->GetInitializationInformation()->dataModel;
-            execEngineDataModel->GetRbxPointer() != dataModel->GetRbxPointer() || !execEngineDataModel->
-            IsDataModelOpen())
+            execEngineDataModel->GetRbxPointer() != dataModel->GetRbxPointer())
             return;
         // DataModel is different, ExecutionEngine is out-of-date, reset required by InitializeExecutionEngineJob.
 
