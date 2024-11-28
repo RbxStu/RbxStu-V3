@@ -3,9 +3,7 @@
 //
 
 #include "DataModel.hpp"
-
 #include <Utilities.hpp>
-
 #include "TypeDefinitions.hpp"
 
 namespace RbxStu::Roblox {

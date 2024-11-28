@@ -3,15 +3,13 @@
 //
 
 #pragma once
-#include <array>
-#include <Logger.hpp>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "Render/Renderable.hpp"
 
-namespace RbxStu::Render {
-    class Renderable;
-}
+struct ImGuiContext;
 
 namespace RbxStu::Render::UI {
     struct UIPage {

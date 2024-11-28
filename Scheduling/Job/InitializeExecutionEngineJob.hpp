@@ -4,7 +4,11 @@
 
 #pragma once
 
+#include <memory>
 #include "Scheduling/Job.hpp"
+
+struct global_State;
+struct lua_State;
 
 namespace RbxStu::Roblox {
     class ScriptContext;

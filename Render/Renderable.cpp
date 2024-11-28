@@ -5,6 +5,7 @@
 #include "Renderable.hpp"
 
 #include <Logger.hpp>
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 namespace RbxStu::Render {

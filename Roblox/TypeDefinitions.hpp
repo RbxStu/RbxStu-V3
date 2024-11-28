@@ -5,8 +5,9 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <string>
 
-#include "lstate.h"
+struct lua_State;
 
 namespace RBX {
     namespace Lua {
@@ -711,7 +712,7 @@ namespace RBX {
         RBX::Reflection::ClassDescriptor *classDescriptor;
     };
 
-    enum PointerEncryptionType { ADD, SUB, XOR, UNDETERMINED };
+    enum PointerEncryptionType : std::int32_t { ADD, SUB, XOR, UNDETERMINED };
 
     template<typename T>
     class PointerEncryption final {

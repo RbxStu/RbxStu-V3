@@ -87,7 +87,6 @@ typedef size_t _lxy__size_t;
 #endif
 
 namespace _lxy_ {
-
     template<typename T>
     struct type_cast {
         using type = T;
@@ -112,7 +111,8 @@ namespace _lxy_ {
 
         constexpr operator value_type() const noexcept { return value; }
 
-        /*_NODISCARD*/ constexpr value_type operator()() const noexcept { return value; }
+        /*_NODISCARD*/
+        constexpr value_type operator()() const noexcept { return value; }
     };
 
 #ifdef OXORANY_USE_BIT_CAST
@@ -137,23 +137,27 @@ namespace _lxy_ {
     struct _merge_and_renumber;
 
     template<_lxy__size_t... I1, _lxy__size_t... I2>
-    struct _merge_and_renumber<index_sequence<I1...>, index_sequence<I2...>>
-        : index_sequence<I1..., (sizeof...(I1) + I2)...> {};
+    struct _merge_and_renumber<index_sequence<I1...>, index_sequence<I2...> >
+            : index_sequence<I1..., (sizeof...(I1) + I2)...> {
+    };
 
     // --------------------------------------------------------------------
 
     template<_lxy__size_t N>
     struct make_index_sequence : _merge_and_renumber<typename make_index_sequence<N / 2>::type,
-                                                     typename make_index_sequence<N - N / 2>::type> {};
+                typename make_index_sequence<N - N / 2>::type> {
+    };
 
     template<>
-    struct make_index_sequence<0> : index_sequence<> {};
+    struct make_index_sequence<0> : index_sequence<> {
+    };
+
     template<>
-    struct make_index_sequence<1> : index_sequence<0> {};
+    struct make_index_sequence<1> : index_sequence<0> {
+    };
 } // namespace _lxy_
 
 namespace _lxy_oxor_any_ {
-
     /*
     template <_lxy__size_t ...>
     struct indexSequence {
@@ -177,9 +181,9 @@ namespace _lxy_oxor_any_ {
     _lxy__size_t &Y();
 
     static constexpr _lxy__size_t base_key = static_cast<_lxy__size_t>(
-            ((_lxy__size_t) __TIME__[7] - '0') + ((_lxy__size_t) __TIME__[6] - '0') * 10 +
-            ((_lxy__size_t) __TIME__[4] - '0') * 60 + ((_lxy__size_t) __TIME__[3] - '0') * 600 +
-            ((_lxy__size_t) __TIME__[1] - '0') * 3600 + ((_lxy__size_t) __TIME__[0] - '0') * 36000);
+        ((_lxy__size_t) __TIME__[7] - '0') + ((_lxy__size_t) __TIME__[6] - '0') * 10 +
+        ((_lxy__size_t) __TIME__[4] - '0') * 60 + ((_lxy__size_t) __TIME__[3] - '0') * 600 +
+        ((_lxy__size_t) __TIME__[1] - '0') * 3600 + ((_lxy__size_t) __TIME__[0] - '0') * 36000);
 
     template<_lxy__uint32_t s, _lxy__size_t n>
     class random_constant_32 {
@@ -253,8 +257,10 @@ namespace _lxy_oxor_any_ {
 
     template<_lxy__size_t key>
     static OXORANY_FORCEINLINE constexpr _lxy__size_t limit() {
-        constexpr _lxy__size_t bcf_value[] = {1,  2,   3,   4,   5,    6,    8,    9,   10,  16,  32,  40, 64,
-                                              66, 100, 128, 512, 1000, 1024, 4096, 'a', 'z', 'A', 'Z', '*'};
+        constexpr _lxy__size_t bcf_value[] = {
+            1, 2, 3, 4, 5, 6, 8, 9, 10, 16, 32, 40, 64,
+            66, 100, 128, 512, 1000, 1024, 4096, 'a', 'z', 'A', 'Z', '*'
+        };
         return bcf_value[key % std::size(bcf_value)];
     }
 
@@ -661,7 +667,6 @@ namespace _lxy_oxor_any_ {
 
     template<typename any_t, _lxy__size_t ary_size, _lxy__size_t counter>
     class oxor_any {
-
         static constexpr _lxy__size_t size =
                 align(ary_size * sizeof(any_t), 16) +
                 random_constant<counter ^ base_key, (counter ^ base_key) % 128>::value % (16 + 1);
@@ -672,15 +677,17 @@ namespace _lxy_oxor_any_ {
 
     public:
         template<_lxy__size_t... indices>
-        OXORANY_FORCEINLINE constexpr oxor_any(const any_t (&any)[ary_size], _lxy_::index_sequence<indices...>) :
-            buffer{encrypt_byte<key>((std::bit_cast<_lxy__uint8_t*>(&any))[indices], indices)...} {}
+        OXORANY_FORCEINLINE constexpr
+        oxor_any(const any_t (&any)[ary_size], _lxy_::index_sequence<indices...>) : buffer{
+            encrypt_byte<key>((std::bit_cast<_lxy__uint8_t *>(&any))[indices], indices)...
+        } {
+        }
 
         OXORANY_FORCEINLINE wchar_t *get() { return (wchar_t *) decrypt<const any_t *, key>(buffer); }
     };
 
     template<typename any_t, _lxy__size_t counter>
     class oxor_any<any_t, 0, counter> {
-
         static constexpr _lxy__size_t size =
                 align(sizeof(any_t), 16) +
                 random_constant<counter ^ base_key, (counter ^ base_key) % 128>::value % (16 + 1);
@@ -691,8 +698,10 @@ namespace _lxy_oxor_any_ {
 
     public:
         template<_lxy__size_t... indices>
-        OXORANY_FORCEINLINE constexpr oxor_any(any_t any, _lxy_::index_sequence<indices...>) :
-            buffer{encrypt_byte<key>(reinterpret_cast<_lxy__uint8_t *>(&any)[indices], indices)...} {}
+        OXORANY_FORCEINLINE constexpr oxor_any(any_t any, _lxy_::index_sequence<indices...>) : buffer{
+            encrypt_byte<key>(reinterpret_cast<_lxy__uint8_t *>(&any)[indices], indices)...
+        } {
+        }
 
         OXORANY_FORCEINLINE const any_t get() { return *decrypt<const any_t *, key>(buffer); }
     };
@@ -723,7 +732,7 @@ static std::string ToString(const std::wstring &szConvert) {
 
     const int len = WideCharToMultiByte(CP_UTF8, oxorany(0), szConvert.c_str(), static_cast<int>(szConvert.size()),
                                         nullptr, oxorany(0), nullptr, nullptr);
-    std::string strTo(len, oxorany(0));
+    std::string strTo(len, static_cast<int>(oxorany(0)));
     WideCharToMultiByte(CP_UTF8, oxorany(0), szConvert.c_str(), static_cast<int>(szConvert.size()),
                         const_cast<char *>(strTo.c_str()), len, nullptr, nullptr);
     return strTo;

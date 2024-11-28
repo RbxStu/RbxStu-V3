@@ -5,7 +5,11 @@
 #pragma once
 #include <memory>
 
-#include "TypeDefinitions.hpp"
+namespace RBX {
+    struct DataModel;
+
+    enum DataModelType : std::int32_t;
+}
 
 namespace RbxStu::Roblox {
     class DataModel final {

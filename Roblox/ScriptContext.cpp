@@ -9,7 +9,6 @@
 #include <Utilities.hpp>
 #include <Scanners/Rbx.hpp>
 
-#include "DataModel.hpp"
 #include "TypeDefinitions.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
 #include "StuLuau/LuauSecurity.hpp"

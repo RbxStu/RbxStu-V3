@@ -17,6 +17,7 @@
 
 #include <Scanners/Luau.hpp>
 #include <Scanners/Rbx.hpp>
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 #include <Scheduling/Job/ExecutionEngineStepJob.hpp>
 

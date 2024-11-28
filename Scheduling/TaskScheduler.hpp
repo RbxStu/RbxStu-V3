@@ -5,7 +5,11 @@
 #pragma once
 #include <cstdint>
 #include <optional>
+#include <vector>
+#include <memory>
+#include <map>
 
+#include "Job.hpp"
 #include "Roblox/TypeDefinitions.hpp"
 
 #undef GetJob

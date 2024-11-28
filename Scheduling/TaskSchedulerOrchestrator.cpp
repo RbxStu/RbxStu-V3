@@ -13,6 +13,7 @@
 #include <libhat/Signature.hpp>
 #include <RTTIHook/VFTHook.h>
 
+#include "TaskScheduler.hpp"
 #include "Roblox/DataModel.hpp"
 
 std::shared_ptr<RbxStu::Scheduling::TaskSchedulerOrchestrator>

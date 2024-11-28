@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include <atomic>
 #include <imgui_internal.h>
 #include <chrono>
 

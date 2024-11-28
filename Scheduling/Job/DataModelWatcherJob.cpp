@@ -4,6 +4,7 @@
 
 #include "DataModelWatcherJob.hpp"
 
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "InitializeExecutionEngineJob.hpp"

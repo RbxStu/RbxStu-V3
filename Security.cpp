@@ -116,7 +116,7 @@ void RbxStu::Security::Initialize() {
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
     this->originalHashedMemory = _strdup(moduleHash.c_str());
-    this->lastRan = static_cast<int *>(malloc(sizeof(int)));
+    this->lastRan = static_cast<time_t *>(malloc(sizeof(time_t)));
     *this->lastRan = std::time(nullptr);
     RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName,
               std::format("Our module hashed is: {}", moduleHash));

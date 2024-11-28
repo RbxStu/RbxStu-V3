@@ -7,9 +7,11 @@
 #include <string>
 #include <map>
 
+#include <lstate.h>
 #include <lualib.h>
 #include <lua.h>
 #include <lapi.h>
+#include <ltm.h>
 
 #include "Roblox/TypeDefinitions.hpp"
 

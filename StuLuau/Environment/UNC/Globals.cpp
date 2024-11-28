@@ -16,10 +16,12 @@
 #include <cpr/cpr.h>
 #include <lz4.h>
 #include <Scanners/Rbx.hpp>
+#include <Scheduling/TaskScheduler.hpp>
 
-#include "lapi.h"
-#include "lmem.h"
-#include "lstring.h"
+#include <lstate.h>
+#include <lapi.h>
+#include <lmem.h>
+#include <lstring.h>
 #include "StuLuau/LuauSecurity.hpp"
 #include "StuLuau/Extensions/luauext.hpp"
 

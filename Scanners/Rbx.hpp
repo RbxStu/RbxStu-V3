@@ -6,10 +6,11 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <string_view>
 #include <StudioOffsets.h>
 
-#include "Roblox/TypeDefinitions.hpp"
+namespace RBX {
+    enum PointerEncryptionType : std::int32_t;
+}
 
 namespace RbxStu::Scanners {
     class RBX final {

@@ -5,8 +5,11 @@
 #pragma once
 #include <memory>
 
-#include "lua.h"
-#include "TypeDefinitions.hpp"
+struct lua_State;
+
+namespace RBX::Lua {
+    struct WeakThreadRef;
+}
 
 namespace RbxStu::StuLuau {
     struct YieldResult;
@@ -22,7 +25,8 @@ namespace RbxStu::Roblox {
         FromWaitingHybridScriptsJob(void *waitingHybridScriptsJob);
 
         explicit ScriptContext(void *scriptContext);
-        explicit ScriptContext(void *scriptContext, void*backingJob);
+
+        explicit ScriptContext(void *scriptContext, void *backingJob);
 
         [[nodiscard]] void *GetRbxPointer() const;
 

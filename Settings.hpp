@@ -10,7 +10,6 @@
 #define RBXSTU_DLL_NAME "RbxStuV3"
 
 
-
 // Begin declspec macros.
 #define RBXSTU_EXPORT __declspec(dllexport)
 #define RBXSTU_NOINLINE __declspec(noinline
@@ -18,5 +17,11 @@
 
 // Begin Macro Definitions
 
+#ifndef RBXSTU_ASSERTOVERRIDE
+#define RBXSTU_ASSERTOVERRIDE
+#undef assert_ex
+#undef assert
+
 #define assert_ex(condition, exception) { if (!(condition)) { throw exception; } }
 #define assert(condition, message) { if (!(condition)) { throw std::exception { std::format("{} @ {}", message, __func__).c_str() }; } }
+#endif

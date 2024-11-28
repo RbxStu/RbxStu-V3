@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 #include <Logger.hpp>
+#include <Scheduling/TaskScheduler.hpp>
 
 #include "StuLuau/ExecutionEngine.hpp"
 

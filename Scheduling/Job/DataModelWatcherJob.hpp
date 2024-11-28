@@ -4,11 +4,18 @@
 
 #pragma once
 
+#include <chrono>
+#include <map>
+
 #include "Scheduling/Job.hpp"
+
+namespace RBX {
+    enum DataModelType : std::int32_t;
+}
 
 namespace RbxStu::Scheduling::Jobs {
     class DataModelWatcherJob final : public RbxStu::Scheduling::Job {
-        std::map<RBX::DataModelType, void*> m_dataModelPointerMap;
+        std::map<RBX::DataModelType, void *> m_dataModelPointerMap;
         std::map<RBX::DataModelType, std::chrono::steady_clock::time_point> m_dataModelLastTimeStepped;
         std::chrono::steady_clock::time_point m_lastStep;
         std::chrono::steady_clock::time_point m_lastCheck;

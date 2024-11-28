@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 namespace RbxStu::Render::ImmediateGui {
     /// <summary>
     /// Virtual-Key Codes.

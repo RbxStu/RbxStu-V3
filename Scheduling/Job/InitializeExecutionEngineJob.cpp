@@ -5,6 +5,7 @@
 #include "InitializeExecutionEngineJob.hpp"
 
 #include <Logger.hpp>
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "ltable.h"

@@ -3,6 +3,7 @@
 //
 
 #include "PagedWindow.hpp"
+#include <Logger.hpp>
 
 namespace RbxStu::Render::UI {
     PagedWindow::PagedWindow(const std::vector<UIPage> &pages, const std::string &szWindowName) {
@@ -35,16 +36,18 @@ namespace RbxStu::Render::UI {
 
             if (this->m_currentPageIndex == i) {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                ImGui::Button(page.szPageName.c_str(), ImVec2(90, 30));
+                ImGui::Button(page.szPageName.c_str(), ImVec2(75, 25));
                 ImGui::PopStyleColor();
             } else {
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.19f, 0.19f, 0.19f, 0.54f));
-                if (ImGui::Button(page.szPageName.c_str(), ImVec2(90, 30)))
+                if (ImGui::Button(page.szPageName.c_str(), ImVec2(75, 25)))
                     this->m_currentPageIndex = i;
 
                 ImGui::PopStyleColor();
             }
         }
+
+        ImGui::NextColumn();
     }
 
     void PagedWindow::Render(ImGuiContext *pContext) {

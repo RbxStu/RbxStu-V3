@@ -10,6 +10,7 @@
 
 #include <lobject.h>
 #include <lstate.h>
+#include <Scheduling/TaskScheduler.hpp>
 #include <StuLuau/ExecutionEngine.hpp>
 
 #include "StuLuau/Extensions/luauext.hpp"

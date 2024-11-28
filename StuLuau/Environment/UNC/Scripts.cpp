@@ -4,6 +4,7 @@
 
 #include "Scripts.hpp"
 
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "StuLuau/LuauSecurity.hpp"

@@ -3,9 +3,16 @@
 //
 
 #pragma once
-#include "TaskScheduler.hpp"
+#include <cstdint>
+
+namespace RBX::TaskScheduler::Job {
+    struct Stats;
+}
 
 namespace RbxStu::Scheduling {
+    enum class JobKind : std::uint8_t;
+    class TaskScheduler;
+
     namespace Jobs {
         enum class AvailableJobs : std::int32_t {
             GenericJob, // Not overriden.

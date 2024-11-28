@@ -16,6 +16,8 @@
 
 #include "Roblox/DataModel.hpp"
 
+
+
 namespace RbxStu::Scheduling::Jobs {
     ImguiRenderJob *ImguiRenderJob::Singleton;
 
@@ -233,8 +235,8 @@ namespace RbxStu::Scheduling::Jobs {
                                             dwSwapChainFlags); // Skip resize.
 
             D3D11_VIEWPORT vp;
-            vp.Width = dwWidth;
-            vp.Height = dwHeight;
+            vp.Width = static_cast<float>(dwWidth);
+            vp.Height = static_cast<float>(dwHeight);
             vp.MinDepth = 0.0f;
             vp.MaxDepth = 1.0f;
             vp.TopLeftX = 0;
@@ -258,12 +260,12 @@ namespace RbxStu::Scheduling::Jobs {
         if (ImGui::GetDrawData() != nullptr) {
             auto drawData = ImGui::GetDrawData();
             drawData->DisplayPos = ImVec2(0.0f, 0.0f);
-            drawData->DisplaySize = ImVec2(dwWidth, dwHeight);
+            drawData->DisplaySize = ImVec2(static_cast<float>(dwWidth), static_cast<float>(dwHeight));
         }
 
         D3D11_VIEWPORT vp;
-        vp.Width = dwWidth;
-        vp.Height = dwHeight;
+        vp.Width = static_cast<float>(dwWidth);
+        vp.Height = static_cast<float>(dwHeight);
         vp.MinDepth = 0.0f;
         vp.MaxDepth = 1.0f;
         vp.TopLeftX = 0;

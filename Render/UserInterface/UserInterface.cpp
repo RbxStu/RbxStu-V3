@@ -7,6 +7,7 @@
 #include <Logger.hpp>
 #include <memory>
 #include <mutex>
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Pages/ExecutionPage.hpp"

@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Communication/PacketBase.hpp"
@@ -29,9 +30,9 @@ namespace RbxStu::Communication {
             const auto scriptSource = jsonData["scriptSource"].get<std::string_view>();
             const auto generateNativeCode = jsonData["generateNativeCode"].get<bool>();
 
-            const auto TaskScheduler = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
+            const auto taskScheduler = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
 
-            if (const auto executionEngine = TaskScheduler->GetExecutionEngine(receivedDatamodelType);
+            if (const auto executionEngine = taskScheduler->GetExecutionEngine(receivedDatamodelType);
                 executionEngine != nullptr) {
                 executionEngine->ScheduleExecute(generateNativeCode, scriptSource,
                                                  RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor, true);

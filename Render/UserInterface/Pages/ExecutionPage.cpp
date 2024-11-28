@@ -9,6 +9,7 @@
 #include "StuLuau/ExecutionEngine.hpp"
 
 #include <misc/cpp/imgui_stdlib.h>
+#include <Scheduling/TaskScheduler.hpp>
 
 namespace RbxStu::Render::UI::Pages {
     ExecutionPage::ExecutionPage() {
