@@ -80,15 +80,15 @@ namespace RbxStu::Scheduling::Jobs {
                 break;
             }
             case WM_KEYDOWN:
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
-                          std::format("Firing key event: DOWN {}", (void*)wParam))
+                // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
+                //           std::format("Firing key event: DOWN {}", (void*)wParam))
                 pKeyStates[wParam] = true;
                 ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
                     static_cast<Render::ImmediateGui::VirtualKey>(wParam), true);
                 break;
             case WM_KEYUP:
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
-                          std::format("Firing key event: UP {}", (void*)wParam))
+                // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
+                //           std::format("Firing key event: UP {}", (void*)wParam))
                 pKeyStates[wParam] = false;
                 ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
                     static_cast<Render::ImmediateGui::VirtualKey>(wParam), false);
