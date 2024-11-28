@@ -4,13 +4,16 @@
 
 #include "Renderable.hpp"
 
+#include <Logger.hpp>
+#include <Scheduling/TaskSchedulerOrchestrator.hpp>
+
 namespace RbxStu::Render {
-    std::int64_t Renderable::DeltaTime() const {
-        return std::chrono::duration_cast<std::chrono::seconds>(
-            std::chrono::high_resolution_clock::now() - this->m_lastFrame).count();
+    std::int64_t Renderable::DeltaTime(ImGuiContext *pContext) const {
+        return pContext->IO.DeltaTime;
     }
 
     void Renderable::PushSeparator() {
+        // Stolen from land.
         ImGui::GetWindowDrawList()->AddLine(
             ImVec2(ImGui::GetCursorScreenPos().x - 9999, ImGui::GetCursorScreenPos().y),
             ImVec2(ImGui::GetCursorScreenPos().x + 9999, ImGui::GetCursorScreenPos().y),
@@ -27,11 +30,19 @@ namespace RbxStu::Render {
     }
 
     bool Renderable::IsRenderingEnabled() {
-        return this->m_bIsRenderingEnabled;
+        const auto isEditAvailable = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->
+                GetTaskScheduler()->IsDataModelActive(RBX::DataModelType::DataModelType_Edit);
+
+        if (!isEditAvailable && this->m_bIsRenderingEnabled) {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::Graphics,
+                      "Disabling RbxStu::Render::Renderable, no Edit DataModel available, graphics APIs cannot be used.");
+            this->DisableRender();
+        }
+
+        return this->m_bIsRenderingEnabled && isEditAvailable;
     }
 
     void Renderable::Render(ImGuiContext *pContext) {
-        this->m_lastFrame = std::chrono::high_resolution_clock::now();
     }
 
     void Renderable::OnKeyPressed(ImmediateGui::VirtualKey key) {
