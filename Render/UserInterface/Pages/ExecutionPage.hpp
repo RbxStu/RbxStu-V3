@@ -9,14 +9,15 @@
 namespace RbxStu::Render::UI::Pages {
     class ExecutionPage final : public RbxStu::Render::Renderable {
         std::string m_executeTextBuffer;
-        std::string m_selectedExecutionSecurity;
         std::vector<const char *> m_executionSecurities;
         int m_dwCurrentlySelectedExecutionSecurity;
+        std::vector<const char *> m_executionDataModels;
+        int m_dwCurrentlySelectedExecutionDataModel;
 
     public:
         ExecutionPage();
 
-        void ExecuteBuffer(RBX::DataModelType dwTargetDataModel);
+        void ExecuteBuffer();
 
         ~ExecutionPage() override = default;
 
