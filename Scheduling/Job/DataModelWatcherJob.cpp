@@ -33,7 +33,8 @@ namespace RbxStu::Scheduling::Jobs {
         const auto taskScheduler = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         RBX::DataModelType dataModels[] = {
             RBX::DataModelType::DataModelType_Edit,
-            RBX::DataModelType::DataModelType_PlayClient, RBX::DataModelType::DataModelType_PlayServer
+            RBX::DataModelType::DataModelType_PlayClient,
+            RBX::DataModelType::DataModelType_PlayServer
         };
 
         for (const auto dataModel: dataModels) {
@@ -57,7 +58,7 @@ namespace RbxStu::Scheduling::Jobs {
             auto lastSeen = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now() - this->m_dataModelLastTimeStepped[dataModel]);
 
-            if (lastSeen.count() > compensationTime.count() + 1000) {
+            if (lastSeen.count() > (compensationTime.count() + 2500)) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::Scheduling_Jobs_DataModelWatcherJob,
                           std::format(
                               "DataModel deletion detected for {}, too much time without stepping -- Resetting ExecutionEngine"
