@@ -8,7 +8,7 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 namespace RbxStu::Render {
-    std::int64_t Renderable::DeltaTime(ImGuiContext *pContext) const {
+    float Renderable::GetDeltaTime(ImGuiContext *pContext) const {
         return pContext->IO.DeltaTime;
     }
 

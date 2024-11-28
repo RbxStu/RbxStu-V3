@@ -27,7 +27,7 @@ namespace RbxStu::Render {
          *      ~ Contains code from land/landervander ~
          */
 
-        std::int64_t DeltaTime(ImGuiContext *pContext) const;
+        float GetDeltaTime(ImGuiContext *pContext) const;
 
         void PushSeparator();
 
