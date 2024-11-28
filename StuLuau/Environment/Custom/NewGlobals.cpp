@@ -4,6 +4,9 @@
 
 #include "NewGlobals.hpp"
 
+#include <Scheduling/TaskScheduler.hpp>
+#include <Scheduling/TaskSchedulerOrchestrator.hpp>
+
 #include "lobject.h"
 #include "StuLuau/LuauSecurity.hpp"
 
@@ -39,12 +42,20 @@ namespace RbxStu::StuLuau::Environment::Custom {
         return 1;
     }
 
+    int NewGlobals::getdatamodeltype(lua_State *L) {
+        const auto executionEngine = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
+                GetExecutionEngine(L);
+        lua_pushinteger(L, executionEngine->GetDataModelType());
+        return 1;
+    }
+
     const luaL_Reg *NewGlobals::GetFunctionRegistry() {
         static luaL_Reg functions[] = {
             {"setuntouched", NewGlobals::setuntouched},
             {"isuntouched", NewGlobals::isuntouched},
             {"getcapabilities", NewGlobals::getcapabilities},
             {"getobjectaddress", NewGlobals::getobjectaddress},
+            {"getdatamodeltype", NewGlobals::getdatamodeltype},
             {nullptr, nullptr}
         };
         return functions;

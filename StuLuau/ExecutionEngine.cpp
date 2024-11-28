@@ -42,6 +42,7 @@ namespace RbxStu::StuLuau {
         }
 
         this->m_bCanUseCodeGeneration = this->m_executionEngineState->executorState->global->ecb.context == nullptr;
+        this->m_runningAs = this->m_executionEngineState->dataModel->GetDataModelType();
     }
 
     void ExecutionEngine::DestroyEngine() {
@@ -294,5 +295,9 @@ namespace RbxStu::StuLuau {
 
     bool ExecutionEngine::IsDestroyed() {
         return this->m_bIsDestroyed;
+    }
+
+    RBX::DataModelType ExecutionEngine::GetDataModelType() const {
+        return this->m_runningAs;
     }
 } // RbxStu::Luau

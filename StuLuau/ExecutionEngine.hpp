@@ -74,6 +74,7 @@ namespace RbxStu::StuLuau {
         std::queue<RbxStu::StuLuau::DispatchRequest> m_synchronizedDispatch;
         lua_State *m_pDispatchThread;
         std::atomic_bool m_bIsDestroyed;
+        RBX::DataModelType m_runningAs;
 
     public:
         explicit ExecutionEngine(
@@ -112,5 +113,7 @@ namespace RbxStu::StuLuau {
         std::shared_ptr<Environment::EnvironmentContext> GetEnvironmentContext();
 
         bool IsDestroyed();
+
+        RBX::DataModelType GetDataModelType() const;
     };
 } // RbxStu::Luau

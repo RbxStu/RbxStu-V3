@@ -18,6 +18,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         static int getobjectaddress(lua_State *L);
 
+        static int getdatamodeltype(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;;
 
         bool PushToGlobals() override;;
