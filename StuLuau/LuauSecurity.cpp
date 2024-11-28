@@ -221,10 +221,11 @@ namespace RbxStu::StuLuau {
                 return RBX::Security::Permissions::LocalUserPermission;
             case RbxStu::StuLuau::ExecutionSecurity::RobloxScript:
                 return RBX::Security::Permissions::RobloxScriptPermission;
+
             case RbxStu::StuLuau::ExecutionSecurity::Plugin:
-                return RBX::Security::Permissions::PluginPermission;
             case RbxStu::StuLuau::ExecutionSecurity::RobloxPlugin:
-                return RBX::Security::Permissions::PluginPermission;
+                return RBX::Security::Permissions::NotAccessiblePermission;
+
             case RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor:
                 return RBX::Security::Permissions::ExecutorLevelPermission;
         }
@@ -358,5 +359,9 @@ namespace RbxStu::StuLuau {
          */
 
         ReplaceUserthreadIfNotReplaced(L);
+
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                  std::format("Setting thread capabilities to {}; identity: {}; thread: {}", (int)executionSecurity,
+                      identity, (void*)L));
     }
 } // RbxStu::StuLuau
