@@ -246,8 +246,6 @@ target_link_libraries(${PROJECT_NAME}
 
         nlohmann_json::nlohmann_json
 
-        Dbghelp.lib
-
         oxorany
 
         # kiero
@@ -256,6 +254,7 @@ target_link_libraries(${PROJECT_NAME}
         # Imgui
         Imgui
 
+        Dbghelp.lib
         libcmt.lib
         libcpmt.lib
 )
