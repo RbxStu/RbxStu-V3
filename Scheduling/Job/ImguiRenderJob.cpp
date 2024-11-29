@@ -239,6 +239,7 @@ namespace RbxStu::Scheduling::Jobs {
             vp.TopLeftX = 0;
             vp.TopLeftY = 0;
             g_pContext->RSSetViewports(1, &vp);
+            TransitionHwnd(pSelf, g_hWnd);
             return hr;
         }
 
@@ -297,7 +298,7 @@ namespace RbxStu::Scheduling::Jobs {
 
     bool ImguiRenderJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                     RBX::TaskScheduler::Job::Stats *jobStats) {
-        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() == RBX::DataModelType_MainMenuStandalone;
+        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() != RBX::DataModelType_MainMenuStandalone;
         // Any DataModel that is not Standalone will be steppable correctly for rendering, else nothing will render to
         // the screen, as there is no Viewport available
     }
