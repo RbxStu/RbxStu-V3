@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+cmake_policy(SET CMP0091 NEW)
 project(RbxStuV3 LANGUAGES CXX C)
 
 enable_language(ASM_MASM)
@@ -17,6 +18,7 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} build_type)
 if (build_type STREQUAL release)
     message("Build is in Release Mode; Adding custom Compiler options and Linker options.")
     add_compile_options(
+            /MT
             /GA
             /bigobj
             /O2
@@ -151,6 +153,15 @@ add_library(${PROJECT_NAME} SHARED
         Render/ImmediateGui/PagedWindow.hpp
         Render/UserInterface/Pages/ExecutionPage.cpp
         Render/UserInterface/Pages/ExecutionPage.hpp
+        Render/UserInterface/Pages/SettingsPage.cpp
+        Render/UserInterface/Pages/SettingsPage.hpp
+        Render/RenderableStub.cpp
+        Render/RenderableStub.hpp
+        Render/Color4.hpp
+)
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+        MSVC_RUNTIME_LIBRARY MultiThreaded
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -241,5 +252,8 @@ target_link_libraries(${PROJECT_NAME}
 
         # Imgui
         Imgui
+
+        libcmt.lib
+        libcpmt.lib
 )
 
