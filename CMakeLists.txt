@@ -156,6 +156,8 @@ add_library(${PROJECT_NAME} SHARED
         Render/RenderableStub.cpp
         Render/RenderableStub.hpp
         Render/Color4.hpp
+        StuLuau/Environment/UNC/Instances.cpp
+        StuLuau/Environment/UNC/Instances.hpp
 )
 
 if (build_type STREQUAL release)

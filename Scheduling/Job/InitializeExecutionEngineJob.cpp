@@ -23,9 +23,10 @@
 #include "StuLuau/Environment/UNC/Crypt.hpp"
 #include "StuLuau/Environment/UNC/Debug.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
+#include "StuLuau/Environment/UNC/Instances.hpp"
+#include "StuLuau/Environment/UNC/Miscellaneous.hpp"
 #include "StuLuau/Environment/UNC/Scripts.hpp"
 #include "StuLuau/Environment/UNC/WebSocket.hpp"
-#include "StuLuau/Environment/UNC/Miscellaneous.hpp"
 
 namespace RbxStu::Scheduling::Jobs {
     bool InitializeExecutionEngineJob::ShouldStep(const RbxStu::Scheduling::JobKind jobKind, void *job,
@@ -140,6 +141,7 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Scripts>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Crypt>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Miscellaneous>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Instances>());
 
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
