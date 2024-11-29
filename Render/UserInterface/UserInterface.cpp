@@ -11,6 +11,8 @@
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
 #include "Pages/ExecutionPage.hpp"
+#include "Pages/SettingsPage.hpp"
+#include "Render/RenderableStub.hpp"
 #include "Scheduling/Job/ImguiRenderJob.hpp"
 #include "Render/ImmediateGui/Keycodes.hpp"
 #include "Render/ImmediateGui/PagedWindow.hpp"
@@ -48,9 +50,12 @@ namespace RbxStu::Render {
 
         const auto pages = std::vector<UI::UIPage>{
             UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::ExecutionPage>(), "Execution"},
+            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "Settings"},
+            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "Credits"},
+            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "TestWindow"},
         };
 
-        this->m_pPagedWindow = std::make_shared<UI::PagedWindow>(pages, "RbxStu V3");
+        this->m_pPagedWindow = std::make_shared<UI::PagedWindow>(pages, "RbxStu V3", 3);
         this->m_renderJob = imguiRenderJob.value();
         this->m_bIsInitialized = true;
         return true;
@@ -70,11 +75,13 @@ namespace RbxStu::Render {
 
     void UserInterface::OnKeyReleased(const ImmediateGui::VirtualKey key) {
         if (key == RbxStu::Render::ImmediateGui::VirtualKey::INSERT) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, "Enabling Internal UI");
-            if (!this->IsRenderingEnabled())
+            if (!this->IsRenderingEnabled()) {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, "Enabling Internal UI");
                 this->EnableRender();
-            else
+            } else {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, "Disabling Internal UI");
                 this->DisableRender();
+            }
         }
 
         this->m_pPagedWindow->OnKeyReleased(key);
