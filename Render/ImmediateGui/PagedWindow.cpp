@@ -110,21 +110,25 @@ namespace RbxStu::Render::UI {
         ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Once);
         ImGui::Begin("RbxStu::Render::UI::PagedWindow", nullptr, ImGuiWindowFlags_NoTitleBar);
 
-        auto currentPageIndex = this->m_dwCurrentPageIndex;
+        const auto currentPageIndex = this->m_dwCurrentPageIndex;
         this->RenderPageButtons();
 
         ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(39.0f, 136.0f, 245.0f).ToImGuiVec4());
-        if (this->m_dwCurrentPageIndex == 0) {
+        if (this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex ==
+            0 || this->m_pages.at(
+                this->m_dwCurrentPageIndex - 1).
+            bIsStub) {
             // We cannot regress more on the button, thus we want to color it as such.
             ImGui::PopStyleColor();
             ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(0.0f, 0.0f, 0.0f).ToImGuiVec4());
+        } {
+            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex ==
+                             0 || this->m_pages.at(
+                                 this->m_dwCurrentPageIndex - 1).
+                             bIsStub);
+            if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--"))
+                this->SetCurrentPage(this->m_dwCurrentPageIndex - 1);
         }
-
-        if (ImGui::Button("<<") && !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex ==
-                                     0 || this->m_pages.at(
-                                         this->m_dwCurrentPageIndex - 1).
-                                     bIsStub))
-            this->SetCurrentPage(this->m_dwCurrentPageIndex - 1);
 
         ImGui::PopStyleColor();
         ImGui::SameLine();
@@ -137,12 +141,13 @@ namespace RbxStu::Render::UI {
             // We cannot regress more on the button, thus we want to color it as such.
             ImGui::PopStyleColor();
             ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(0.0f, 0.0f, 0.0f).ToImGuiVec4());
+        } {
+            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(
+                                 this->m_dwCurrentPageIndex + 1).
+                             bIsStub);
+            if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--"))
+                this->SetCurrentPage(this->m_dwCurrentPageIndex + 1);
         }
-
-        if (ImGui::Button(">>") && !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(
-                                         this->m_dwCurrentPageIndex + 1).
-                                     bIsStub))
-            this->SetCurrentPage(this->m_dwCurrentPageIndex + 1);
 
         Renderable::PushSeparator();
 
