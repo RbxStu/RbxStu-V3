@@ -3,25 +3,25 @@
 //
 
 #pragma once
+#include <map>
 #include <optional>
 #include <string>
-#include <map>
 
-#include <lstate.h>
-#include <lualib.h>
-#include <lua.h>
 #include <lapi.h>
+#include <lstate.h>
 #include <ltm.h>
+#include <lua.h>
+#include <lualib.h>
 
 #include "Roblox/TypeDefinitions.hpp"
 
 namespace RbxStu::StuLuau::Environment::Interop {
-    struct FunctionInformation {
-        int argumentCount;
+    struct FunctionInformation final {
+        int argumentCount; // -1 == vaarg.
         lua_CFunction fpFunction;
     };
 
-    struct PropertyInformation {
+    struct PropertyInformation final {
         lua_CFunction fpGetter; // getter will only get in first place the pointer to the object.
         int setterArgc;
         std::optional<lua_CFunction> fpSetter;
@@ -29,9 +29,8 @@ namespace RbxStu::StuLuau::Environment::Interop {
 
     class TaggedIdentifier abstract {
     public:
-        virtual std::string GetTagName() {
-            return "TaggedIdentifier";
-        }
+        virtual ~TaggedIdentifier() = default;
+        virtual std::string GetTagName() { return "TaggedIdentifier"; }
     };
 
     template<Concepts::TypeConstraint<TaggedIdentifier> TaggerContainer>
@@ -76,7 +75,7 @@ namespace RbxStu::StuLuau::Environment::Interop {
                 return lua_gettop(L);
             }
 
-            luaL_error(L, std::format( "invalid index into userdata<{}>", x.GetTagName()).c_str());
+            luaL_error(L, std::format("invalid index into userdata<{}>", x.GetTagName()).c_str());
         }
 
         template<Concepts::TypeConstraint<TaggedIdentifier> tagContainer>
@@ -92,11 +91,17 @@ namespace RbxStu::StuLuau::Environment::Interop {
                 const auto funcInfo = ppNative->m_functionMap.at(func);
                 lua_pushcclosure(L, funcInfo.fpFunction, nullptr, 0);
                 lua_insert(L, 1);
-                lua_call(L, funcInfo.argumentCount, LUA_MULTRET);
+
+                auto argc = funcInfo.argumentCount;
+                if (funcInfo.argumentCount == -1) {
+                    argc = lua_gettop(L) - 1;
+                }
+
+                lua_call(L, argc, LUA_MULTRET);
                 return lua_gettop(L);
             }
 
             luaL_error(L, std::format("invalid namecall into userdata<{}>", x.GetTagName()).c_str());
         }
     };
-}
+} // namespace RbxStu::StuLuau::Environment::Interop
