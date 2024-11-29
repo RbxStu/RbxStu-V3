@@ -102,7 +102,6 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Closures.hpp
         StuLuau/Environment/UNC/Globals.cpp
         StuLuau/Environment/UNC/Globals.hpp
-
         StuLuau/Environment/Custom/Memory.cpp
         StuLuau/Environment/Custom/Memory.hpp
         StuLuau/Environment/UNC/WebSocket.cpp

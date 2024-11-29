@@ -35,6 +35,12 @@ namespace RbxStu {
         return FastFlagUnknown;
     }
 
+    void FastFlagsManager::ReloadFlags() {
+        std::lock_guard guard(getSingletonMutex);
+        instance->isInitialized = false;
+        this->FailedToLoadFlags = false;
+        this->Initialize();
+    }
 
     void FastFlagsManager::Initialize() {
         if (isInitialized) return;

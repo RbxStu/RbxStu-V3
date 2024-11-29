@@ -47,6 +47,8 @@ namespace RbxStu {
 
         FastFlagType ParseFFLagNameToType(const std::string &fflagName);
 
+        void ReloadFlags();
+
         template<typename T>
         [[nodiscard]] T GetOptionalFastFlagValue(const std::string &flagName, T defaultValue) const {
             if (!this->isInitialized)

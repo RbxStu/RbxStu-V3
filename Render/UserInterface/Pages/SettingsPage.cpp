@@ -6,9 +6,6 @@
 
 namespace RbxStu::Render::UI::Pages {
     void SettingsPage::Render(ImGuiContext *pContext) {
-
-
-
         Renderable::Render(pContext);
     }
 }
