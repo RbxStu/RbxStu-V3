@@ -61,6 +61,7 @@
     },
     {
       "name": "RelWithDebInfo",
+      "configurePreset": "Release",
       "configuration": "RelWithDebInfo",
       "targets": [
         "Module"
@@ -68,6 +69,7 @@
     },
     {
       "name": "Debug",
+      "configurePreset": "Release",
       "configuration": "Debug",
       "targets": [
         "Module"
