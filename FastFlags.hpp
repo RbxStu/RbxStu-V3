@@ -33,12 +33,11 @@ namespace RbxStu {
         bool FailedToLoadFlags = false;
 
         FlagMapType loadedFlags = FlagMapType{};
-        std::map<std::string, FastFlagType> fastFlagPrefixes = std::map<std::string, FastFlagType>{
-            {"FFlag", FastFlagBoolean},
-            {"DFlag", FastFlagFloat},
-            {"IFlag", FastFlagInteger},
-            {"SFlag", FastFlagString}
-        };
+        std::map<std::string, FastFlagType> fastFlagPrefixes =
+                std::map<std::string, FastFlagType>{{"FFlag", FastFlagBoolean},
+                                                    {"DFlag", FastFlagFloat},
+                                                    {"IFlag", FastFlagInteger},
+                                                    {"SFlag", FastFlagString}};
 
     public:
         static std::shared_ptr<FastFlagsManager> GetSingleton();
@@ -66,29 +65,30 @@ namespace RbxStu {
         }
     };
 
-    template<FastFlagType type, typename T, T defaultValue>
+    template<FastFlagType type, typename T>
     class FastFlagDeclaration final {
         std::string szFastFlagName = "";
+        T m_defaultValue;
 
     public:
-        explicit FastFlagDeclaration(std::string szFastFlagName) : szFastFlagName(std::move(szFastFlagName)) {
-            this->szFastFlagName = std::move(szFastFlagName);
+        explicit FastFlagDeclaration(const std::string &szFastFlagName, T defaultValue) {
+            this->szFastFlagName = (szFastFlagName);
+            this->m_defaultValue = defaultValue;
         };
 
         [[nodiscard]] bool IsDefined() const {
             return RbxStu::FastFlagsManager::GetSingleton()->GetOptionalFastFlagValue<T>(
-                       this->szFastFlagName, defaultValue)
-                   !=
-                   defaultValue;
+                           this->szFastFlagName, this->m_defaultValue) != this->m_defaultValue;
         };
 
         [[nodiscard]] T GetValue() const {
-            return RbxStu::FastFlagsManager::GetSingleton()->GetOptionalFastFlagValue<T>(
-                this->szFastFlagName, defaultValue);
+            return RbxStu::FastFlagsManager::GetSingleton()->GetOptionalFastFlagValue<T>(this->szFastFlagName,
+                                                                                         this->m_defaultValue);
         }
     };
 
-#define RBXSTU_DEFINEFASTFLAG(fastFlagVariableName, szFastFlagName, fastFlagType, cType, defaultFlagValue) static FastFlagDeclaration<fastFlagType, cType, defaultFlagValue> fastFlagVariableName{szFastFlagName};
+#define RBXSTU_DEFINEFASTFLAG(fastFlagVariableName, szFastFlagName, fastFlagType, cType, defaultFlagValue)             \
+    static FastFlagDeclaration<fastFlagType, cType> fastFlagVariableName{szFastFlagName, defaultFlagValue};
 
     namespace FastFlags {
         RBXSTU_DEFINEFASTFLAG(FFlagIsRobloxInternalEnabled, "FFlagIsRobloxInternalEnabled",
@@ -97,15 +97,18 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(FFLagEnablePipeCommunication, "FFLagEnablePipeCommunication",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
-        RBXSTU_DEFINEFASTFLAG(FFlagEnableDebugLogs, "FFlagEnableDebugLogs",
-                              RbxStu::FastFlagType::FastFlagBoolean, bool, false);
+        RBXSTU_DEFINEFASTFLAG(FFlagEnableDebugLogs, "FFlagEnableDebugLogs", RbxStu::FastFlagType::FastFlagBoolean, bool,
+                              false);
 
-        RBXSTU_DEFINEFASTFLAG(IFlagWebsocketPort, "IFlagWebsocketPort",
-                              RbxStu::FastFlagType::FastFlagInteger, int, 7777);
+        RBXSTU_DEFINEFASTFLAG(IFlagWebsocketPort, "IFlagWebsocketPort", RbxStu::FastFlagType::FastFlagInteger, int,
+                              7777);
 
-        RBXSTU_DEFINEFASTFLAG(FFLagUseWebsocketServer, "FFLagUseWebsocketServer",
-                              RbxStu::FastFlagType::FastFlagBoolean, bool, false);
-    }
+        RBXSTU_DEFINEFASTFLAG(FFLagUseWebsocketServer, "FFLagUseWebsocketServer", RbxStu::FastFlagType::FastFlagBoolean,
+                              bool, false);
+
+        RBXSTU_DEFINEFASTFLAG(SFlagRbxCrashKey, "SFlagRbxCrashKey", RbxStu::FastFlagType::FastFlagString, std::string,
+                              "__RbxCrash");
+    } // namespace FastFlags
 
 #undef RBXSTU_DEFINEFASTFLAG
-} // RbxStu
+} // namespace RbxStu

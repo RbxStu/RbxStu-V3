@@ -4,8 +4,8 @@
 
 #include "FastFlags.hpp"
 
-#include <fstream>
 #include <Utilities.hpp>
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 
@@ -26,7 +26,8 @@ namespace RbxStu {
     }
 
     RbxStu::FastFlagType FastFlagsManager::ParseFFLagNameToType(const std::string &fflagName) {
-        if (fflagName.length() < 5) return FastFlagUnknown;
+        if (fflagName.length() < 5)
+            return FastFlagUnknown;
         const auto it = fastFlagPrefixes.find(fflagName.substr(0, 5));
         if (it != fastFlagPrefixes.end()) {
             return it->second;
@@ -43,7 +44,8 @@ namespace RbxStu {
     }
 
     void FastFlagsManager::Initialize() {
-        if (isInitialized) return;
+        if (isInitialized)
+            return;
 
         const auto DllDirectoryOpt = Utilities::GetDllDir();
         if (!DllDirectoryOpt.has_value()) {
@@ -97,19 +99,23 @@ namespace RbxStu {
             std::optional<FlagValueType> flagValue;
             switch (flagType) {
                 case FastFlagBoolean:
-                    if (!value.is_boolean()) continue;
+                    if (!value.is_boolean())
+                        continue;
                     flagValue = value.get<bool>();
                     break;
                 case FastFlagInteger:
-                    if (!value.is_number_integer()) continue;
+                    if (!value.is_number_integer())
+                        continue;
                     flagValue = value.get<int>();
                     break;
                 case FastFlagFloat:
-                    if (!value.is_number_float()) continue;
+                    if (!value.is_number_float())
+                        continue;
                     flagValue = value.get<float>();
                     break;
                 case FastFlagString:
-                    if (!value.is_string()) continue;
+                    if (!value.is_string())
+                        continue;
                     flagValue = value.get<std::string>();
                     break;
                 default:
@@ -124,6 +130,10 @@ namespace RbxStu {
 
         RbxStuLog(LogType::Information, RbxStu::Fast_Flags,
                   std::format("Successfully loaded {} FastFlag(s)!", loadedFlags.size()));
+
+        for (const auto &fastFlag: this->loadedFlags) {
+            RbxStuLog(LogType::Information, RbxStu::Fast_Flags, std::format("- {}", fastFlag.first))
+        }
         this->isInitialized = true;
     }
-} // RbxStu
+} // namespace RbxStu
