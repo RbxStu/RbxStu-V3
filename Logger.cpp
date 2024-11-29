@@ -10,6 +10,7 @@
 #include <mutex>
 #include <shared_mutex>
 
+#include "FastFlags.hpp"
 #include "Roblox/TypeDefinitions.hpp"
 #include "Settings.hpp"
 
@@ -75,11 +76,11 @@ void RbxStu::Logger::Initialize(const bool bInstantFlush) {
 }
 
 void RbxStu::Logger::PrintDebug(std::string_view sectionName, std::string_view msg, std::string_view line) {
-#if RBXSTU_ENABLE_DEBUG_LOGS
-    std::lock_guard lock{mutex};
-    this->m_szMessageBuffer.append(std::format("[DEBUG/{} -> {}] {}", sectionName, line, msg));
-    this->FlushIfFull(RbxStu::LogType::Debug);
-#endif // #if RBXSTU_ENABLE_DEBUG_LOGS
+    if (FastFlags::GetSingleton()->GetOptionalFastFlagValue<bool>("FFlagEnableDebugLogs", false)) {
+        std::lock_guard lock{mutex};
+        this->m_szMessageBuffer.append(std::format("[DEBUG/{} -> {}] {}", sectionName, line, msg));
+        this->FlushIfFull(RbxStu::LogType::Debug);
+    }
 }
 
 void RbxStu::Logger::PrintInformation(std::string_view sectionName, std::string_view msg, std::string_view line) {
