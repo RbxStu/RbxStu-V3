@@ -47,7 +47,6 @@ namespace RbxStu::Render::UI::Pages {
         for (const auto &contributor: this->m_contributorList)
             contributor->Render(pContext);
 
-
         Renderable::Render(pContext);
     }
 } // namespace RbxStu::Render::UI::Pages
