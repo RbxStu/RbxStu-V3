@@ -207,7 +207,8 @@ namespace RbxStu::Scheduling::Jobs {
                                             if (currentNamecall == nullptr)
                                                 return StuLuau::Environment::HookReturnState{true, false, 0};
 
-                                            if (strcmp(currentNamecall, "HttpGet") == 0 || strcmp(currentNamecall, "HttpGetAsync") == 0) {
+                                            if (strcmp(currentNamecall, "HttpGet") == 0 || strcmp(
+                                                    currentNamecall, "HttpGetAsync") == 0) {
                                                 lua_getglobal(inCtx.L, "httpget");
                                                 lua_pushvalue(inCtx.L, 2);
                                                 lua_pcall(inCtx.L, 1, 1, 0);
