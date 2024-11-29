@@ -6,6 +6,7 @@
 
 #include <Utilities.hpp>
 
+#include "FastFlags.hpp"
 #include "Roblox/DataModel.hpp"
 #include "StuLuau/Extensions/luauext.hpp"
 
@@ -27,16 +28,25 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Miscellaneous::rbxcrash(lua_State *L) {
-        return **static_cast<int **>(0);
+        std::size_t len{};
+        const auto givenKey = luaL_checklstring(L, 1, &len);
+        const auto key = RbxStu::FastFlags::SFlagRbxCrashKey.GetValue();
+
+        if (len == key.length() && strcmp(givenKey, key.c_str()) == 0) {
+            // ReSharper disable once CppDFANullDereference
+            return **static_cast<int **>(nullptr);
+        }
+
+        luaL_error(L, "attempted to call RbxStu::RBXCRASH with an invalid crash key; crashing on Luau context instead "
+                      "of Native context.");
     }
 
     const luaL_Reg *Miscellaneous::GetFunctionRegistry() {
         static const luaL_Reg functions[] = {
-            {"isparallel", RbxStu::StuLuau::Environment::UNC::Miscellaneous::isparallel},
-            {"rbxcrash", RbxStu::StuLuau::Environment::UNC::Miscellaneous::rbxcrash},
-            {nullptr, nullptr}
-        };
+                {"isparallel", RbxStu::StuLuau::Environment::UNC::Miscellaneous::isparallel},
+                {"rbxcrash", RbxStu::StuLuau::Environment::UNC::Miscellaneous::rbxcrash},
+                {nullptr, nullptr}};
 
         return functions;
     }
-}
+} // namespace RbxStu::StuLuau::Environment::UNC
