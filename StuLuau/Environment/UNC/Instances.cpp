@@ -172,7 +172,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             task_defer(nL);
 
-            return 1;
+            return 0;
         }
 
         static int GetForeignState(lua_State *L) {
