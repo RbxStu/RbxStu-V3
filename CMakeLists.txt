@@ -159,6 +159,8 @@ add_library(${PROJECT_NAME} SHARED
         Roblox/Script.cpp
         Roblox/Script.hpp
         Miscellaneous/OpaqueClass.hpp
+        Render/UserInterface/Pages/CreditsPage.cpp
+        Render/UserInterface/Pages/CreditsPage.hpp
 )
 
 if (build_type STREQUAL release)
