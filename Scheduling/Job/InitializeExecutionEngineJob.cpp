@@ -301,7 +301,16 @@ namespace RbxStu::Scheduling::Jobs {
 
                 return x
             end)
-        )", "InstanceFunctionIntialization");
+            getgenv().firesignal = newcclosure(function(signal, ...)
+                local cons = getconnections(signal)
+
+                for _, con in cons do
+                    pcall(con.Fire, con, ...)
+                end
+
+                task.wait()
+            end)
+        )", "InteropFunctionDeclarations");
 
         envContext->DefineInitScript(R"(
             setreadonly(getgenv().debug, false)
