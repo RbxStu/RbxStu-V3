@@ -5,17 +5,18 @@
 #include "UserInterface.hpp"
 
 #include <Logger.hpp>
-#include <memory>
-#include <mutex>
 #include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
+#include <memory>
+#include <mutex>
 
+#include "Pages/CreditsPage.hpp"
 #include "Pages/ExecutionPage.hpp"
 #include "Pages/SettingsPage.hpp"
-#include "Render/RenderableStub.hpp"
-#include "Scheduling/Job/ImguiRenderJob.hpp"
 #include "Render/ImmediateGui/Keycodes.hpp"
 #include "Render/ImmediateGui/PagedWindow.hpp"
+#include "Render/RenderableStub.hpp"
+#include "Scheduling/Job/ImguiRenderJob.hpp"
 
 namespace RbxStu::Render {
     std::shared_ptr<UserInterface> UserInterface::pInstance;
@@ -38,21 +39,22 @@ namespace RbxStu::Render {
     }
 
     bool UserInterface::Initialize() {
-        if (this->IsInitialized()) return false;
+        if (this->IsInitialized())
+            return false;
 
         const auto orchestrator = Scheduling::TaskSchedulerOrchestrator::GetSingleton();
         const auto taskScheduler = orchestrator->GetTaskScheduler();
 
         auto imguiRenderJob = taskScheduler->GetSchedulerJob<RbxStu::Scheduling::Jobs::ImguiRenderJob>(
-            Scheduling::Jobs::AvailableJobs::ImguiRenderJob);
+                Scheduling::Jobs::AvailableJobs::ImguiRenderJob);
 
-        if (!imguiRenderJob.has_value()) return false; // Impossible, but anything can happen in C++ bro
+        if (!imguiRenderJob.has_value())
+            return false; // Impossible, but anything can happen in C++ bro
 
         const auto pages = std::vector<UI::UIPage>{
-            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::ExecutionPage>(), "Execution"},
-            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "Settings"},
-            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "Credits"},
-            UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "TestWindow"},
+                UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::ExecutionPage>(), "Execution"},
+                UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::SettingsPage>(), "Settings"},
+                UI::UIPage{std::make_shared<RbxStu::Render::UI::Pages::CreditsPage>(), "Credits"},
         };
 
         this->m_pPagedWindow = std::make_shared<UI::PagedWindow>(pages, "RbxStu V3", 3);
@@ -88,4 +90,4 @@ namespace RbxStu::Render {
 
         Renderable::OnKeyReleased(key);
     }
-}
+} // namespace RbxStu::Render

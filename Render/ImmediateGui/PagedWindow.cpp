@@ -21,39 +21,40 @@ namespace RbxStu::Render::UI {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::Graphics,
                       "Unsuitale number of rows per column for the given number of pages; Filling with stub pages!");
 
+            const auto realOldSize = this->m_pages.size();
             auto oldSize = this->m_pages.size();
             auto newSize = oldSize;
 
-            while (newSize++ % rowsPerColumn != 0);
+            while (newSize++ % rowsPerColumn != 0) {
+            }
 
-            this->m_pages.reserve(newSize);
+            this->m_pages.reserve(newSize + 1);
 
             while (oldSize++ < this->m_pages.capacity())
                 this->m_pages.emplace_back(std::make_shared<RbxStu::Render::RenderableStub>(), "~~ ~~", true);
 
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::Graphics,
-                      std::format(
-                          "Adjusted pages to render objects for proper display; Previous this->m_pages.size(): {:d}; Current this->m_pages.size(): {:d}"
-                          , oldSize, newSize));
+                      std::format("Adjusted pages to render objects for proper display; Previous this->m_pages.size(): "
+                                  "{:d}; Current this->m_pages.size(): {:d}",
+                                  realOldSize, newSize));
         }
 
+        this->m_pages.emplace_back(std::make_shared<RbxStu::Render::RenderableStub>(), "~~ ~~", true);
         // this->m_pages.emplace_back(std::make_shared<RbxStu::Render::RenderableStub>(), "~~ ~~"); // Push stub
     }
 
-    PagedWindow::~PagedWindow() {
-        this->m_pages.clear();
-    }
+    PagedWindow::~PagedWindow() { this->m_pages.clear(); }
 
-    const UIPage &PagedWindow::GetCurrentPage() const {
-        return this->m_pages.at(this->m_dwCurrentPageIndex);
-    }
+    const UIPage &PagedWindow::GetCurrentPage() const { return this->m_pages.at(this->m_dwCurrentPageIndex); }
 
     void PagedWindow::SetCurrentPage(const int newCurrentPage) {
         if (this->m_pages.size() < newCurrentPage) {
-            RbxStuLog(RbxStu::LogType::Warning, RbxStu::Graphics,
-                      std::format(
-                          "PagedWindow::SetCurrentPage(): Attempted to set the current page into index outside of the available page set, request dropped; Attempted New Page: {:d}; Pages List Size: {:d}"
-                          , newCurrentPage, this->m_pages.size()));
+            RbxStuLog(
+                    RbxStu::LogType::Warning, RbxStu::Graphics,
+                    std::format(
+                            "PagedWindow::SetCurrentPage(): Attempted to set the current page into index outside of "
+                            "the available page set, request dropped; Attempted New Page: {:d}; Pages List Size: {:d}",
+                            newCurrentPage, this->m_pages.size()));
             return;
         }
 
@@ -114,18 +115,15 @@ namespace RbxStu::Render::UI {
         this->RenderPageButtons();
 
         ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(39.0f, 136.0f, 245.0f).ToImGuiVec4());
-        if (this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex ==
-            0 || this->m_pages.at(
-                this->m_dwCurrentPageIndex - 1).
-            bIsStub) {
+        if (this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex == 0 ||
+            this->m_pages.at(this->m_dwCurrentPageIndex - 1).bIsStub) {
             // We cannot regress more on the button, thus we want to color it as such.
             ImGui::PopStyleColor();
             ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(0.0f, 0.0f, 0.0f).ToImGuiVec4());
-        } {
-            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex ==
-                             0 || this->m_pages.at(
-                                 this->m_dwCurrentPageIndex - 1).
-                             bIsStub);
+        }
+        {
+            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_dwCurrentPageIndex == 0 ||
+                             this->m_pages.at(this->m_dwCurrentPageIndex - 1).bIsStub);
             if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--"))
                 // Right condition just for feedback.
                 if (canMove)
@@ -134,19 +132,18 @@ namespace RbxStu::Render::UI {
 
         ImGui::PopStyleColor();
         ImGui::SameLine();
-        ImGui::Text("%s ",
-                    this->m_pages.at(currentPageIndex).szPageName.c_str());
+        ImGui::Text("%s ", this->m_pages.at(currentPageIndex).szPageName.c_str());
         ImGui::SameLine();
         ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(39.0f, 136.0f, 245.0f).ToImGuiVec4());
-        if (this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(this->m_dwCurrentPageIndex + 1).
-            bIsStub) {
+        if (this->m_dwCurrentPageIndex == this->m_pages.size() ||
+            this->m_pages.at(this->m_dwCurrentPageIndex + 1).bIsStub) {
             // We cannot regress more on the button, thus we want to color it as such.
             ImGui::PopStyleColor();
             ImGui::PushStyleColor(ImGuiCol_Button, Color4::FromRGB(0.0f, 0.0f, 0.0f).ToImGuiVec4());
-        } {
-            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(
-                                 this->m_dwCurrentPageIndex + 1).
-                             bIsStub);
+        }
+        {
+            auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() ||
+                             this->m_pages.at(this->m_dwCurrentPageIndex + 1).bIsStub);
             if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--"))
                 // Right condition just for feedback.
                 if (canMove)
@@ -161,4 +158,4 @@ namespace RbxStu::Render::UI {
 
         Renderable::Render(pContext);
     }
-}
+} // namespace RbxStu::Render::UI

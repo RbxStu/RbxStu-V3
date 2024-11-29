@@ -156,6 +156,11 @@ add_library(${PROJECT_NAME} SHARED
         Render/RenderableStub.cpp
         Render/RenderableStub.hpp
         Render/Color4.hpp
+        Roblox/Script.cpp
+        Roblox/Script.hpp
+        Miscellaneous/OpaqueClass.hpp
+        Render/UserInterface/Pages/CreditsPage.cpp
+        Render/UserInterface/Pages/CreditsPage.hpp
         StuLuau/Environment/UNC/Instances.cpp
         StuLuau/Environment/UNC/Instances.hpp
 )
@@ -245,8 +250,6 @@ target_link_libraries(${PROJECT_NAME}
 
         nlohmann_json::nlohmann_json
 
-        Dbghelp.lib
-
         oxorany
 
         # kiero
@@ -255,6 +258,7 @@ target_link_libraries(${PROJECT_NAME}
         # Imgui
         Imgui
 
+        Dbghelp.lib
         libcmt.lib
         libcpmt.lib
 )

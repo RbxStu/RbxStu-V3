@@ -38,6 +38,37 @@ add_library(${PROJECT} STATIC
         ${IMGUI_SOURCES}
 )
 
+string(TOLOWER ${CMAKE_BUILD_TYPE} build_type)
+
+if (build_type STREQUAL release)
+    add_compile_options(
+            /MT
+            /GA
+            /bigobj
+            /O2
+            /Gr
+            /GS
+            /cgthreads8
+            /arch:AVX2
+    )
+
+    add_link_options(
+            /LTCG
+            /INCREMENTAL
+            /DEBUG
+            /DYNAMICBASE
+            /HIGHENTROPYVA
+            /GUARD:CF
+            /VERBOSE
+    )
+endif ()
+
+if (build_type STREQUAL release)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            MSVC_RUNTIME_LIBRARY MultiThreaded
+    )
+endif ()
+
 target_link_libraries(${PROJECT} PUBLIC
         dxgi.lib
         d3d11.lib

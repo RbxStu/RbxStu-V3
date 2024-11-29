@@ -4,31 +4,36 @@
 
 #include "Globals.hpp"
 
-#include <Utilities.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
+#include <Utilities.hpp>
 
-#include "lgc.h"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "lgc.h"
 
 #include <Dependencies/HttpStatus.hpp>
 
-#include <cpr/cpr.h>
-#include <lz4.h>
 #include <Scanners/Rbx.hpp>
 #include <Scheduling/TaskScheduler.hpp>
+#include <cpr/cpr.h>
+#include <lz4.h>
 
-#include <lstate.h>
 #include <lapi.h>
 #include <lmem.h>
+#include <lstate.h>
 #include <lstring.h>
-#include "StuLuau/LuauSecurity.hpp"
+
+#include "Roblox/Script.hpp"
 #include "StuLuau/Extensions/luauext.hpp"
+#include "StuLuau/LuauSecurity.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Globals::getgenv(lua_State *L) {
-        const auto mainState = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L)->GetInitializationInformation()->executorState;
+        const auto mainState = Scheduling::TaskSchedulerOrchestrator::GetSingleton()
+                                       ->GetTaskScheduler()
+                                       ->GetExecutionEngine(L)
+                                       ->GetInitializationInformation()
+                                       ->executorState;
 
         if (mainState == L) {
             lua_pushvalue(L, LUA_GLOBALSINDEX); // We are parent thread.
@@ -45,8 +50,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getrenv(lua_State *L) {
-        const auto rL = lua_mainthread(Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-            GetExecutionEngine(L)->GetInitializationInformation()->globalState);
+        const auto rL = lua_mainthread(Scheduling::TaskSchedulerOrchestrator::GetSingleton()
+                                               ->GetTaskScheduler()
+                                               ->GetExecutionEngine(L)
+                                               ->GetInitializationInformation()
+                                               ->globalState);
 
         if (!rL->isactive)
             luaC_threadbarrier(rL);
@@ -102,8 +110,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::httpget(lua_State *L) {
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
+        const auto executionEngine =
+                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
 
         std::string url;
         if (!lua_isstring(L, 1)) {
@@ -118,31 +126,33 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (url.find("http://") == std::string::npos && url.find("https://") == std::string::npos)
             luaL_argerror(L, 1, "Invalid protocol (expected 'http://' or 'https://')");
 
-        executionEngine->YieldThread(L, [url](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-            auto Headers = std::map<std::string, std::string, cpr::CaseInsensitiveCompare>();
-            Headers["User-Agent"] = "Roblox/WinInet";
-            Headers["RbxStu-Fingerprint"] = Utilities::GetHwid().value();
+        executionEngine->YieldThread(
+                L,
+                [url](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                    auto Headers = std::map<std::string, std::string, cpr::CaseInsensitiveCompare>();
+                    Headers["User-Agent"] = "Roblox/WinInet";
+                    Headers["RbxStu-Fingerprint"] = Utilities::GetHwid().value();
 
-            const auto response = cpr::Get(cpr::Url{url}, cpr::Header{Headers});
+                    const auto response = cpr::Get(cpr::Url{url}, cpr::Header{Headers});
 
-            auto output = std::string("");
+                    auto output = std::string("");
 
-            if (HttpStatus::IsError(response.status_code)) {
-                output = std::format("HttpGet failed\nResponse {} - {}. {}",
-                                     std::to_string(response.status_code),
-                                     HttpStatus::ReasonPhrase(response.status_code),
-                                     std::string(response.error.message));
-            } else {
-                output = response.text;
-            }
+                    if (HttpStatus::IsError(response.status_code)) {
+                        output = std::format(
+                                "HttpGet failed\nResponse {} - {}. {}", std::to_string(response.status_code),
+                                HttpStatus::ReasonPhrase(response.status_code), std::string(response.error.message));
+                    } else {
+                        output = response.text;
+                    }
 
-            yieldRequest->fpCompletionCallback = [output, yieldRequest]() -> RbxStu::StuLuau::YieldResult {
-                lua_pushlstring(yieldRequest->lpResumeTarget, output.c_str(), output.size());
-                return {true, 1, {}};
-            };
+                    yieldRequest->fpCompletionCallback = [output, yieldRequest]() -> RbxStu::StuLuau::YieldResult {
+                        lua_pushlstring(yieldRequest->lpResumeTarget, output.c_str(), output.size());
+                        return {true, 1, {}};
+                    };
 
-            yieldRequest->bIsReady = true;
-        }, true);
+                    yieldRequest->bIsReady = true;
+                },
+                true);
 
         return lua_yield(L, 0);
     }
@@ -184,8 +194,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::lz4compress(lua_State *L) {
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
+        const auto executionEngine =
+                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
 
         luaL_checktype(L, 1, LUA_TSTRING);
 
@@ -196,24 +206,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const int iMaxCompressedSize = LZ4_compressBound(str->len);
         if (iMaxCompressedSize > 10000) {
             executionEngine->YieldThread(
-                L, [L, str, iMaxCompressedSize](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-                    const auto pszCompressedBuffer = new char[iMaxCompressedSize];
-                    memset(pszCompressedBuffer, 0, iMaxCompressedSize);
+                    L,
+                    [L, str, iMaxCompressedSize](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                        const auto pszCompressedBuffer = new char[iMaxCompressedSize];
+                        memset(pszCompressedBuffer, 0, iMaxCompressedSize);
 
-                    const auto actualSize = LZ4_compress_default(str->data, pszCompressedBuffer, str->len,
-                                                                 iMaxCompressedSize);
+                        const auto actualSize =
+                                LZ4_compress_default(str->data, pszCompressedBuffer, str->len, iMaxCompressedSize);
 
 
-                    yieldRequest->fpCompletionCallback = [actualSize, L, pszCompressedBuffer, yieldRequest
-                            ]() -> RbxStu::StuLuau::YieldResult {
-                                if (actualSize != 0)
-                                    lua_pushlstring(L, pszCompressedBuffer, actualSize);
+                        yieldRequest->fpCompletionCallback = [actualSize, L, pszCompressedBuffer,
+                                                              yieldRequest]() -> RbxStu::StuLuau::YieldResult {
+                            if (actualSize != 0)
+                                lua_pushlstring(L, pszCompressedBuffer, actualSize);
 
-                                return {actualSize != 0, 1, "compression failed"};
-                            };
+                            return {actualSize != 0, 1, "compression failed"};
+                        };
 
-                    yieldRequest->bIsReady = true;
-                }, true);
+                        yieldRequest->bIsReady = true;
+                    },
+                    true);
 
             return lua_yield(L, 0);
         }
@@ -231,8 +243,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::lz4decompress(lua_State *L) {
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
+        const auto executionEngine =
+                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
         luaL_checktype(L, 1, LUA_TSTRING);
         luaL_checktype(L, 2, LUA_TNUMBER);
 
@@ -244,25 +256,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (dataSize > 10000 || str->len > 10000) {
             executionEngine->YieldThread(
-                L, [dataSize, L, str](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-                    auto *pszUncompressedBuffer = new char[dataSize];
+                    L,
+                    [dataSize, L, str](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
+                        auto *pszUncompressedBuffer = new char[dataSize];
 
-                    memset(pszUncompressedBuffer, 0, dataSize);
+                        memset(pszUncompressedBuffer, 0, dataSize);
 
-                    const auto ret = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
+                        const auto ret = LZ4_decompress_safe(str->data, pszUncompressedBuffer, str->len, dataSize);
 
-                    yieldRequest->fpCompletionCallback = [L, pszUncompressedBuffer, dataSize, ret, yieldRequest
-                            ]() -> RbxStu::StuLuau::YieldResult {
-                                if (ret > 0)
-                                    lua_pushlstring(L, pszUncompressedBuffer, dataSize);
+                        yieldRequest->fpCompletionCallback = [L, pszUncompressedBuffer, dataSize, ret,
+                                                              yieldRequest]() -> RbxStu::StuLuau::YieldResult {
+                            if (ret > 0)
+                                lua_pushlstring(L, pszUncompressedBuffer, dataSize);
 
-                                return {
-                                    ret > 0, 1, std::format("lz4 decompression failed. lz4 error code: {}", ret).c_str()
-                                };
-                            };
+                            return {ret > 0, 1,
+                                    std::format("lz4 decompression failed. lz4 error code: {}", ret).c_str()};
+                        };
 
-                    yieldRequest->bIsReady = true;
-                }, true);
+                        yieldRequest->bIsReady = true;
+                    },
+                    true);
 
             return lua_yield(L, 0);
         }
@@ -311,9 +324,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
         if (lua_gettop(L) == 3)
             luaL_argerror(L, 2,
-                      std::format("userdata<{}> does not have the property '{}'.",
-                          Utilities::getInstanceType(L, 1).second, propName)
-                      .c_str());
+                          std::format("userdata<{}> does not have the property '{}'.",
+                                      Utilities::getInstanceType(L, 1).second, propName)
+                                  .c_str());
 
         return 1;
     }
@@ -337,9 +350,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
         if (lua_gettop(L) == 2)
             luaL_argerror(L, 2,
-                      std::format("userdata<{}> does not have the property '{}'.",
-                          Utilities::getInstanceType(L, 1).second, propName)
-                      .c_str());
+                          std::format("userdata<{}> does not have the property '{}'.",
+                                      Utilities::getInstanceType(L, 1).second, propName)
+                                  .c_str());
 
         lua_pushboolean(L, !isPublic);
         return 2;
@@ -365,9 +378,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
         if (lua_gettop(L) == 3) // lua_setfield will pop the new value of the property.
             luaL_argerror(L, 2,
-                      std::format("userdata<{}> does not have the property '{}'.",
-                          Utilities::getInstanceType(L, 1).second, propName)
-                      .c_str());
+                          std::format("userdata<{}> does not have the property '{}'.",
+                                      Utilities::getInstanceType(L, 1).second, propName)
+                                  .c_str());
 
         lua_pushboolean(L, !isPublic);
         return 1;
@@ -412,8 +425,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!lua_getmetatable(L, 1))
             lua_pushnil(L);
 
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
+        const auto executionEngine =
+                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
 
         if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
             luaL_argerror(L, 1, "cannot getrawmetatable on the global environment of the executor");
@@ -429,8 +442,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (lua_gettop(L) != 2)
             lua_pushvalue(L, 2);
 
-        const auto executionEngine = Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->
-                GetExecutionEngine(L);
+        const auto executionEngine =
+                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
 
         if (lua_topointer(L, 1) == executionEngine->GetInitializationInformation()->executorState->gt)
             luaL_argerror(L, 1, "cannot setrawmetatable on the global environment of the executor");
@@ -479,8 +492,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto userdata = lua_touserdata(L, 1);
         const auto rawUserdata = *static_cast<void **>(userdata);
 
-        const auto rbxPushInstance = RbxStuOffsets::GetSingleton()->GetOffset(
-            RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+        const auto rbxPushInstance =
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
 
         if (rbxPushInstance == nullptr) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
@@ -500,8 +513,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_pushnil(L);
         lua_rawset(L, -4);
 
-        reinterpret_cast<r_RBX_Instance_pushInstance>(rbxPushInstance)(L,
-                                                                       userdata);
+        reinterpret_cast<r_RBX_Instance_pushInstance>(rbxPushInstance)(L, userdata);
         lua_pushlightuserdata(L, rawUserdata);
         lua_pushvalue(L, -3);
         lua_rawset(L, -5);
@@ -513,7 +525,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         Utilities::checkInstance(L, 2, "ANY");
 
         lua_pushboolean(L, *static_cast<const std::uintptr_t *>(lua_touserdata(L, 1)) ==
-                           *static_cast<const std::uintptr_t *>(lua_touserdata(L, 2)));
+                                   *static_cast<const std::uintptr_t *>(lua_touserdata(L, 2)));
 
         return 1;
     }
@@ -522,8 +534,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         auto extraspace = LuauSecurity::GetThreadExtraspace(L);
 
         try {
-            const auto rbxPushInstance = reinterpret_cast<r_RBX_Instance_pushInstance>(RbxStuOffsets::GetSingleton()
-                ->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance));
+            const auto rbxPushInstance = reinterpret_cast<r_RBX_Instance_pushInstance>(
+                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance));
 
             if (extraspace->script == nullptr || rbxPushInstance == nullptr)
                 lua_pushnil(L);
@@ -592,8 +604,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto weakThreadRef = *reinterpret_cast<uintptr_t *>(threadNode + 0x8);
             const auto firstNode = *reinterpret_cast<uintptr_t *>(weakThreadRef + 0x18);
             const auto luaStateContainer = *reinterpret_cast<uintptr_t *>(firstNode + 0x20);
-            const auto scriptLuaState = reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(
-                luaStateContainer + 0x8));
+            const auto scriptLuaState =
+                    reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(luaStateContainer + 0x8));
 
             if (!scriptLuaState) {
                 lua_pushnil(L);
@@ -625,8 +637,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 return 1;
             }
 
-            const auto moduleScriptLuaState = reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(
-                firstNode + 0x10));
+            const auto moduleScriptLuaState =
+                    reinterpret_cast<lua_State *>(*reinterpret_cast<uintptr_t *>(firstNode + 0x10));
 
             if (!moduleScriptLuaState) {
                 lua_pushnil(L);
@@ -670,9 +682,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         auto partSystemAddress = RBX::SystemAddress{0};
         auto localPlayerAddress = RBX::SystemAddress{0};
-        reinterpret_cast<::r_RBX_BasePart_getNetworkOwner>(
-            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(
-            part, &partSystemAddress);
+        reinterpret_cast<::r_RBX_BasePart_getNetworkOwner>(RbxStuOffsets::GetSingleton()->GetOffset(
+                RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(part, &partSystemAddress);
 
         lua_getglobal(L, "Instance");
         lua_getfield(L, -1, "new");
@@ -680,8 +691,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_getglobal(L, "workspace");
         lua_pcall(L, 2, 1, 0);
         reinterpret_cast<::r_RBX_BasePart_getNetworkOwner>(
-            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(
-            *static_cast<void **>(lua_touserdata(L, -1)), &localPlayerAddress);
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner))(
+                *static_cast<void **>(lua_touserdata(L, -1)), &localPlayerAddress);
 
         lua_getfield(L, -1, "Destroy");
         lua_pushvalue(L, -2);
@@ -689,7 +700,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_pop(L, 1);
 
         lua_pushboolean(L, partSystemAddress.remoteId.peerId == 2 ||
-                           partSystemAddress.remoteId.peerId == localPlayerAddress.remoteId.peerId);
+                                   partSystemAddress.remoteId.peerId == localPlayerAddress.remoteId.peerId);
         return 1;
     }
 
@@ -709,13 +720,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         // Utilities::GetService(L, "Workspace");
         // auto world = reinterpret_cast<void *>(lua_touserdata(L, -1));
 
-        const auto fireTouchSignals =
-                reinterpret_cast<::r_RBX_BasePart_fireTouchSignals>(
-                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals));
+        const auto fireTouchSignals = reinterpret_cast<::r_RBX_BasePart_fireTouchSignals>(
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals));
 
         if (fireTouchSignals == nullptr)
             luaL_error(L, "cannot firetouchinterest; RBX::BasePart::fireTouchSignals was not found during the "
-                   "scanning step! If you believe this was caused by an update, contact the developers!");
+                          "scanning step! If you believe this was caused by an update, contact the developers!");
 
         /*
          *  Roblox touch signals are super fun.
@@ -736,9 +746,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         Utilities::checkInstance(L, 1, "ProximityPrompt");
 
         const auto proximityPrompt = *static_cast<std::uintptr_t **>(lua_touserdata(L, 1));
-        reinterpret_cast<::r_RBX_ProximityPrompt_onTriggered>(
-            RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered))(
-            proximityPrompt);
+        reinterpret_cast<::r_RBX_ProximityPrompt_onTriggered>(RbxStuOffsets::GetSingleton()->GetOffset(
+                RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered))(proximityPrompt);
         return 0;
     }
 
@@ -747,63 +756,139 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Globals::getscriptbytecode(lua_State *L) {
+        Utilities::checkInstance(L, 1, "LuaSourceContainer");
+        auto [isInstance, className] = Utilities::getInstanceType(L, 1);
+
+        if (!isInstance)
+            luaL_error(L, "unknown error occurred");
+
+        auto ppScript = static_cast<void **>(lua_touserdata(L, 1));
+
+        auto scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+
+        if (strcmp(className.c_str(), "ModuleScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::ModuleScript;
+        } else if (strcmp(className.c_str(), "Script") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+        } else if (strcmp(className.c_str(), "LocalScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::LocalScript;
+        }
+
+        const RbxStu::Roblox::Script script{*ppScript, scriptType};
+
+        if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
+                    RBX::DataModelType::DataModelType_Edit) &&
+            scriptType == RbxStu::Roblox::Script::ScriptKind::Script) {
+            // Team Create, we do not support this function there, as the bytecode is in a weird ahh format.
+            luaL_error(L, "unknown error occured while trying to fetch script bytecode.");
+        }
+
+        const auto bytecode = script.GetBytecode();
+        lua_rawcheckstack(L, 1);
+        lua_pushlstring(L, bytecode.c_str(), bytecode.length());
+        return 1;
+    }
+
+    int Globals::getscriptclosure(lua_State *L) {
+        Utilities::checkInstance(L, 1, "LuaSourceContainer");
+        auto [isInstance, className] = Utilities::getInstanceType(L, 1);
+
+        if (!isInstance)
+            luaL_error(L, "unknown error occurred");
+
+        auto ppScript = static_cast<void **>(lua_touserdata(L, 1));
+
+        auto scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+
+        if (strcmp(className.c_str(), "ModuleScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::ModuleScript;
+        } else if (strcmp(className.c_str(), "Script") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+        } else if (strcmp(className.c_str(), "LocalScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::LocalScript;
+        }
+
+        const RbxStu::Roblox::Script script{*ppScript, scriptType};
+
+        if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
+                    RBX::DataModelType::DataModelType_Edit) &&
+            scriptType == RbxStu::Roblox::Script::ScriptKind::Script) {
+            // Team Create, we do not support this function there, as the bytecode is in a weird ahh format.
+            luaL_error(L, "unknown error occured while trying to fetch script closure.");
+        }
+
+        const auto bytecode = script.GetBytecode();
+
+        lua_rawcheckstack(L, 1);
+        if (luau_load(L, "=getscriptclosure", bytecode.c_str(), bytecode.length(), 0) != LUA_OK)
+            lua_error(L);
+
+        LuauSecurity::GetSingleton()->ElevateClosure(lua_toclosure(L, -1),
+                                                     RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+
+        return 1;
+    }
+
     const luaL_Reg *Globals::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {
-            {"isnetworkowner", RbxStu::StuLuau::Environment::UNC::Globals::isnetworkowner},
-            {"fireproximityprompt", RbxStu::StuLuau::Environment::UNC::Globals::fireproximityprompt},
-            {"firetouchinterest", RbxStu::StuLuau::Environment::UNC::Globals::firetouchinterest},
+                {"getscriptclosure", RbxStu::StuLuau::Environment::UNC::Globals::getscriptclosure},
+                {"getscriptbytecode", RbxStu::StuLuau::Environment::UNC::Globals::getscriptbytecode},
 
-            {"gethui", RbxStu::StuLuau::Environment::UNC::Globals::gethui},
+                {"isnetworkowner", RbxStu::StuLuau::Environment::UNC::Globals::isnetworkowner},
+                {"fireproximityprompt", RbxStu::StuLuau::Environment::UNC::Globals::fireproximityprompt},
+                {"firetouchinterest", RbxStu::StuLuau::Environment::UNC::Globals::firetouchinterest},
 
-            {"cloneref", RbxStu::StuLuau::Environment::UNC::Globals::cloneref},
-            {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
+                {"gethui", RbxStu::StuLuau::Environment::UNC::Globals::gethui},
 
-            {"getcallingscript", RbxStu::StuLuau::Environment::UNC::Globals::getcallingscript},
+                {"cloneref", RbxStu::StuLuau::Environment::UNC::Globals::cloneref},
+                {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
 
-            {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
-            {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
+                {"getcallingscript", RbxStu::StuLuau::Environment::UNC::Globals::getcallingscript},
 
-            {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},
-            {"settenv", RbxStu::StuLuau::Environment::UNC::Globals::settenv},
+                {"getrenv", RbxStu::StuLuau::Environment::UNC::Globals::getrenv},
+                {"getgenv", RbxStu::StuLuau::Environment::UNC::Globals::getgenv},
 
-            {"httpget", RbxStu::StuLuau::Environment::UNC::Globals::httpget},
+                {"gettenv", RbxStu::StuLuau::Environment::UNC::Globals::gettenv},
+                {"settenv", RbxStu::StuLuau::Environment::UNC::Globals::settenv},
 
-            {"checkcallstack", RbxStu::StuLuau::Environment::UNC::Globals::checkcallstack},
-            {"checkcaller", RbxStu::StuLuau::Environment::UNC::Globals::checkcaller},
+                {"httpget", RbxStu::StuLuau::Environment::UNC::Globals::httpget},
 
-            {"getreg", RbxStu::StuLuau::Environment::UNC::Globals::getreg},
+                {"checkcallstack", RbxStu::StuLuau::Environment::UNC::Globals::checkcallstack},
+                {"checkcaller", RbxStu::StuLuau::Environment::UNC::Globals::checkcaller},
 
-            {"identifyexecutor", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
-            {"getexecutorname", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
+                {"getreg", RbxStu::StuLuau::Environment::UNC::Globals::getreg},
 
-            {"lz4compress", RbxStu::StuLuau::Environment::UNC::Globals::lz4compress},
-            {"lz4decompress", RbxStu::StuLuau::Environment::UNC::Globals::lz4decompress},
+                {"identifyexecutor", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
+                {"getexecutorname", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
 
-            {"isscriptable", RbxStu::StuLuau::Environment::UNC::Globals::isscriptable},
-            {"setscriptable", RbxStu::StuLuau::Environment::UNC::Globals::setscriptable},
+                {"lz4compress", RbxStu::StuLuau::Environment::UNC::Globals::lz4compress},
+                {"lz4decompress", RbxStu::StuLuau::Environment::UNC::Globals::lz4decompress},
 
-            {"gethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::gethiddenproperty},
-            {"sethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::sethiddenproperty},
+                {"isscriptable", RbxStu::StuLuau::Environment::UNC::Globals::isscriptable},
+                {"setscriptable", RbxStu::StuLuau::Environment::UNC::Globals::setscriptable},
 
-            {"getfpscap", RbxStu::StuLuau::Environment::UNC::Globals::getfpscap},
-            {"setfpscap", RbxStu::StuLuau::Environment::UNC::Globals::setfpscap},
+                {"gethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::gethiddenproperty},
+                {"sethiddenproperty", RbxStu::StuLuau::Environment::UNC::Globals::sethiddenproperty},
 
-            {"isluau", RbxStu::StuLuau::Environment::UNC::Globals::isluau},
-            {"isrbxactive", RbxStu::StuLuau::Environment::UNC::Globals::isrbxactive},
+                {"getfpscap", RbxStu::StuLuau::Environment::UNC::Globals::getfpscap},
+                {"setfpscap", RbxStu::StuLuau::Environment::UNC::Globals::setfpscap},
 
-            {"getrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::getrawmetatable},
-            {"setrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::setrawmetatable},
+                {"isluau", RbxStu::StuLuau::Environment::UNC::Globals::isluau},
+                {"isrbxactive", RbxStu::StuLuau::Environment::UNC::Globals::isrbxactive},
 
-            {"getnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::getnamecallmethod},
-            {"setnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::setnamecallmethod},
+                {"getrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::getrawmetatable},
+                {"setrawmetatable", RbxStu::StuLuau::Environment::UNC::Globals::setrawmetatable},
 
-            {"setreadonly", RbxStu::StuLuau::Environment::UNC::Globals::setreadonly},
-            {"isreadonly", RbxStu::StuLuau::Environment::UNC::Globals::isreadonly},
+                {"getnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::getnamecallmethod},
+                {"setnamecallmethod", RbxStu::StuLuau::Environment::UNC::Globals::setnamecallmethod},
 
-            {"getsenv", RbxStu::StuLuau::Environment::UNC::Globals::getsenv},
+                {"setreadonly", RbxStu::StuLuau::Environment::UNC::Globals::setreadonly},
+                {"isreadonly", RbxStu::StuLuau::Environment::UNC::Globals::isreadonly},
 
-            {nullptr, nullptr}
-        };
+                {"getsenv", RbxStu::StuLuau::Environment::UNC::Globals::getsenv},
+
+                {nullptr, nullptr}};
 
         return libreg;
     }
@@ -811,4 +896,4 @@ namespace RbxStu::StuLuau::Environment::UNC {
     bool Globals::PushToGlobals() { return true; }
 
     const char *Globals::GetLibraryName() { return "uncrbxstu"; }
-}
+} // namespace RbxStu::StuLuau::Environment::UNC
