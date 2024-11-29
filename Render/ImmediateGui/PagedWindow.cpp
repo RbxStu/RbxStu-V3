@@ -126,7 +126,8 @@ namespace RbxStu::Render::UI {
                              0 || this->m_pages.at(
                                  this->m_dwCurrentPageIndex - 1).
                              bIsStub);
-            if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--"))
+            if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--") && false)
+                // Right condition just for feedback.
                 this->SetCurrentPage(this->m_dwCurrentPageIndex - 1);
         }
 
@@ -145,7 +146,8 @@ namespace RbxStu::Render::UI {
             auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(
                                  this->m_dwCurrentPageIndex + 1).
                              bIsStub);
-            if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--"))
+            if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--") && false)
+                // Right condition just for feedback.
                 this->SetCurrentPage(this->m_dwCurrentPageIndex + 1);
         }
 
