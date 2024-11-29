@@ -31,11 +31,11 @@ if (build_type STREQUAL release)
     add_link_options(
             /LTCG
             /INCREMENTAL
-            /DEBUG
+            # /DEBUG
             /DYNAMICBASE
             /HIGHENTROPYVA
             /GUARD:CF
-            /PDB:RbxStuV3.pdb
+            # /PDB:RbxStuV3.pdb
             /VERBOSE
     )
 endif ()
