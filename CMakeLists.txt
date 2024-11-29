@@ -160,9 +160,11 @@ add_library(${PROJECT_NAME} SHARED
         Render/Color4.hpp
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-        MSVC_RUNTIME_LIBRARY MultiThreaded
-)
+if (build_type STREQUAL release)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            MSVC_RUNTIME_LIBRARY MultiThreaded
+    )
+endif ()
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/Dependencies")
