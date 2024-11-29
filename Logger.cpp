@@ -76,7 +76,7 @@ void RbxStu::Logger::Initialize(const bool bInstantFlush) {
 }
 
 void RbxStu::Logger::PrintDebug(std::string_view sectionName, std::string_view msg, std::string_view line) {
-    if (FastFlags::GetSingleton()->GetOptionalFastFlagValue<bool>("FFlagEnableDebugLogs", false)) {
+    if (RbxStu::FastFlags::FFlagEnableDebugLogs.GetValue()) {
         std::lock_guard lock{mutex};
         this->m_szMessageBuffer.append(std::format("[DEBUG/{} -> {}] {}", sectionName, line, msg));
         this->FlushIfFull(RbxStu::LogType::Debug);

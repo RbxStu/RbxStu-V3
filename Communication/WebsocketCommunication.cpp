@@ -28,14 +28,15 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
     if (this->IsInitialized())
         return;
 
-    const auto fastFlags = FastFlags::GetSingleton();
-    this->websocketPort = fastFlags->GetOptionalFastFlagValue<int>("IFlagWebsocketPort", 7777);
+    const auto fastFlags = FastFlagsManager::GetSingleton();
+    this->websocketPort = RbxStu::FastFlags::IFlagWebsocketPort.GetValue();
 
     std::thread([this, fastFlags] {
-        if (fastFlags->GetOptionalFastFlagValue<bool>("FFLagUseWebsocketServer", false)) {
+        if (RbxStu::FastFlags::FFLagUseWebsocketServer.GetValue()) {
             ix::WebSocketServer server(this->websocketPort);
-            server.setOnClientMessageCallback([](const std::shared_ptr<ix::ConnectionState> &connectionState, ix::WebSocket &webSocket,
-                       const ix::WebSocketMessagePtr &msg) {
+            server.setOnClientMessageCallback([](const std::shared_ptr<ix::ConnectionState> &connectionState,
+                                                 ix::WebSocket &webSocket,
+                                                 const ix::WebSocketMessagePtr &msg) {
                 if (msg->type == ix::WebSocketMessageType::Message) {
                     const auto handleResults = PacketManager::HandleNewPacket(msg->str);
                     if (handleResults.has_value()) {
@@ -51,9 +52,11 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
                         webSocket.sendText(successJson.dump());
                     }
                 } else if (msg->type == ix::WebSocketMessageType::Open) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication, "A client has established connection to our server!");
+                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                              "A client has established connection to our server!");
                 } else if (msg->type == ix::WebSocketMessageType::Close) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication, "A client has disconnected from our server!");
+                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                              "A client has disconnected from our server!");
                 }
             });
 

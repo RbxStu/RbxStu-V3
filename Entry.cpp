@@ -131,8 +131,8 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::Utilities...");
     RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
 
-    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::FastFlags...");
-    const auto fastFlags = RbxStu::FastFlags::GetSingleton();
+    RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::FastFlagsManager...");
+    const auto fastFlags = RbxStu::FastFlagsManager::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::Disassembler...");
@@ -163,13 +163,13 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
     RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
-    if (fastFlags->GetOptionalFastFlagValue<bool>("FFLagEnablePipeCommunication", false)) {
+    if (RbxStu::FastFlags::FFLagEnablePipeCommunication.GetValue()) {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communication [DEVELOPMENT ONLY]")
 
         std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe").detach();
     }
 
-    if (fastFlags->GetOptionalFastFlagValue<bool>("FFlagEnableRobloxInternal", false)) {
+    if (RbxStu::FastFlags::FFlagIsRobloxInternalEnabled.GetValue()) {
         Sleep(100);
 
         RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
