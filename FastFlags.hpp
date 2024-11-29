@@ -6,6 +6,7 @@
 #include <Logger.hpp>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -25,6 +26,7 @@ namespace RbxStu {
         using FlagMapType = std::map<std::string, FlagValueType>;
 
         static std::shared_ptr<FastFlags> instance;
+        static std::mutex getSingletonMutex;
 
         bool isInitialized = false;
         bool FailedToLoadFlags = false;

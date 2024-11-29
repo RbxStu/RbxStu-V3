@@ -11,8 +11,11 @@
 
 namespace RbxStu {
    std::shared_ptr<FastFlags> FastFlags::instance;
+   std::mutex FastFlags::getSingletonMutex;
 
    std::shared_ptr<FastFlags> FastFlags::GetSingleton() {
+      std::lock_guard guard(getSingletonMutex);
+
       if (instance == nullptr)
          instance = std::make_shared<FastFlags>();
 
