@@ -134,7 +134,8 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Debug.hpp
         StuLuau/Environment/UNC/Miscellaneous.cpp
         StuLuau/Environment/UNC/Miscellaneous.hpp
-
+        StuLuau/Environment/UNC/Instances.cpp
+        StuLuau/Environment/UNC/Instances.hpp
 
         ${ASSEMBLY_FILES}
         Assembly/ExternalAssembly.h
