@@ -39,6 +39,7 @@ namespace RbxStu::Render::UI {
                                   realOldSize, newSize));
         }
 
+        this->m_pages.emplace_back(std::make_shared<RbxStu::Render::RenderableStub>(), "~~ ~~", true);
         // this->m_pages.emplace_back(std::make_shared<RbxStu::Render::RenderableStub>(), "~~ ~~"); // Push stub
     }
 
