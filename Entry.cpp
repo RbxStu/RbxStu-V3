@@ -132,7 +132,7 @@ void Entry() {
     RbxStu::Utilities::GetSingleton(); // GetSingleton calls Initialize.
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing RbxStu::FastFlags...");
-    RbxStu::FastFlags::GetSingleton();
+    const auto fastFlags = RbxStu::FastFlags::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "-- Initializing RbxStu::Analysis::Disassembler...");
@@ -163,26 +163,26 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
     RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
-#if RBXSTU_ENABLE_DEBUG_LOGS
-    RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communciation [DEVELOPMENT ONLY]")
+    if (fastFlags->GetOptionalFastFlagValue<bool>("FFLagEnablePipeCommunication", false)) {
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communication [DEVELOPMENT ONLY]")
 
-    std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe").detach();
-#endif
-
-#ifdef ROBLOX_INTERNAL_ENABLED
-    Sleep(100);
-
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
-              "-- Enabling Roblox Internal -- This may take a bit...");
-
-    auto tsk = std::async(std::launch::async, EnableRobloxInternal);
-
-    if (tsk.wait_for(std::chrono::microseconds{0}) == std::future_status::timeout) {
-        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
-                  "-- Waiting for Roblox Internal to finish initializing...");
-        tsk.wait();
+        std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe").detach();
     }
-#endif
+
+    if (fastFlags->GetOptionalFastFlagValue<bool>("FFlagEnableRobloxInternal", false)) {
+        Sleep(100);
+
+        RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                  "-- Enabling Roblox Internal -- This may take a bit...");
+
+        auto tsk = std::async(std::launch::async, EnableRobloxInternal);
+
+        if (tsk.wait_for(std::chrono::microseconds{0}) == std::future_status::timeout) {
+            RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+                      "-- Waiting for Roblox Internal to finish initializing...");
+            tsk.wait();
+        }
+    }
 
     // Test exec.
     /*    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)

@@ -4,9 +4,7 @@
 
 #pragma once
 
-#define ROBLOX_INTERNAL_ENABLED true
 #define RBXSTU_REBASE_STACKTRACE_ON_SEH true
-#define RBXSTU_ENABLE_DEBUG_LOGS true
 #define RBXSTU_DLL_NAME "RbxStuV3"
 
 
