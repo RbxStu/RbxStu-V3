@@ -758,13 +758,28 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Globals::getscriptbytecode(lua_State *L) {
         Utilities::checkInstance(L, 1, "LuaSourceContainer");
+        auto [isInstance, className] = Utilities::getInstanceType(L, 1);
+
+        if (!isInstance)
+            luaL_error(L, "unknown error occurred");
 
         auto ppScript = static_cast<void **>(lua_touserdata(L, 1));
 
-        const RbxStu::Roblox::Script script{*ppScript};
+        auto scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+
+        if (strcmp(className.c_str(), "ModuleScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::ModuleScript;
+        } else if (strcmp(className.c_str(), "Script") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+        } else if (strcmp(className.c_str(), "LocalScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::LocalScript;
+        }
+
+        const RbxStu::Roblox::Script script{*ppScript, scriptType};
 
         if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
-                    RBX::DataModelType::DataModelType_Edit)) {
+                    RBX::DataModelType::DataModelType_Edit) &&
+            scriptType == RbxStu::Roblox::Script::ScriptKind::Script) {
             // Team Create, we do not support this function there, as the bytecode is in a weird ahh format.
             luaL_error(L, "unknown error occured while trying to fetch script bytecode.");
         }
@@ -777,12 +792,28 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Globals::getscriptclosure(lua_State *L) {
         Utilities::checkInstance(L, 1, "LuaSourceContainer");
+        auto [isInstance, className] = Utilities::getInstanceType(L, 1);
+
+        if (!isInstance)
+            luaL_error(L, "unknown error occurred");
+
         auto ppScript = static_cast<void **>(lua_touserdata(L, 1));
 
-        const RbxStu::Roblox::Script script{*ppScript};
+        auto scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+
+        if (strcmp(className.c_str(), "ModuleScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::ModuleScript;
+        } else if (strcmp(className.c_str(), "Script") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::Script;
+        } else if (strcmp(className.c_str(), "LocalScript") == 0) {
+            scriptType = RbxStu::Roblox::Script::ScriptKind::LocalScript;
+        }
+
+        const RbxStu::Roblox::Script script{*ppScript, scriptType};
 
         if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
-                    RBX::DataModelType::DataModelType_Edit)) {
+                    RBX::DataModelType::DataModelType_Edit) &&
+            scriptType == RbxStu::Roblox::Script::ScriptKind::Script) {
             // Team Create, we do not support this function there, as the bytecode is in a weird ahh format.
             luaL_error(L, "unknown error occured while trying to fetch script closure.");
         }

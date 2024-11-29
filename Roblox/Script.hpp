@@ -9,12 +9,17 @@
 namespace RbxStu::Roblox {
 
     class Script final : public RbxStu::Miscellaneous::OpaqueClass {
-    public:
-        explicit Script(void *pNative) : OpaqueClass(pNative) {}
+        enum class ScriptKind : std::int8_t;
 
-        std::string GetScriptHash() const;
-        std::string GetSource() const;
-        std::string GetBytecode() const;
+        RbxStu::Roblox::Script::ScriptKind m_scriptKind;
+
+    public:
+        enum class ScriptKind : std::int8_t { LocalScript, ModuleScript, Script };
+        explicit Script(void *pNative, RbxStu::Roblox::Script::ScriptKind kind);
+
+        [[nodiscard]] std::string GetScriptHash() const;
+        [[nodiscard]] std::string GetSource() const;
+        [[nodiscard]] std::string GetBytecode() const;
     };
 
 } // namespace RbxStu::Roblox
