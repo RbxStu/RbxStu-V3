@@ -156,6 +156,9 @@ add_library(${PROJECT_NAME} SHARED
         Render/RenderableStub.cpp
         Render/RenderableStub.hpp
         Render/Color4.hpp
+        Roblox/Script.cpp
+        Roblox/Script.hpp
+        Miscellaneous/OpaqueClass.hpp
 )
 
 if (build_type STREQUAL release)
