@@ -4,15 +4,15 @@
 
 #include "ImguiRenderJob.hpp"
 
-#include <d3d11.h>
-#include <kiero.h>
 #include <Logger.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
+#include <d3d11.h>
+#include <kiero.h>
 
-#include "imgui_internal.h"
+#include "Render/UserInterface/UserInterface.hpp"
 #include "backends/imgui_impl_dx11.h"
 #include "backends/imgui_impl_win32.h"
-#include "Render/UserInterface/UserInterface.hpp"
+#include "imgui_internal.h"
 
 #include "Roblox/DataModel.hpp"
 
@@ -20,11 +20,10 @@
 namespace RbxStu::Scheduling::Jobs {
     ImguiRenderJob *ImguiRenderJob::Singleton;
 
-    static HRESULT (__stdcall *originalPresent)(IDXGISwapChain *, UINT, UINT) = nullptr;
+    static HRESULT(__stdcall *originalPresent)(IDXGISwapChain *, UINT, UINT) = nullptr;
 
-    static HRESULT (__stdcall *originalResizeBuffers)(IDXGISwapChain *pSelf, UINT BufferCount, UINT Width, UINT Height,
-                                                      DXGI_FORMAT NewFormat,
-                                                      UINT SwapChainFlags) = nullptr;
+    static HRESULT(__stdcall *originalResizeBuffers)(IDXGISwapChain *pSelf, UINT BufferCount, UINT Width, UINT Height,
+                                                     DXGI_FORMAT NewFormat, UINT SwapChainFlags) = nullptr;
 
     static WNDPROC g_pOriginalImGuiProcedure;
     static WNDPROC g_pOriginalInputProcedure;
@@ -85,23 +84,25 @@ namespace RbxStu::Scheduling::Jobs {
                 //           std::format("Firing key event: DOWN {}", (void*)wParam))
                 pKeyStates[wParam] = true;
                 ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
-                    static_cast<Render::ImmediateGui::VirtualKey>(wParam), true);
+                        static_cast<Render::ImmediateGui::VirtualKey>(wParam), true);
                 break;
             case WM_KEYUP:
                 // RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
                 //           std::format("Firing key event: UP {}", (void*)wParam))
                 pKeyStates[wParam] = false;
                 ImguiRenderJob::Singleton->FireKeyEventToRenderableObjects(
-                    static_cast<Render::ImmediateGui::VirtualKey>(wParam), false);
+                        static_cast<Render::ImmediateGui::VirtualKey>(wParam), false);
                 break;
             default:
                 break;
         }
 
         /*
-         *  If the Edit DataModel is not active and we do not fire the window procedure, we will dead-lock ROBLOX entirely,
-         *  making it impossible to work, we must manually unlock it by permitting the procedure to be called IF the Edit DataModel is not ready, we will force the UI off if it is the case.
-         *  this is ALREADY handled on the override to IsRenderingEnabled into the UserInterface of the UI, but this note is left here to explain such behaviour.
+         *  If the Edit DataModel is not active and we do not fire the window procedure, we will dead-lock ROBLOX
+         * entirely, making it impossible to work, we must manually unlock it by permitting the procedure to be called
+         * IF the Edit DataModel is not ready, we will force the UI off if it is the case. this is ALREADY handled on
+         * the override to IsRenderingEnabled into the UserInterface of the UI, but this note is left here to explain
+         * such behaviour.
          */
 
         if (const auto ui = RbxStu::Render::UserInterface::GetSingleton(); !ui->IsRenderingEnabled())
@@ -130,8 +131,8 @@ namespace RbxStu::Scheduling::Jobs {
     void ReInitializeBuffers(IDXGISwapChain *pSwapchain, HWND hWnd, bool bSetTarget) {
         ID3D11Texture2D *pBuffer;
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
-                  std::format("Reinitializing buffers with HWND and SwapChain {} & {}", (void*)hWnd,(void*) pSwapchain
-                  ));
+                  std::format("Reinitializing buffers with HWND and SwapChain {} & {}", (void *) hWnd,
+                              (void *) pSwapchain));
 
         pSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&pBuffer));
         g_pDevice->CreateRenderTargetView(pBuffer, nullptr, &g_pRenderTargetView);
@@ -142,8 +143,7 @@ namespace RbxStu::Scheduling::Jobs {
 
         g_bReleasedView = false;
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
-                  "Buffers re-initialized");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, "Buffers re-initialized");
     }
 
     void TransitionHwnd(IDXGISwapChain *pSwapchain, const HWND hWnd) {
@@ -197,8 +197,7 @@ namespace RbxStu::Scheduling::Jobs {
     }
 
     HRESULT ImguiRenderJob::hkResizeBuffers(IDXGISwapChain *pSelf, UINT dwBufferCount, UINT dwWidth, UINT dwHeight,
-                                            DXGI_FORMAT newFormat,
-                                            UINT dwSwapChainFlags) {
+                                            DXGI_FORMAT newFormat, UINT dwSwapChainFlags) {
         if (!IsWindow(g_hWnd)) {
             DXGI_SWAP_CHAIN_DESC sd;
             pSelf->GetDesc(&sd);
@@ -209,16 +208,15 @@ namespace RbxStu::Scheduling::Jobs {
 
         if (!g_bInitializedImGuiHook) {
             /*
-             *  Due to the fact roblox holds multiple hWnd, we must hook the main ancestor of them all to get all required input events.
-             *  this is kind of nasty, and may result in some bugs down the line, but it is this or either modifying the hWnd hook to separate them correctly and appropriately.
+             *  Due to the fact roblox holds multiple hWnd, we must hook the main ancestor of them all to get all
+             * required input events. this is kind of nasty, and may result in some bugs down the line, but it is this
+             * or either modifying the hWnd hook to separate them correctly and appropriately.
              */
             g_pOriginalInputProcedure = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
-                GetAncestor(g_hWnd, GA_ROOTOWNER), GWLP_WNDPROC,
-                reinterpret_cast<LONG_PTR>(InputHwndProcedure)));
+                    GetAncestor(g_hWnd, GA_ROOTOWNER), GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(InputHwndProcedure)));
 
-            g_pOriginalImGuiProcedure = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(
-                g_hWnd, GWLP_WNDPROC,
-                reinterpret_cast<LONG_PTR>(ImGuiHwndProcedure)));
+            g_pOriginalImGuiProcedure = reinterpret_cast<WNDPROC>(
+                    SetWindowLongPtrW(g_hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(ImGuiHwndProcedure)));
 
             pSelf->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void **>(&g_pDevice));
             g_pDevice->GetImmediateContext(&g_pContext);
@@ -245,14 +243,13 @@ namespace RbxStu::Scheduling::Jobs {
         }
 
         if (g_pCurrentSwapchain != pSelf)
-            return originalResizeBuffers(pSelf, dwBufferCount, dwWidth, dwHeight, newFormat,
-                                         dwSwapChainFlags);
+            return originalResizeBuffers(pSelf, dwBufferCount, dwWidth, dwHeight, newFormat, dwSwapChainFlags);
 
         g_pContext->OMSetRenderTargets(0, nullptr, nullptr);
         ReleaseRenderView();
 
-        const auto hResult = originalResizeBuffers(pSelf, dwBufferCount, dwWidth, dwHeight, newFormat,
-                                                   dwSwapChainFlags);
+        const auto hResult =
+                originalResizeBuffers(pSelf, dwBufferCount, dwWidth, dwHeight, newFormat, dwSwapChainFlags);
 
         ReInitializeBuffers(pSelf, g_hWnd, true);
 
@@ -300,16 +297,15 @@ namespace RbxStu::Scheduling::Jobs {
 
     bool ImguiRenderJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                     RBX::TaskScheduler::Job::Stats *jobStats) {
-        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() ==
-               RBX::DataModelType_Edit;
-        // The edit DataModel must be active, else nothing will render to the screen, as there is no Viewport available
+        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() == RBX::DataModelType_MainMenuStandalone;
+        // Any DataModel that is not Standalone will be steppable correctly for rendering, else nothing will render to
+        // the screen, as there is no Viewport available
     }
 
     void ImguiRenderJob::Step(void *job, RBX::TaskScheduler::Job::Stats *jobStats,
                               RbxStu::Scheduling::TaskScheduler *scheduler) {
         if (!this->m_bIsInitialized) {
-            RbxStuLog(RbxStu::LogType::Information, RbxStu::Anonymous,
-                      "Initializing DX3D11 hooks");
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::Anonymous, "Initializing DX3D11 hooks");
 
             kiero::init(kiero::RenderType::D3D11);
 
@@ -325,4 +321,4 @@ namespace RbxStu::Scheduling::Jobs {
             this->m_bIsInitialized = true;
         }
     }
-}
+} // namespace RbxStu::Scheduling::Jobs
