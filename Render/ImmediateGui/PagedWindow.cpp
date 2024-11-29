@@ -126,9 +126,10 @@ namespace RbxStu::Render::UI {
                              0 || this->m_pages.at(
                                  this->m_dwCurrentPageIndex - 1).
                              bIsStub);
-            if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--") && false)
+            if (canMove && ImGui::Button("<<") || !canMove && ImGui::Button("--"))
                 // Right condition just for feedback.
-                this->SetCurrentPage(this->m_dwCurrentPageIndex - 1);
+                if (canMove)
+                    this->SetCurrentPage(this->m_dwCurrentPageIndex - 1);
         }
 
         ImGui::PopStyleColor();
@@ -146,9 +147,10 @@ namespace RbxStu::Render::UI {
             auto canMove = !(this->m_dwCurrentPageIndex == this->m_pages.size() || this->m_pages.at(
                                  this->m_dwCurrentPageIndex + 1).
                              bIsStub);
-            if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--") && false)
+            if (canMove && ImGui::Button(">>") || !canMove && ImGui::Button("--"))
                 // Right condition just for feedback.
-                this->SetCurrentPage(this->m_dwCurrentPageIndex + 1);
+                if (canMove)
+                    this->SetCurrentPage(this->m_dwCurrentPageIndex + 1);
         }
 
         Renderable::PushSeparator();
