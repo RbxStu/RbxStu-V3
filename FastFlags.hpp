@@ -63,6 +63,8 @@ namespace RbxStu {
                 return defaultValue;
             }
         }
+
+        void WriteFlags();
     };
 
     template<FastFlagType type, typename T>

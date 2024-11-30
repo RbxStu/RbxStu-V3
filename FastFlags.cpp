@@ -49,6 +49,57 @@ namespace RbxStu {
         this->Initialize();
     }
 
+    void FastFlagsManager::WriteFlags() {
+        // ReSharper disable once CppDFAConstantConditions
+        if (!this->isInitialized)
+            return;
+
+        const auto DllDirectoryOpt = Utilities::GetDllDir();
+        if (!DllDirectoryOpt.has_value()) {
+            RbxStuLog(LogType::Error, RbxStu::Fast_Flags, "Couldn't find the DLL Directory to initialize FastFlags!");
+            return;
+        }
+
+        const auto &DllDirectory = DllDirectoryOpt.value();
+        const auto fastFlagPath = DllDirectory / "RbxStuSettings.json";
+
+        if (!std::filesystem::exists(fastFlagPath)) {
+            RbxStuLog(LogType::Information, RbxStu::Fast_Flags, "No fast flags file found, nothing to write to.");
+            return;
+        }
+
+        nlohmann::json json{};
+
+        for (const auto &entry: this->loadedFlags) {
+            switch (this->ParseFFLagNameToType(entry.first)) {
+                case FastFlagString:
+                    json[entry.first] = std::get<std::string>(entry.second);
+                    break;
+                case FastFlagBoolean:
+                    json[entry.first] = std::get<bool>(entry.second);
+                    break;
+                case FastFlagFloat:
+                    json[entry.first] = std::get<float>(entry.second);
+                    break;
+                case FastFlagInteger:
+                    json[entry.first] = std::get<std::int32_t>(entry.second);
+                    break;
+                case FastFlagUnknown:
+                    json[entry.first] = std::get<std::string>(entry.second);
+                    break;
+            }
+        }
+
+        const auto out = json.dump(1);
+
+        std::ofstream file(fastFlagPath.string(), std::ios::out | std::ios::trunc);
+
+        file.clear();
+        file << out;
+        file.flush();
+        file.close();
+    }
+
     void FastFlagsManager::Initialize() {
         if (isInitialized)
             return;
