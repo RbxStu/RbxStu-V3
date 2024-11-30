@@ -38,8 +38,9 @@ namespace RbxStu {
 
     void FastFlagsManager::ReloadFlags() {
         std::lock_guard guard(getSingletonMutex);
-        instance->isInitialized = false;
+        this->isInitialized = false;
         this->FailedToLoadFlags = false;
+        this->loadedFlags.clear();
         this->Initialize();
     }
 
