@@ -37,10 +37,12 @@ namespace RbxStu {
     }
 
     void FastFlagsManager::ReloadFlags() {
-        if (!this->isInitialized)
+        if (!this->isInitialized && !this->FailedToLoadFlags)
             return;
 
+        RbxStuLog(Information, Fast_Flags, "Reloading FastFlags!");
         std::lock_guard guard(getSingletonMutex);
+
         this->isInitialized = false;
         this->FailedToLoadFlags = false;
         this->loadedFlags.clear();
