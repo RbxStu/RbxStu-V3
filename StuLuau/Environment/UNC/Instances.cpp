@@ -287,18 +287,30 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 !Utilities::IsPointerValid(slot->pFunctionSlot->objRef->thread)) {
                 RbxStuLog(Warning, Anonymous,
                           std::format("Skipped connection due to it being likely declared outside of Luau's context, "
-                                      "and being a C connection, not supported."));
+                                      "and being a C connection, not supported. Connection: {}",
+                                      (void *) slot));
                 slot = slot->pNext;
+                lua_pop(L, 1);
                 continue;
             }
 
             ReferencedLuauObject<Closure *, lua_Type::LUA_TFUNCTION> func{slot->pFunctionSlot->objRef->objectId};
             auto obj = func.GetReferencedObject(L);
 
-            if (lua_mainthread(slot->pFunctionSlot->objRef->thread) != lua_mainthread(L) || !obj.has_value()) {
+            if (!obj.has_value()) {
                 RbxStuLog(Warning, Anonymous,
-                          std::format("Skipped connection due to it not being declared in the current LVM context."));
+                          std::format("ObjectId is not valid, cannot fetch callback. Connection: {}", (void *) slot));
                 slot = slot->pNext;
+                lua_pop(L, 1);
+                continue;
+            }
+            if (lua_mainthread(slot->pFunctionSlot->objRef->thread) != lua_mainthread(L)) {
+                RbxStuLog(Warning, Anonymous,
+                          std::format("Skipped connection due to it not being declared in the current LVM context. "
+                                      "Connection: {}",
+                                      (void *) slot));
+                slot = slot->pNext;
+                lua_pop(L, 1);
                 continue;
             }
             RbxStuLog(Warning, Anonymous, std::format("creating rbxstu connection"));
@@ -323,6 +335,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (lua_type(L, -1) != LUA_TTABLE)
             lua_newtable(L);
+
         return 1;
     }
 
