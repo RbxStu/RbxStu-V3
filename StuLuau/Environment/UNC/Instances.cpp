@@ -113,7 +113,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
 
-            auto newUserdata = (ConnectionSlot*)lua_newuserdatatagged(L, sizeof(void*), 4); // 4 is the right tag for RBXScriptConnection
+            auto newUserdata = (ConnectionSlot *) lua_newuserdatatagged(
+                    L, sizeof(void *), 4); // 4 is the right tag for RBXScriptConnection
             *newUserdata = *pConnection->connection;
 
             lua_getfield(L, LUA_REGISTRYINDEX, "RBXScriptConnection");
@@ -149,14 +150,15 @@ namespace RbxStu::StuLuau::Environment::UNC {
             L->top++;
             lua_insert(L, 1);
             lua_remove(L, 2);
-            auto nL = lua_newthread(L);
+            auto nL = lua_newthread(L->global->mainthread); // Avoid dangerous environment primitives.
+            luaL_sandboxthread(nL);
+            lua_pop(L->global->mainthread, 1);
             lua_xmove(L, nL, lua_gettop(L));
 
             const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
                     RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
 
             task_defer(nL);
-
             return 0;
         }
 
