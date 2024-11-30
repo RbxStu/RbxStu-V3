@@ -113,32 +113,17 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
 
+            auto newUserdata = (ConnectionSlot*)lua_newuserdatatagged(L, sizeof(void*), 4); // 4 is the right tag for RBXScriptConnection
+            *newUserdata = *pConnection->connection;
 
-            /*
-             *  We must walk the connection list to the first connection.
-             */
+            lua_getfield(L, LUA_REGISTRYINDEX, "RBXScriptConnection");
+            lua_setmetatable(L, -2);
 
-            // auto currentSlot = pConnection->connection->pConnections->head;
-
-            // while (currentSlot != nullptr) {
-            //     if (currentSlot->pNext == pConnection->connection) {
-            //         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Disconnected.");
-            //         pConnection->connection->pConnections->connectionCount--;
-            //         currentSlot->pNext = pConnection->connection->pNext;
-            //         currentSlot->Connected = 0;
-            //         lua_unref(currentSlot->pFunctionSlot->objRef->thread,
-            //                   currentSlot->pFunctionSlot->objRef->thread_ref);
-            //         lua_unref(currentSlot->pFunctionSlot->objRef->thread,
-            //         currentSlot->pFunctionSlot->objRef->objectId); currentSlot->pFunctionSlot->objRef->thread_ref =
-            //         LUA_REFNIL; currentSlot->pFunctionSlot->objRef->objectId = LUA_REFNIL;
-            //     }
-            //     currentSlot = currentSlot->pNext;
-
-            //}
-
+            lua_getfield(L, -1, "Disconnect");
+            lua_pushvalue(L, -2);
+            lua_call(L, 1, 0);
 
             pConnection->m_bUsable = false;
-
             return 0;
         }
 
