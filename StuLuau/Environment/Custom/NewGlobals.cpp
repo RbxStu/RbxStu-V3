@@ -49,6 +49,14 @@ namespace RbxStu::StuLuau::Environment::Custom {
         return 1;
     }
 
+    int NewGlobals::getuserdatatag(lua_State *L) {
+        luaL_checktype(L, 1, LUA_TUSERDATA);
+
+        lua_pushinteger(L, lua_userdatatag(L, 1));
+        return 1;
+    }
+
+
     const luaL_Reg *NewGlobals::GetFunctionRegistry() {
         static luaL_Reg functions[] = {
             {"setuntouched", NewGlobals::setuntouched},
@@ -56,6 +64,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
             {"getcapabilities", NewGlobals::getcapabilities},
             {"getobjectaddress", NewGlobals::getobjectaddress},
             {"getdatamodeltype", NewGlobals::getdatamodeltype},
+            {"getuserdatatag", NewGlobals::getuserdatatag},
+
             {nullptr, nullptr}
         };
         return functions;
