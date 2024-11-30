@@ -19,10 +19,15 @@ namespace RbxStu::Render::UI::Pages {
 
         Renderable::PushSeparator();
 
-        if (ImGui::Button("Reload FastFlags")) {
-            FastFlagsManager::GetSingleton()->ReloadFlags();
-        }
+        ImGui::Text("RbxStu FastFlags Management");
 
+        if (ImGui::Button("Reload FastFlags"))
+            FastFlagsManager::GetSingleton()->ReloadFlags();
+
+        if (ImGui::Button("Write FastFlags"))
+            FastFlagsManager::GetSingleton()->WriteFlags();
+
+        Renderable::PushSeparator();
 
         Renderable::Render(pContext);
     }
