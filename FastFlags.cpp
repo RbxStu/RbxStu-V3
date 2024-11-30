@@ -63,11 +63,6 @@ namespace RbxStu {
         const auto &DllDirectory = DllDirectoryOpt.value();
         const auto fastFlagPath = DllDirectory / "RbxStuSettings.json";
 
-        if (!std::filesystem::exists(fastFlagPath)) {
-            RbxStuLog(LogType::Information, RbxStu::Fast_Flags, "No fast flags file found, nothing to write to.");
-            return;
-        }
-
         nlohmann::json json{};
 
         for (const auto &entry: this->loadedFlags) {
