@@ -19,6 +19,11 @@ namespace RbxStu::Render::UI::Pages {
 
         Renderable::PushSeparator();
 
+        if (ImGui::Button("Reload FastFlags")) {
+            FastFlagsManager::GetSingleton()->ReloadFlags();
+        }
+
+
         Renderable::Render(pContext);
     }
 } // namespace RbxStu::Render::UI::Pages
