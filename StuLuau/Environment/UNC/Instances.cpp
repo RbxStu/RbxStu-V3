@@ -197,6 +197,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
                 task_defer(nL);
             } else {
+                luaL_error(L, "C connections cannot be fired");
                 /*
                  *  Hard Coding my beloooooved.
                  */
