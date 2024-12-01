@@ -63,7 +63,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         bool m_bIsOtherLVM;
         bool m_bIsC;
         bool m_bUsable;
-        ConnectionSlot *connection;
+        ConnectionSlot *m_pConnection;
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_ParentExecutionEngine;
         ReferencedLuauObject<Closure *, lua_Type::LUA_TFUNCTION> m_stubRef;
         ReferencedLuauObject<Closure *, lua_Type::LUA_TFUNCTION> m_rpRealFunction;
@@ -80,7 +80,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
             lua_rawcheckstack(L, 1);
-            lua_getref(L, pConnection->m_rpRealFunction.luaRef);
+
+            if (!pConnection->m_bIsC &&
+                lua_mainthread(pConnection->m_pConnection->pFunctionSlot->objRef->thread) == lua_mainthread(L))
+                lua_getref(L, pConnection->m_rpRealFunction.luaRef);
+            else
+                lua_pushnil(L);
+
             return 1;
         }
 
@@ -90,11 +96,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
             lua_rawcheckstack(L, 1);
-            lua_pushboolean(L, (pConnection->connection->weak != 0 || pConnection->connection->strong != 0) &&
-                                       pConnection->connection->pFunctionSlot->objRef->objectId ==
+            lua_pushboolean(L, (pConnection->m_pConnection->weak != 0 || pConnection->m_pConnection->strong != 0) &&
+                                       pConnection->m_pConnection->pFunctionSlot->objRef->objectId ==
                                                pConnection->m_rpRealFunction.luaRef);
             return 1;
         }
+
+        // TODO: Complete Disconnect, Enable and Disable for C based connections.
 
         static int Enable(lua_State *L) {
             EnsureTaggedObjectOnStack(L);
@@ -102,7 +110,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
             // pConnection->connection->Connected = 1;
-            pConnection->connection->pFunctionSlot->objRef->objectId = pConnection->m_rpRealFunction.luaRef;
+            if (!pConnection->m_bIsC) {
+                pConnection->m_pConnection->pFunctionSlot->objRef->objectId = pConnection->m_rpRealFunction.luaRef;
+            }
             return 1;
         }
 
@@ -112,7 +122,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
             // pConnection->connection->Connected = 0;
-            pConnection->connection->pFunctionSlot->objRef->objectId = pConnection->m_stubRef.luaRef;
+            if (!pConnection->m_bIsC) {
+                pConnection->m_pConnection->pFunctionSlot->objRef->objectId = pConnection->m_stubRef.luaRef;
+            }
             return 1;
         }
 
@@ -124,7 +136,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (!pConnection->m_bIsC) { // Lua closure disconnection.
                 auto newUserdata = static_cast<ConnectionSlot **>(
                         lua_newuserdatatagged(L, sizeof(void *), 4)); // 4 is the right tag for RBXScriptConnection
-                *newUserdata = pConnection->connection;
+                *newUserdata = pConnection->m_pConnection;
 
                 lua_getfield(L, LUA_REGISTRYINDEX, "RBXScriptConnection");
                 lua_setmetatable(L, -2);
@@ -160,8 +172,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 if (!func.has_value())
                     luaL_error(L, "no function associated with RbxStuConnection object");
 
-                if (pConnection->connection->weak == 0 && pConnection->connection->strong == 0 ||
-                    pConnection->connection->pFunctionSlot->objRef->objectId != pConnection->m_rpRealFunction.luaRef) {
+                if (pConnection->m_pConnection->weak == 0 && pConnection->m_pConnection->strong == 0 ||
+                    pConnection->m_pConnection->pFunctionSlot->objRef->objectId != pConnection->m_rpRealFunction.luaRef) {
                     lua_pushnil(L);
                     return 1;
                 }
@@ -191,7 +203,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
                 /**/
 
-                for (auto current = reinterpret_cast<std::uintptr_t>(pConnection->connection->pFunctionSlot);
+                for (auto current = reinterpret_cast<std::uintptr_t>(pConnection->m_pConnection->pFunctionSlot);
                      (Utilities::IsPointerValid(reinterpret_cast<void ***>(current)) &&
                       Utilities::IsPointerValid(*reinterpret_cast<void ***>(current)));
                      current += sizeof(void *))
@@ -259,11 +271,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 //                                              args.data() + 8, args.data() + 9);
                 // case 1:
 
+                // TODO: Resolve random HEAP corruptions, possibly related to the way we currently handle pointers in
+                // memory.
                 try {
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
-                              std::format("Invoking Native Call; rcx: {}, rbx: {}", (void *) pConnection->connection,
+                              std::format("Invoking Native Call; rcx: {}, rbx: {}", (void *) pConnection->m_pConnection,
                                           *args.data()));
-                    pConnection->connection->call_Signal(pConnection->connection, *args.data(), *(args.data() + 1),
+                    pConnection->m_pConnection->call_Signal(pConnection->m_pConnection, *args.data(), *(args.data() + 1),
                                                          *(args.data() + 2), *(args.data() + 3), *(args.data() + 4),
                                                          *(args.data() + 5), *(args.data() + 6), *(args.data() + 7),
                                                          *(args.data() + 8), *(args.data() + 9));
@@ -293,7 +307,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
             lua_pushboolean(L, pConnection->m_bIsC ||
                                        lua_mainthread(L) !=
-                                               lua_mainthread(pConnection->connection->pFunctionSlot->objRef->thread));
+                                               lua_mainthread(pConnection->m_pConnection->pFunctionSlot->objRef->thread));
 
             return 1;
         }
@@ -314,7 +328,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pConnection = *static_cast<RbxStuConnection **>(lua_touserdata(L, 1));
             pConnection->ThrowIfUnusable(L);
 
-            if (!pConnection->m_bIsC) {
+            if (!pConnection->m_bIsC &&
+                lua_mainthread(pConnection->m_pConnection->pFunctionSlot->objRef->thread) == lua_mainthread(L)) {
                 lua_getref(L, pConnection->m_rpThread.luaRef);
             } else {
                 lua_pushnil(L);
@@ -328,8 +343,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         static int stub(lua_State *L) { return 0; }
 
         RbxStuConnection(ConnectionSlot *slot, lua_State *parentState, bool isC) {
-            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Creating RbxStuConnection...");
-            this->connection = slot;
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                      std::format("Creating RbxStuConnection on connection {}...", (void *) slot));
+            this->m_pConnection = slot;
             if (!isC) {
                 this->m_rpRealFunction.luaRef = slot->pFunctionSlot->objRef->objectId;
                 this->m_rpThread.luaRef = slot->pFunctionSlot->objRef->thread_ref;
@@ -401,7 +417,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         lua_newtable(L);
         ConnectionSlot *slot = rawConnection;
         auto idx = 1;
-        while (slot != nullptr) {
+        while (slot != nullptr && Utilities::IsPointerValid(slot)) {
             RbxStuLog(Warning, Anonymous, std::format("new userdata"));
             const auto connection = reinterpret_cast<RbxStuConnection **>(lua_newuserdata(L, sizeof(void *)));
 
@@ -409,26 +425,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
                         !Utilities::IsPointerValid(slot->pFunctionSlot->objRef) ||
                         !Utilities::IsPointerValid(slot->pFunctionSlot->objRef->thread);
             if (bIsC) {
-                RbxStuLog(Warning, Anonymous,
-                          std::format("Connection likely declared outside of Luau's context,"
-                                      "and being a C connection, not supported. Connection: {}",
-                                      (void *) slot));
+                RbxStuLog(Warning, Anonymous, std::format("Connection originating from C++: {}", (void *) slot));
                 // slot = slot->pNext;
                 // lua_pop(L, 1);
                 // continue;
-            }
-            if (!bIsC) {
-                ReferencedLuauObject<Closure *, lua_Type::LUA_TFUNCTION> func{slot->pFunctionSlot->objRef->objectId};
-                auto obj = func.GetReferencedObject(L);
+            } else {
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
+                          std::format("Connection originating from Luau: {}", (void *) slot));
+                // ReferencedLuauObject<Closure *, lua_Type::LUA_TFUNCTION> func{slot->pFunctionSlot->objRef->objectId};
+                // auto obj = func.GetReferencedObject(slot->pFunctionSlot->objRef->thread);
 
-                if (!obj.has_value()) {
-                    RbxStuLog(
-                            Warning, Anonymous,
-                            std::format("ObjectId is not valid, cannot fetch callback. Connection: {}", (void *) slot));
-                    slot = slot->pNext;
-                    lua_pop(L, 1);
-                    continue;
-                }
+                // if (!obj.has_value()) {
+                //     RbxStuLog(Warning, Anonymous,
+                //               std::format("ObjectId is not valid, cannot fetch callback from the thread that the ref
+                //               "
+                //                           "seemingly originates from. Connection: {}",
+                //                           (void *) slot));
+                //     slot = slot->pNext;
+                //     lua_pop(L, 1);
+                //     continue;
+                // }
             }
             RbxStuLog(Warning, Anonymous, std::format("creating rbxstu connection"));
             *connection = new RbxStuConnection{slot, L, bIsC};
