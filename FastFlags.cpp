@@ -51,12 +51,12 @@ namespace RbxStu {
 
     void FastFlagsManager::WriteFlags() {
         // ReSharper disable once CppDFAConstantConditions
-        if (!this->isInitialized)
+        if (!this->isInitialized && !this->FailedToLoadFlags)
             return;
 
         const auto DllDirectoryOpt = Utilities::GetDllDir();
         if (!DllDirectoryOpt.has_value()) {
-            RbxStuLog(LogType::Error, RbxStu::Fast_Flags, "Couldn't find the DLL Directory to initialize FastFlags!");
+            RbxStuLog(LogType::Error, RbxStu::Fast_Flags, "Couldn't find the DLL Directory to save FastFlags!");
             return;
         }
 
