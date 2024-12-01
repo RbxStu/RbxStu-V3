@@ -3,13 +3,13 @@
 //
 
 #pragma once
-#include <memory>
-#include <functional>
 #include <Logger.hpp>
-#include <utility>
-#include <optional>
+#include <functional>
 #include <lstate.h>
+#include <memory>
+#include <optional>
 #include <unordered_set>
+#include <utility>
 
 #include "Library.hpp"
 
@@ -40,21 +40,16 @@ namespace RbxStu::StuLuau::Environment {
     struct ReferencedLuauObject {
         int luaRef;
 
-        ReferencedLuauObject() {
-            this->luaRef = LUA_REFNIL;
-        }
+        ReferencedLuauObject() { this->luaRef = LUA_REFNIL; }
 
-        explicit ReferencedLuauObject(int ref) {
-            this->luaRef = ref;
-        }
+        explicit ReferencedLuauObject(int ref) { this->luaRef = ref; }
 
-        ReferencedLuauObject(lua_State *L, int idx) {
-            this->luaRef = lua_ref(L, idx);
-        }
+        ReferencedLuauObject(lua_State *L, int idx) { this->luaRef = lua_ref(L, idx); }
 
         std::optional<T> GetReferencedObject(lua_State *L) {
             try {
-                if (this->luaRef <= LUA_REFNIL) return {};
+                if (this->luaRef <= LUA_REFNIL)
+                    return {};
 
                 lua_getref(L, this->luaRef);
                 if (lua_type(L, -1) != U) {
@@ -73,11 +68,7 @@ namespace RbxStu::StuLuau::Environment {
         }
     };
 
-    enum class FunctionKind {
-        NewCClosure,
-        CClosure,
-        LuauClosure
-    };
+    enum class FunctionKind { NewCClosure, CClosure, LuauClosure };
 
     struct HookInformation {
         ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> original;
@@ -92,19 +83,17 @@ namespace RbxStu::StuLuau::Environment {
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_parentEngine;
 
         std::vector<InitScript> m_initScripts;
-        std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library> > m_libraries;
+        std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library>> m_libraries;
         std::unordered_set<Closure *> m_unhookableClosures;
 
         std::atomic_bool m_bIsDestroyed;
 
     public:
         std::map<Closure *, HookInformation> m_functionHooks;
-        std::map<Closure *, ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION> > m_newcclosures;
+        std::map<Closure *, ReferencedLuauObject<Closure *, ::lua_Type::LUA_TFUNCTION>> m_newcclosures;
 
-        explicit EnvironmentContext(
-            const std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> &parentEngine) : m_parentEngine(
-            parentEngine) {
-        };
+        explicit EnvironmentContext(const std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> &parentEngine) :
+            m_parentEngine(parentEngine) {};
 
         ~EnvironmentContext();
 
@@ -124,8 +113,7 @@ namespace RbxStu::StuLuau::Environment {
                 if (strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
                     RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
                               std::format("Library already defined, ignoring re-definition. Affected Library: {}",
-                                  library->
-                                  GetLibraryName()));
+                                          library->GetLibraryName()));
                     return;
                 }
             }
@@ -144,6 +132,7 @@ namespace RbxStu::StuLuau::Environment {
 
         bool IsWrappedClosure(Closure *cl) const;
 
-        bool IsDataModelMetamethod(Closure *closure) const;;
+        bool IsDataModelMetamethod(Closure *closure) const;
+        ;
     };
-} // RbxStu::StuLuau::Environment
+} // namespace RbxStu::StuLuau::Environment

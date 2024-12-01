@@ -11,9 +11,7 @@
 #include "Roblox/TypeDefinitions.hpp"
 
 namespace RbxStu {
-    enum LogType {
-        Information, Warning, Error, Debug
-    };
+    enum LogType { Information, Warning, Error, Debug };
 
     class Logger final {
         /// @brief Private, Static shared pointer into the instance.
@@ -42,8 +40,8 @@ namespace RbxStu {
         void OpenStandard();
 
         /// @brief Initializes the Logger instance by opening the standard pipes, setting up the buffer and its size.
-        /// @param bInstantFlush Whether the logger should keep no buffer, and let the underlying implementation for stdio
-        /// and files handle it.
+        /// @param bInstantFlush Whether the logger should keep no buffer, and let the underlying implementation for
+        /// stdio and files handle it.
         void Initialize(bool bInstantFlush);
 
         void PrintDebug(std::string_view sectionName, std::string_view msg, std::string_view line);
@@ -85,8 +83,7 @@ namespace RbxStu {
     DefineSectionName(Analysis_XrefSearcher, "RbxStuV3::Analysis::XrefSearcher");
     DefineSectionName(Analysis_Disassembler, "RbxStuV3::Analysis::Disassembler");
 
-    DefineSectionName(Scheduling_Jobs_DataModelWatcherJob,
-                      "RbxStuV3::Scheduling::Jobs::DataModelWatcherJob");
+    DefineSectionName(Scheduling_Jobs_DataModelWatcherJob, "RbxStuV3::Scheduling::Jobs::DataModelWatcherJob");
     DefineSectionName(Scheduling_Jobs_InitializeExecutionEngineJob,
                       "RbxStuV3::Scheduling::Jobs::InitializeExecutionEngineJob");
     DefineSectionName(Scheduling_TaskSchedulerOrchestrator, "RbxStuV3::Scheduling::TaskSchedulerOrchestrator");
@@ -107,20 +104,21 @@ namespace RbxStu {
 #undef DefineSectionName
 }; // namespace RbxStu
 
-#define RbxStuLog(logType, sectionName, logMessage) {                           \
-    const auto logger = RbxStu::Logger::GetSingleton();                         \
-    switch (logType) {                                                          \
-        case RbxStu::LogType::Information:                                      \
-            logger->PrintInformation(sectionName, logMessage, __FUNCTION__);    \
-            break;                                                              \
-        case RbxStu::LogType::Warning:                                          \
-            logger->PrintWarning(sectionName, logMessage, __FUNCTION__);        \
-            break;                                                              \
-        case RbxStu::LogType::Error:                                            \
-            logger->PrintError(sectionName, logMessage, __FUNCTION__);          \
-            break;                                                              \
-        case RbxStu::LogType::Debug:                                            \
-            logger->PrintDebug(sectionName, logMessage, __FUNCTION__);          \
-            break;                                                              \
-        }                                                                       \
+#define RbxStuLog(logType, sectionName, logMessage)                                                                    \
+    {                                                                                                                  \
+        const auto logger = RbxStu::Logger::GetSingleton();                                                            \
+        switch (logType) {                                                                                             \
+            case RbxStu::LogType::Information:                                                                         \
+                logger->PrintInformation(sectionName, logMessage, __FUNCTION__);                                       \
+                break;                                                                                                 \
+            case RbxStu::LogType::Warning:                                                                             \
+                logger->PrintWarning(sectionName, logMessage, __FUNCTION__);                                           \
+                break;                                                                                                 \
+            case RbxStu::LogType::Error:                                                                               \
+                logger->PrintError(sectionName, logMessage, __FUNCTION__);                                             \
+                break;                                                                                                 \
+            case RbxStu::LogType::Debug:                                                                               \
+                logger->PrintDebug(sectionName, logMessage, __FUNCTION__);                                             \
+                break;                                                                                                 \
+        }                                                                                                              \
     }

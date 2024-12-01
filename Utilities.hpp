@@ -5,16 +5,16 @@
 #pragma once
 #include <Windows.h>
 
-#include <filesystem>
-#include <hex.h>
 #include <Logger.hpp>
+#include <filesystem>
+#include <future>
+#include <hex.h>
+#include <libhat/Scanner.hpp>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sha.h>
-#include <future>
-#include <map>
 #include <vector>
-#include <libhat/Scanner.hpp>
 
 #include <sstream>
 #include <tlhelp32.h>
@@ -161,11 +161,9 @@ namespace RbxStu {
         __forceinline static std::optional<std::filesystem::path> GetDllDir() {
             HMODULE hModule = nullptr;
 
-            if (!GetModuleHandleEx(
-                GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                reinterpret_cast<LPCSTR>(&GetDllDir),
-                &hModule
-            )) {
+            if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                                   reinterpret_cast<LPCSTR>(&GetDllDir), &hModule)) {
                 return std::nullopt;
             }
 
@@ -235,8 +233,8 @@ namespace RbxStu {
             luaL_checktype(L, index, LUA_TUSERDATA);
 
             if (lua_touserdatatagged(L, index, UTAG_PROXY) != nullptr)
-                luaL_argerror(
-                L, index, std::format("expected to be {}, got userdata<newproxy>", expectedClassname).c_str());
+                luaL_argerror(L, index,
+                              std::format("expected to be {}, got userdata<newproxy>", expectedClassname).c_str());
 
             lua_getglobal(L, "typeof");
             lua_pushvalue(L, index);
@@ -262,18 +260,15 @@ namespace RbxStu {
         }
 
         template<typename T>
-        static std::map<T, hat::scan_result> ScanMany(
-            std::map<T, hat::signature> signatures,
-            const bool parallelScan,
-            const char *targetSection) {
-            std::vector<std::future<std::pair<T, hat::scan_result> > > futures{};
+        static std::map<T, hat::scan_result> ScanMany(std::map<T, hat::signature> signatures, const bool parallelScan,
+                                                      const char *targetSection) {
+            std::vector<std::future<std::pair<T, hat::scan_result>>> futures{};
 
             for (const auto sig: signatures) {
-                futures.emplace_back(std::async(parallelScan ? std::launch::async : std::launch::deferred,
-                                                [sig, targetSection]() {
-                                                    return std::make_pair(
-                                                        sig.first, hat::find_pattern(sig.second, targetSection));
-                                                }));
+                futures.emplace_back(
+                        std::async(parallelScan ? std::launch::async : std::launch::deferred, [sig, targetSection]() {
+                            return std::make_pair(sig.first, hat::find_pattern(sig.second, targetSection));
+                        }));
             }
 
             std::map<T, hat::scan_result> results = {};
@@ -343,4 +338,4 @@ namespace RbxStu {
             return true;
         }
     };
-} // RbxStu
+} // namespace RbxStu
