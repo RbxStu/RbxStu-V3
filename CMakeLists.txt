@@ -20,6 +20,7 @@ if (build_type STREQUAL release)
     add_compile_options(
             /MT
             /GA
+            /EHa
             /bigobj
             /O2
             /Gr
