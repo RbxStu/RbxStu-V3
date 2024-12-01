@@ -303,6 +303,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                     for (const auto &function: pendingFreeOperations)
                         function();
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous, "Call dispatched.");
+                    pConnection->m_pConnection->weak--;
                     luaL_error(L, "what the fuck did you do?");
                 }
 
