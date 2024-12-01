@@ -14,8 +14,9 @@
 #include "Library.hpp"
 
 namespace RbxStu::StuLuau {
+    struct SignalInformation;
     class ExecutionEngine;
-}
+} // namespace RbxStu::StuLuau
 
 namespace RbxStu::StuLuau::Environment {
     class Library abstract;
@@ -82,6 +83,8 @@ namespace RbxStu::StuLuau::Environment {
     class EnvironmentContext final {
         std::shared_ptr<RbxStu::StuLuau::ExecutionEngine> m_parentEngine;
 
+        std::map<RBX::Signals::ConnectionSlot *, std::shared_ptr<SignalInformation>>
+                m_connectionOriginal; // Second key is a variant of LuauFunctionSlot/call function.
         std::vector<InitScript> m_initScripts;
         std::vector<std::shared_ptr<RbxStu::StuLuau::Environment::Library>> m_libraries;
         std::unordered_set<Closure *> m_unhookableClosures;
@@ -133,6 +136,9 @@ namespace RbxStu::StuLuau::Environment {
         bool IsWrappedClosure(Closure *cl) const;
 
         bool IsDataModelMetamethod(Closure *closure) const;
-        ;
+        std::optional<std::shared_ptr<SignalInformation>>
+        GetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot);
+        void SetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot,
+                               const std::shared_ptr<SignalInformation> &information);
     };
 } // namespace RbxStu::StuLuau::Environment

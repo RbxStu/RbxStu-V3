@@ -4,25 +4,25 @@
 
 #include "ExecutionEngine.hpp"
 
-#include <future>
 #include <Logger.hpp>
+#include <future>
 #include <string>
 
-#include "lapi.h"
-#include "lualib.h"
-#include "LuauSecurity.hpp"
 #include "Extensions/luauext.hpp"
 #include "Luau/CodeGen.h"
-#include "Luau/Compiler.h"
 #include "Luau/CodeGen/src/CodeGenContext.h"
+#include "Luau/Compiler.h"
+#include "LuauSecurity.hpp"
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
+#include "lapi.h"
+#include "lualib.h"
 
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 
 namespace RbxStu::StuLuau {
     ExecutionEngine::ExecutionEngine(
-        std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation) {
+            std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation) {
         this->m_bIsReadyStepping = false;
         this->m_firstStepsCount = 0;
         this->m_executionEngineState = std::move(parentJobInitializationInformation);
@@ -31,14 +31,16 @@ namespace RbxStu::StuLuau {
         lua_ref(this->m_executionEngineState->executorState, -1);
         lua_pop(this->m_executionEngineState->executorState, 1);
 
-        if (this->m_executionEngineState->executorState->global && this->m_executionEngineState->executorState->global->
-            ecb.context == nullptr) {
+        if (this->m_executionEngineState->executorState->global &&
+            this->m_executionEngineState->executorState->global->ecb.context == nullptr) {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-                      "Luau Native Code Generation is not enabled on the Luau VM! Code Generated request will be interpreted instead!");
+                      "Luau Native Code Generation is not enabled on the Luau VM! Code Generated request will be "
+                      "interpreted instead!");
             this->m_bCanUseCodeGeneration = false;
         } else {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::ExecutionEngine,
-                      "Luau Native Code Generation is set up on this Luau VM, but it must be enabled by ROBLOX on their methods (Else we may make it crash :()!");
+                      "Luau Native Code Generation is set up on this Luau VM, but it must be enabled by ROBLOX on "
+                      "their methods (Else we may make it crash :()!");
         }
 
         this->m_bCanUseCodeGeneration = this->m_executionEngineState->executorState->global->ecb.context == nullptr;
@@ -46,34 +48,30 @@ namespace RbxStu::StuLuau {
     }
 
     void ExecutionEngine::DestroyEngine() {
-        if (this->m_bIsDestroyed) return;
+        if (this->m_bIsDestroyed)
+            return;
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Tainting ExecutionEngine...");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Tainting ExecutionEngine...");
 
         this->m_bIsDestroyed = true;
         this->m_bIsReadyStepping = false;
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Emptying Yielding Queue...");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Emptying Yielding Queue...");
 
         while (!this->m_yieldQueue.empty())
             this->m_yieldQueue.pop();
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Emptying Execution Queue...");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Emptying Execution Queue...");
 
         while (!this->m_executeQueue.empty())
             this->m_executeQueue.pop();
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Emptying Synchronized Dispatch...");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Emptying Synchronized Dispatch...");
 
         while (!this->m_synchronizedDispatch.empty())
             this->m_synchronizedDispatch.pop();
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Clearing dependendant objects...");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Clearing dependendant objects...");
         for (const auto &dependency: this->m_associatedObjects) {
             try {
                 dependency->freeObject();
@@ -83,24 +81,19 @@ namespace RbxStu::StuLuau {
             }
         }
 
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine,
-                  "Freeing associated EnvironmentContext");
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Freeing associated EnvironmentContext");
 
         this->m_environmentContext->DestroyContext();
     }
 
-    ExecutionEngine::~ExecutionEngine() {
-        this->DestroyEngine();
-    }
+    ExecutionEngine::~ExecutionEngine() { this->DestroyEngine(); }
 
-    std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> ExecutionEngine::
-    GetInitializationInformation() {
+    std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation>
+    ExecutionEngine::GetInitializationInformation() {
         return this->m_executionEngineState;
     }
 
-    void ExecutionEngine::SetExecuteReady(bool isReady) {
-        this->m_bIsReadyStepping = isReady;
-    }
+    void ExecutionEngine::SetExecuteReady(bool isReady) { this->m_bIsReadyStepping = isReady; }
 
     void ExecutionEngine::Execute(const ExecuteRequest &executeRequest) {
         auto luauSecurity = StuLuau::LuauSecurity::GetSingleton();
@@ -116,13 +109,12 @@ namespace RbxStu::StuLuau {
             nL = L;
         }
 
-        luauSecurity->SetThreadSecurity(nL, executeRequest.executeWithSecurity,
-                                        luauSecurity->GetIdentityFromExecutionSecurity(
-                                            executeRequest.executeWithSecurity), true);
+        luauSecurity->SetThreadSecurity(
+                nL, executeRequest.executeWithSecurity,
+                luauSecurity->GetIdentityFromExecutionSecurity(executeRequest.executeWithSecurity), true);
 
         const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
-            RbxStuOffsets::GetSingleton()->
-            GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
 
         auto opts = Luau::CompileOptions{};
         opts.debugLevel = 2;
@@ -163,13 +155,13 @@ namespace RbxStu::StuLuau {
 
         switch (stepType) {
             case ExecutionEngineStep::SynchronizedDispatch: {
-                if (this->m_synchronizedDispatch.empty()) break;
+                if (this->m_synchronizedDispatch.empty())
+                    break;
                 while (!this->m_synchronizedDispatch.empty()) {
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Dispatching synchronized call...");
                     const auto currentDispatch = this->m_synchronizedDispatch.front();
                     LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread,
-                                                                    currentDispatch.executionSecurity,
-                                                                    8, true);
+                                                                    currentDispatch.executionSecurity, 8, true);
                     currentDispatch.execute(this->m_pDispatchThread);
 
                     if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {
@@ -178,9 +170,8 @@ namespace RbxStu::StuLuau {
 
                         if (lua_type(this->m_pDispatchThread, -1) == ::lua_Type::LUA_TSTRING) {
                             RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
-                                      std::format( "Error string on callstack {}", lua_tostring(this->m_pDispatchThread,
-                                              -1)
-                                      ));
+                                      std::format("Error string on callstack {}",
+                                                  lua_tostring(this->m_pDispatchThread, -1)));
                         }
                     }
 
@@ -192,9 +183,11 @@ namespace RbxStu::StuLuau {
 
             case ExecutionEngineStep::YieldStep: {
                 // During the yielding stage we want to step over our yield jobs queue and
-                // dequeue the next yielding step, if it is not ready we want to reschedule (if there is no other job on the queue we want to leave it be for performance reasons)
+                // dequeue the next yielding step, if it is not ready we want to reschedule (if there is no other job on
+                // the queue we want to leave it be for performance reasons)
 
-                if (this->m_yieldQueue.empty()) break; // Nothing to yield.
+                if (this->m_yieldQueue.empty())
+                    break; // Nothing to yield.
 
                 auto frontYield = this->m_yieldQueue.front();
 
@@ -220,7 +213,8 @@ namespace RbxStu::StuLuau {
             case ExecutionEngineStep::ExecuteStep: {
                 // The execute step will dequeue luau scripts and run them through the ROBLOX scheduler
 
-                if (this->m_executeQueue.empty()) break; // Nothing to execute.
+                if (this->m_executeQueue.empty())
+                    break; // Nothing to execute.
 
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Performing execution task...");
 
@@ -232,8 +226,9 @@ namespace RbxStu::StuLuau {
                 break;
             }
             default: {
-                throw std::exception(std::format("Cannot step ExecutionEngine, unknown step type -> {}",
-                                                 static_cast<int>(stepType)).c_str());
+                throw std::exception(
+                        std::format("Cannot step ExecutionEngine, unknown step type -> {}", static_cast<int>(stepType))
+                                .c_str());
             }
         }
     }
@@ -244,13 +239,7 @@ namespace RbxStu::StuLuau {
         lua_pop(L, 1);
 
         auto yieldRequest = std::make_shared<RbxStu::StuLuau::YieldRequest>(RbxStu::StuLuau::YieldRequest{
-                true, L, {0, L, threadRef, 0}, [nret] {
-                    return YieldResult{
-                        true, nret, {}
-                    };
-                }
-            }
-        );
+                true, L, {0, L, threadRef, 0}, [nret] { return YieldResult{true, nret, {}}; }});
 
         this->m_yieldQueue.emplace(yieldRequest);
     }
@@ -262,15 +251,12 @@ namespace RbxStu::StuLuau {
         const auto threadRef = lua_ref(L, -1);
         lua_pop(L, 1);
 
-        auto yieldRequest = std::make_shared<RbxStu::StuLuau::YieldRequest>(RbxStu::StuLuau::YieldRequest{
-                false, L, {0, L, threadRef, 0}, nullptr,
-                {}
-            }
-        );
+        auto yieldRequest = std::make_shared<RbxStu::StuLuau::YieldRequest>(
+                RbxStu::StuLuau::YieldRequest{false, L, {0, L, threadRef, 0}, nullptr, {}});
 
         yieldRequest->lpRunningTask = bRunInParallel
-                                          ? std::async(std::launch::async, runForYield, yieldRequest).share()
-                                          : std::async(std::launch::deferred, runForYield, yieldRequest).share();
+                                              ? std::async(std::launch::async, runForYield, yieldRequest).share()
+                                              : std::async(std::launch::deferred, runForYield, yieldRequest).share();
 
         this->m_yieldQueue.emplace(yieldRequest);
     }
@@ -293,11 +279,17 @@ namespace RbxStu::StuLuau {
         return this->m_environmentContext;
     }
 
-    bool ExecutionEngine::IsDestroyed() {
-        return this->m_bIsDestroyed;
+    bool ExecutionEngine::IsDestroyed() { return this->m_bIsDestroyed; }
+
+    RBX::DataModelType ExecutionEngine::GetDataModelType() const { return this->m_runningAs; }
+
+    std::optional<std::shared_ptr<SignalInformation>>
+    ExecutionEngine::GetSignalOriginal(RBX::Signals::ConnectionSlot *connection_slot) const {
+        return this->m_environmentContext->GetSignalOriginal(connection_slot);
     }
 
-    RBX::DataModelType ExecutionEngine::GetDataModelType() const {
-        return this->m_runningAs;
+    void ExecutionEngine::SetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot,
+                                            const std::shared_ptr<SignalInformation> &signalInformation) const {
+        return this->m_environmentContext->SetSignalOriginal(connectionSlot, signalInformation);
     }
-} // RbxStu::Luau
+} // namespace RbxStu::StuLuau

@@ -4,8 +4,8 @@
 
 #pragma once
 #include <cstdint>
-#include <vector>
 #include <string>
+#include <vector>
 
 struct lua_State;
 
@@ -34,7 +34,7 @@ namespace RBX {
     enum DataModelType : std::int32_t;
     struct DataModel;
     struct SystemAddress;
-}
+} // namespace RBX
 
 namespace RbxStu::Concepts {
     template<typename Derived, typename Base>
@@ -44,35 +44,34 @@ namespace RbxStu::Concepts {
 using r_RBX_Instance_pushInstance = void(__fastcall *)(lua_State *L, void *instance);
 using r_RBX_ProximityPrompt_onTriggered = void(__fastcall *)(void *proximityPrompt);
 using r_RBX_ScriptContext_scriptStart = void(__fastcall *)(void *scriptContext, void *baseScript);
-using r_RBX_ScriptContext_openStateImpl = bool(__fastcall *)(void *scriptContext, void *unk_0,
-                                                             std::int32_t unk_1, std::int32_t unk_2);
-using r_RBX_ExtraSpace_initializeFrom = void *(__fastcall *)(void *newExtraSpace, void *baseExtraSpace);
+using r_RBX_ScriptContext_openStateImpl = bool(__fastcall *)(void *scriptContext, void *unk_0, std::int32_t unk_1,
+                                                             std::int32_t unk_2);
+using r_RBX_ExtraSpace_initializeFrom = void *(__fastcall *) (void *newExtraSpace, void *baseExtraSpace);
 
-using r_RBX_ScriptContext_getGlobalState = lua_State *(__fastcall *)(void *scriptContext,
-                                                                     const uint64_t *identity,
-                                                                     const uint64_t *unk_0);
+using r_RBX_ScriptContext_getGlobalState = lua_State *(__fastcall *) (void *scriptContext, const uint64_t *identity,
+                                                                      const uint64_t *unk_0);
 
 using r_RBX_Console_StandardOut = std::int32_t(__fastcall *)(RBX::Console::MessageType dwMessageId,
                                                              const char *szFormatString, ...);
 
-using r_RBX_ScriptContext_resumeDelayedThreads = void *(__fastcall *)(void *scriptContext);
+using r_RBX_ScriptContext_resumeDelayedThreads = void *(__fastcall *) (void *scriptContext);
 
 using r_RBX_DataModel_getStudioGameStateType = RBX::DataModelType(__fastcall *)(void *dataModel);
 using r_RBX_DataModel_doCloseDataModel = void(__fastcall *)(void *dataModel);
-using r_RBX_ScriptContext_getDataModel = RBX::DataModel *(__fastcall *)(void *scriptContext);
+using r_RBX_ScriptContext_getDataModel = RBX::DataModel *(__fastcall *) (void *scriptContext);
 
 using r_RBX_ScriptContext_resume = void(__fastcall *)(void *scriptContext, std::int64_t unk[0x2],
                                                       RBX::Lua::WeakThreadRef **ppWeakThreadRef, int32_t nRet,
                                                       bool isError, char const *szErrorMessage);
-using r_RBX_BasePart_getNetworkOwner =
-RBX::SystemAddress *(__fastcall *)(void *basePart, RBX::SystemAddress *returnSystemAddress);
+using r_RBX_BasePart_getNetworkOwner = RBX::SystemAddress *(__fastcall *) (void *basePart,
+                                                                           RBX::SystemAddress *returnSystemAddress);
 
 // other is wrapped in a std::shared_ptr
-using r_RBX_BasePart_fireTouchSignals = void(__fastcall *)(void *basePart, void **other,
-                                                           RBX::TouchEventType type, bool isLocal);
+using r_RBX_BasePart_fireTouchSignals = void(__fastcall *)(void *basePart, void **other, RBX::TouchEventType type,
+                                                           bool isLocal);
 
-using r_RBX_Player_findPlayerWithAddress = std::shared_ptr<void> *(__fastcall *)(std::shared_ptr<void> *__return,
-    const RBX::SystemAddress *playerAddress, const void *context);
+using r_RBX_Player_findPlayerWithAddress = std::shared_ptr<void> *(
+        __fastcall *) (std::shared_ptr<void> *__return, const RBX::SystemAddress *playerAddress, const void *context);
 
 namespace RBX {
     typedef int64_t (*Validator)(int64_t testAgainst, struct lua_State *testWith);
@@ -160,7 +159,7 @@ namespace RBX {
             RBX::Time deltaTime; // timespanSinceLastStep
             RBX::Time previousDeltaTime; // timespanOfLastStep
         };
-    }
+    } // namespace TaskScheduler::Job
 
     struct DataModelJobVFTable {
         void (*Destroy)(void *job);
@@ -256,11 +255,9 @@ namespace RBX {
 
     enum TouchEventType : std::uint8_t { Touch = 0x0, Untouch = 0x1 };
 
-    struct Script {
-    };
+    struct Script {};
 
-    struct Actor {
-    };
+    struct Actor {};
 
 
     struct IntrusivePtrTarget {
@@ -405,11 +402,9 @@ namespace RBX {
             int32_t _0; // __padding (unrepresentable);
         };
 
-        struct EventDescriptor : RBX::Reflection::MemberDescriptor {
-        };
+        struct EventDescriptor : RBX::Reflection::MemberDescriptor {};
 
-        struct PropertyDescriptorVFT {
-        };
+        struct PropertyDescriptorVFT {};
 
         struct PropertyDescriptor : RBX::Reflection::MemberDescriptor {
         public:
@@ -514,24 +509,41 @@ namespace RBX {
         };
     } // namespace Reflection
     namespace Signals {
-        struct SlotBase;
-
-        struct SignalBase {
-            IntrusivePtr<SlotBase> head;
-            std::shared_ptr<std::vector<IntrusivePtr<SlotBase> > > slots;
+        struct ConnectionSlot;
+        struct WeakThreadRef_Connections {
+            std::int64_t *_Refs;
+            lua_State *thread;
+            std::int64_t thread_ref;
+            std::int64_t objectId;
         };
 
-        struct SlotBase : RBX::IntrusivePtrTarget {
-            void (*call)(RBX::Signals::SlotBase *);
-
-            void (*destroy)(RBX::Signals::SlotBase *);
-
-            IntrusivePtr<RBX::Signals::SlotBase> next;
-            RBX::Signals::SignalBase *owner;
+        struct LuauFunctionSlot {
+            void *vft;
+            char filler[104];
+            RBX::Lua::WeakThreadRef *objRef;
         };
 
-        class Connection {
-            IntrusivePtr<SlotBase> signal;
+        struct SlotInfo {
+            int strong;
+            int weak; // number of weak refs can be also linked to the number of slots on the connection :)
+            ConnectionSlot *head;
+        };
+
+        struct ConnectionSlot {
+            int strong;
+            int weak;
+            void(__fastcall *call_Signal)(ConnectionSlot *connection);
+            ConnectionSlot *pNext;
+            int unk2;
+            int unk3;
+            SlotInfo *pConnections;
+            void(__fastcall *destroySignal)(ConnectionSlot *connection);
+            LuauFunctionSlot *pFunctionSlot; // This may not point to a valid Luau Function slot if the connection is a
+                                             // C connection
+            /*
+             *  What follows are a set of pointers read respective from LuauFunctionSlot, all valid pointers after these
+             * point (Before the invalid) are to be called with call_Signal.
+             */
         };
     } // namespace Signals
 

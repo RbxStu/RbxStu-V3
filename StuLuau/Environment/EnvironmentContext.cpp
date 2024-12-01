@@ -6,21 +6,21 @@
 
 #include <Logger.hpp>
 
-#include "lapi.h"
+#include <unordered_set>
 #include "Library.hpp"
 #include "Roblox/DataModel.hpp"
 #include "Scheduling/Job/InitializeExecutionEngineJob.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
-#include <unordered_set>
+#include "lapi.h"
 
 #include "StuLuau/Extensions/luauext.hpp"
 
 struct HookChainInformation {
     std::shared_ptr<RbxStu::Roblox::DataModel> executionEngineDataModel;
     std::map<Closure *, std::shared_ptr<std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
-        const RbxStu::StuLuau::Environment::HookInputState &state)> > > >
-    hookMap;
-    std::map<Closure *, std::shared_ptr<lua_CFunction> > originalChain;
+                                const RbxStu::StuLuau::Environment::HookInputState &state)>>>>
+            hookMap;
+    std::map<Closure *, std::shared_ptr<lua_CFunction>> originalChain;
     lua_State *mainthread;
 };
 
@@ -37,11 +37,11 @@ namespace RbxStu::StuLuau::Environment {
             }
 
             for (const auto &next: *hookChainInfo.hookMap[currentFunction]) {
-                // Traverse hook chain from head to bottom, executing every call on the defined order, allows for hooks to be many, whilst simple.
+                // Traverse hook chain from head to bottom, executing every call on the defined order, allows for hooks
+                // to be many, whilst simple.
                 const auto previousStackSize = lua_gettop(L);
-                const auto hkInfo = next(RbxStu::StuLuau::Environment::HookInputState{
-                    L, *hookChainInfo.originalChain[currentFunction]
-                });
+                const auto hkInfo = next(
+                        RbxStu::StuLuau::Environment::HookInputState{L, *hookChainInfo.originalChain[currentFunction]});
 
                 // Reset Stack.
                 if (hkInfo.bContinueNextHook)
@@ -56,35 +56,36 @@ namespace RbxStu::StuLuau::Environment {
 
             // Call and return with original call.
             if (!hookChainInfo.originalChain.contains(currentFunction))
-                luaL_error(L,
-                       "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
+                luaL_error(L, "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, "
+                              "this should never happen.");
 
             return (*hookChainInfo.originalChain[currentFunction])(L);
         }
 
-        luaL_error(L,
-                   "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this should never happen.");
+        luaL_error(L, "RbxStu::StuLuau::Environment::EnvironmentContext: Failed to get original hook chain, this "
+                      "should never happen.");
     }
 
-    EnvironmentContext::~EnvironmentContext() {
-        this->DestroyContext();
-    }
+    EnvironmentContext::~EnvironmentContext() { this->DestroyContext(); }
 
     void EnvironmentContext::DefineNewDataModelMetaMethodClosure(Closure *originalMetamethod, Closure *func) const {
         /*
-        *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is running on.
-        */
+         *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is
+         * running on.
+         */
         const auto initInfo = this->m_parentEngine->GetInitializationInformation();
 
-        s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[func] = s_hookChain[initInfo->dataModel->
-            GetDataModelType()].hookMap[originalMetamethod];
+        s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[func] =
+                s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[originalMetamethod];
 
-        s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[func] = s_hookChain[initInfo->dataModel->
-            GetDataModelType()].originalChain[originalMetamethod];
+        s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[func] =
+                s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[originalMetamethod];
     }
 
     void EnvironmentContext::DestroyContext() {
-        if (this->m_bIsDestroyed) return;
+        if (this->m_bIsDestroyed)
+            return;
+
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Tainting EnvironmentContext...");
         this->m_bIsDestroyed = true;
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing newcclosures...");
@@ -95,6 +96,8 @@ namespace RbxStu::StuLuau::Environment {
         this->m_initScripts.clear();
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Clearing unhookable closures...");
         this->m_unhookableClosures.clear();
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Freeing connection metadata map...");
+        this->m_connectionOriginal.clear();
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Unreferencing parent engine...");
         this->m_parentEngine = nullptr;
 
@@ -109,15 +112,16 @@ namespace RbxStu::StuLuau::Environment {
         for (const auto &lib: this->m_libraries) {
             if (library->GetLibraryName() == nullptr && !library->PushNoTable()) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
-                          "Library defined with no name, yet it has a table to push, ignoring definition. Cannot determine affected library easily (No name)");
+                          "Library defined with no name, yet it has a table to push, ignoring definition. Cannot "
+                          "determine affected library easily (No name)");
                 return;
             }
 
-            if (lib->GetLibraryName() != nullptr && library->GetLibraryName() != nullptr && strcmp(
-                    lib->GetLibraryName(), library->GetLibraryName()) == 0) {
+            if (lib->GetLibraryName() != nullptr && library->GetLibraryName() != nullptr &&
+                strcmp(lib->GetLibraryName(), library->GetLibraryName()) == 0) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
-                          std::format("Library already defined, ignoring re-definition. Affected Library: {}", library->
-                              GetLibraryName()));
+                          std::format("Library already defined, ignoring re-definition. Affected Library: {}",
+                                      library->GetLibraryName()));
                 return;
             }
         }
@@ -128,10 +132,10 @@ namespace RbxStu::StuLuau::Environment {
     // It is not really const, modifies static mutable state, shut up ReSharper++ :)
     // ReSharper disable once CppMemberFunctionMayBeConst
     void EnvironmentContext::DefineDataModelHook(const std::string_view szMetamethodName,
-                                                 std::function<HookReturnState(const HookInputState &)>
-                                                 func) {
+                                                 std::function<HookReturnState(const HookInputState &)> func) {
         /*
-         *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is running on.
+         *  During the first call, we must initialize our s_hookChain map for the DataModel this execution engine is
+         * running on.
          */
         const auto initInfo = this->m_parentEngine->GetInitializationInformation();
         if (s_hookChain.contains(initInfo->dataModel->GetDataModelType())) {
@@ -140,9 +144,8 @@ namespace RbxStu::StuLuau::Environment {
                 initInfo->dataModel->GetRbxPointer()) {
                 auto hkChain = s_hookChain[initInfo->dataModel->GetDataModelType()];
                 // DataModel pointer is out of date, void map and re-create.
-                hkChain.originalChain.erase(
-                    hkChain.originalChain.begin(),
-                    hkChain.originalChain.end()); // Clear.
+                hkChain.originalChain.erase(hkChain.originalChain.begin(),
+                                            hkChain.originalChain.end()); // Clear.
 
                 hkChain.executionEngineDataModel = nullptr;
                 hkChain.executionEngineDataModel = initInfo->dataModel;
@@ -152,11 +155,7 @@ namespace RbxStu::StuLuau::Environment {
             }
         } else {
             s_hookChain[initInfo->dataModel->GetDataModelType()] = {
-                initInfo->dataModel,
-                {},
-                {},
-                lua_mainthread(initInfo->globalState)
-            };
+                    initInfo->dataModel, {}, {}, lua_mainthread(initInfo->globalState)};
         }
 
 
@@ -167,7 +166,8 @@ namespace RbxStu::StuLuau::Environment {
         if (lua_getfield(initInfo->executorState, -1, szMetamethodName.data()) != ::lua_Type::LUA_TFUNCTION) {
             lua_pop(initInfo->executorState, 2); // pop mt + nil
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
-                      "Cannot establish hook-chain: meta method does not have a default implementation, or if it has any, it is not a C closure or Luau Closure!");
+                      "Cannot establish hook-chain: meta method does not have a default implementation, or if it has "
+                      "any, it is not a C closure or Luau Closure!");
             return;
         }
 
@@ -175,40 +175,39 @@ namespace RbxStu::StuLuau::Environment {
 
         if (!s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap.contains(closure)) {
             /*
-             *  The hook map has not been initialized for this metamethod, this means there is no hook implace to restore the original, we must do it ourselves.
+             *  The hook map has not been initialized for this metamethod, this means there is no hook implace to
+             * restore the original, we must do it ourselves.
              */
 
             auto iscclosure = lua_iscfunction(initInfo->executorState, -1);
 
             if (!iscclosure) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::EnvironmentContext,
-                          "Cannot establish hook-chain: Metamethod is not a C closure, calling it will result on the call-stack becoming messed up.");
+                          "Cannot establish hook-chain: Metamethod is not a C closure, calling it will result on the "
+                          "call-stack becoming messed up.");
                 return;
             }
 
-            s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure] = std::make_shared<std::list<
-                std::function<RbxStu::StuLuau::Environment::HookReturnState(
-                    const RbxStu::StuLuau::Environment::HookInputState &state)> > >();
+            s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure] =
+                    std::make_shared<std::list<std::function<RbxStu::StuLuau::Environment::HookReturnState(
+                            const RbxStu::StuLuau::Environment::HookInputState &state)>>>();
 
-            s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[closure] = std::make_shared<
-                lua_CFunction>(closure->c.f);
+            s_hookChain[initInfo->dataModel->GetDataModelType()].originalChain[closure] =
+                    std::make_shared<lua_CFunction>(closure->c.f);
 
             RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
                       "Hijacked Roblox's metamethod with a Proxy!");
             closure->c.f = metamethod_thunk;
         }
 
-        RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext,
-                  "Pushed new hook to the hook chain...");
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::EnvironmentContext, "Pushed new hook to the hook chain...");
 
         s_hookChain[initInfo->dataModel->GetDataModelType()].hookMap[closure]->emplace_back(func);
 
         lua_pop(initInfo->executorState, 2); // Leave nothing on the lua stack.
     }
 
-    void EnvironmentContext::MakeUnhookable(Closure *closure) {
-        this->m_unhookableClosures.insert(closure);
-    }
+    void EnvironmentContext::MakeUnhookable(Closure *closure) { this->m_unhookableClosures.insert(closure); }
 
     bool EnvironmentContext::IsUnhookable(Closure *closure) const {
         if (this->m_unhookableClosures.contains(closure))
@@ -231,19 +230,18 @@ namespace RbxStu::StuLuau::Environment {
 
     void EnvironmentContext::PushEnvironment() {
         /*
-         *  Note: Unbalanced Luau Stacks are bad. do NOT pop like an idiot, just save the previous top and then pop it all out, its MUCH easier
-         *  like that, sudden crashes are crazy, though.
+         *  Note: Unbalanced Luau Stacks are bad. do NOT pop like an idiot, just save the previous top and then pop it
+         * all out, its MUCH easier like that, sudden crashes are crazy, though.
          */
 
         const auto L = this->m_parentEngine->GetInitializationInformation()->executorState;
         const auto oldTop = lua_gettop(this->m_parentEngine->GetInitializationInformation()->executorState);
         for (const auto &lib: this->m_libraries) {
             if (lib->GetLibraryName() == nullptr) {
-                RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
-                          "Library holds no name");
+                RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext, "Library holds no name");
             } else {
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
-                          std::format("Pushing library {} to the environment.",lib->GetLibraryName()));
+                          std::format("Pushing library {} to the environment.", lib->GetLibraryName()));
             }
 
             const auto envGlobals = lib->GetFunctionRegistry();
@@ -253,10 +251,11 @@ namespace RbxStu::StuLuau::Environment {
 
             if (lib->GetLibraryName() != nullptr && lua_getglobal(L, lib->GetLibraryName()) != ::lua_Type::LUA_TNIL)
                 RbxStuLog(RbxStu::LogType::Debug, RbxStu::EnvironmentContext,
-                      std::format(
-                          "DEV WARN: Currently over-writing already defined global library {} with a new registry, this may be intended, but this is important that if callers expect the methods of the previous library to be present scripts may not run as expected anymore!"
-                          ,
-                          lib->GetLibraryName()));
+                          std::format("DEV WARN: Currently over-writing already defined global library {} with a new "
+                                      "registry, this may be intended, but this is important that if callers expect "
+                                      "the methods of the previous library to be present scripts may not run as "
+                                      "expected anymore!",
+                                      lib->GetLibraryName()));
 
             lua_pop(L, 1); // pop prev lua_getglobal.
 
@@ -280,7 +279,7 @@ namespace RbxStu::StuLuau::Environment {
                       std::format("- RbxStuV3/init/{}.luau", init.scriptName));
 
             m_parentEngine->Execute(
-                {true, true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
+                    {true, true, init.scriptSource, RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor});
         }
     }
 
@@ -296,4 +295,15 @@ namespace RbxStu::StuLuau::Environment {
 
         return s_hookChain.at(initInfo->dataModel->GetDataModelType()).originalChain.contains(closure);
     }
-} // RbxStu::StuLuau::Environment
+    std::optional<std::shared_ptr<SignalInformation>>
+    EnvironmentContext::GetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot) {
+        if (this->m_connectionOriginal.contains(connectionSlot))
+            return this->m_connectionOriginal.at(connectionSlot);
+
+        return std::nullopt;
+    }
+    void EnvironmentContext::SetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot,
+                                               const std::shared_ptr<SignalInformation> &information) {
+        this->m_connectionOriginal[connectionSlot] = information;
+    }
+} // namespace RbxStu::StuLuau::Environment

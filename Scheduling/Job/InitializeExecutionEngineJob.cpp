@@ -8,16 +8,16 @@
 #include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 
-#include "ltable.h"
-#include "lualib.h"
 #include "Roblox/DataModel.hpp"
 #include "Roblox/ScriptContext.hpp"
-#include "StuLuau/ExecutionEngine.hpp"
-#include "StuLuau/LuauSecurity.hpp"
-#include "StuLuau/Environment/EnvironmentContext.hpp"
 #include "StuLuau/Environment/Custom/Memory.hpp"
 #include "StuLuau/Environment/Custom/NewGlobals.hpp"
+#include "StuLuau/Environment/EnvironmentContext.hpp"
 #include "StuLuau/Environment/UNC/Cache.hpp"
+#include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/LuauSecurity.hpp"
+#include "ltable.h"
+#include "lualib.h"
 
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Crypt.hpp"
@@ -39,12 +39,11 @@ namespace RbxStu::Scheduling::Jobs {
             if (engine != nullptr) {
                 const auto engineDataModel = engine->GetInitializationInformation()->dataModel;
 
-                if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() && engineDataModel->
-                    GetRbxPointer()
-                    != dataModel->GetRbxPointer()) {
+                if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() &&
+                    engineDataModel->GetRbxPointer() != dataModel->GetRbxPointer()) {
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                              std::format("DataModel re-initialized to {} from {}", (void*)dataModel->GetRbxPointer(),
-                                  (void*)engineDataModel->GetRbxPointer()));
+                              std::format("DataModel re-initialized to {} from {}", (void *) dataModel->GetRbxPointer(),
+                                          (void *) engineDataModel->GetRbxPointer()));
 
                     // DataModel has re-initialized.
                     taskScheduler->ResetExecutionEngine(dataModel->GetDataModelType());
@@ -74,7 +73,8 @@ namespace RbxStu::Scheduling::Jobs {
 
         /*
          *  We make a few assumptions here:
-         *      - If we got to Step, that means that we MUST re-create the ExecutionEngine for the DataModelType this DataModelJob belongs to.
+         *      - If we got to Step, that means that we MUST re-create the ExecutionEngine for the DataModelType this
+         * DataModelJob belongs to.
          *      - We are RBX::ScriptContextFacets::WaitingHybridScriptsJob.
          */
 
@@ -120,15 +120,12 @@ namespace RbxStu::Scheduling::Jobs {
         scheduler->CreateExecutionEngine(dataModel->GetDataModelType(), initData);
         const auto executionEngine = scheduler->GetExecutionEngine(dataModel->GetDataModelType());
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                  std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!", RBX::
-                      DataModelTypeToString(
-                          dataModel->GetDataModelType())));
+                  std::format("Created RbxStu::StuLuau::ExecutionEngine for DataModel {}!",
+                              RBX::DataModelTypeToString(dataModel->GetDataModelType())));
 
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                  std::format("Pushing Environment for DataModel Executor State {}...", RBX
-                      ::
-                      DataModelTypeToString(
-                          dataModel->GetDataModelType())));
+                  std::format("Pushing Environment for DataModel Executor State {}...",
+                              RBX ::DataModelTypeToString(dataModel->GetDataModelType())));
 
         const auto envContext = std::make_shared<StuLuau::Environment::EnvironmentContext>(executionEngine);
         executionEngine->SetEnvironmentContext(envContext);
@@ -146,101 +143,98 @@ namespace RbxStu::Scheduling::Jobs {
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::Memory>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::Custom::NewGlobals>());
 
-        const static auto s_BannedServices = std::vector<std::string_view>{
-            "linkingservice",
-            "browserservice",
-            "httprbxapiservice",
-            "opencloudservice",
-            "messagebusservice",
-            "omnirecommendationsservice",
-            "captureservice",
-            "corepackages",
-            "animationfromvideocreatorservice",
-            "safetyservice",
-            "appupdateservice",
-            "ugcvalidationservice",
-            "accountservice",
-            "analyticsservice",
-            "ixpservice",
-            "commerceservice",
-            "sessionservice",
-            "studioservice",
-            "platformcloudstorageservice",
-            "startpageservice",
-            "scripteditorservice",
-            "avatareditorservice",
-            "webviewservice",
-            "commerceservice"
-        };
+        const static auto s_BannedServices = std::vector<std::string_view>{"linkingservice",
+                                                                           "browserservice",
+                                                                           "httprbxapiservice",
+                                                                           "opencloudservice",
+                                                                           "messagebusservice",
+                                                                           "omnirecommendationsservice",
+                                                                           "captureservice",
+                                                                           "corepackages",
+                                                                           "animationfromvideocreatorservice",
+                                                                           "safetyservice",
+                                                                           "appupdateservice",
+                                                                           "ugcvalidationservice",
+                                                                           "accountservice",
+                                                                           "analyticsservice",
+                                                                           "ixpservice",
+                                                                           "commerceservice",
+                                                                           "sessionservice",
+                                                                           "studioservice",
+                                                                           "platformcloudstorageservice",
+                                                                           "startpageservice",
+                                                                           "scripteditorservice",
+                                                                           "avatareditorservice",
+                                                                           "webviewservice",
+                                                                           "commerceservice"};
 
-        envContext->DefineDataModelHook("__namecall",
-                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
-                                    StuLuau::Environment::HookReturnState {
-                                            const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
+        envContext->DefineDataModelHook(
+                "__namecall",
+                [](const StuLuau::Environment::HookInputState &inCtx) -> StuLuau::Environment::HookReturnState {
+                    const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
 
-                                            if (currentNamecall == nullptr)
-                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+                    if (currentNamecall == nullptr)
+                        return StuLuau::Environment::HookReturnState{true, false, 0};
 
-                                            const auto luauSecurity = StuLuau::LuauSecurity::GetSingleton();
-                                            const auto bIsServiceRetrieval =
-                                                    strcmp(currentNamecall, "GetService") == 0
-                                                    || strcmp(currentNamecall, "service") == 0
-                                                    || strcmp(currentNamecall, "FindService") == 0
-                                                    || strcmp(currentNamecall, "getService") == 0;
+                    const auto luauSecurity = StuLuau::LuauSecurity::GetSingleton();
+                    const auto bIsServiceRetrieval =
+                            strcmp(currentNamecall, "GetService") == 0 || strcmp(currentNamecall, "service") == 0 ||
+                            strcmp(currentNamecall, "FindService") == 0 || strcmp(currentNamecall, "getService") == 0;
 
-                                            if (bIsServiceRetrieval && luauSecurity->IsOurThread(inCtx.L)) {
-                                                const auto target = Utilities::ToLower(lua_tostring(inCtx.L, 2));
-                                                for (const auto &service: s_BannedServices) {
-                                                    if (target == service)
-                                                        luaL_error(
-                                                        inCtx.L,
-                                                        "this service has been blocked for safety reasons");
-                                                }
-                                            }
+                    if (bIsServiceRetrieval && luauSecurity->IsOurThread(inCtx.L)) {
+                        const auto target = Utilities::ToLower(lua_tostring(inCtx.L, 2));
+                        for (const auto &service: s_BannedServices) {
+                            if (target == service)
+                                luaL_error(inCtx.L, "this service has been blocked for safety reasons");
+                        }
+                    }
 
-                                            return StuLuau::Environment::HookReturnState{true, false, 0};
-                                        });
+                    return StuLuau::Environment::HookReturnState{true, false, 0};
+                });
 
-        envContext->DefineDataModelHook("__namecall",
-                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
-                                    StuLuau::Environment::HookReturnState {
-                                            const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
+        envContext->DefineDataModelHook(
+                "__namecall",
+                [](const StuLuau::Environment::HookInputState &inCtx) -> StuLuau::Environment::HookReturnState {
+                    const auto currentNamecall = lua_namecallatom(inCtx.L, nullptr);
 
-                                            if (currentNamecall == nullptr)
-                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+                    if (currentNamecall == nullptr)
+                        return StuLuau::Environment::HookReturnState{true, false, 0};
 
-                                            if (strcmp(currentNamecall, "HttpGet") == 0 || strcmp(
-                                                    currentNamecall, "HttpGetAsync") == 0) {
-                                                lua_getglobal(inCtx.L, "httpget");
-                                                lua_pushvalue(inCtx.L, 2);
-                                                lua_pcall(inCtx.L, 1, 1, 0);
+                    if (strcmp(currentNamecall, "HttpGet") == 0 || strcmp(currentNamecall, "HttpGetAsync") == 0) {
+                        lua_getglobal(inCtx.L, "httpget");
+                        lua_pushvalue(inCtx.L, 2);
+                        lua_pcall(inCtx.L, 1, 1, 0);
 
-                                                return StuLuau::Environment::HookReturnState{false, true, 1};
-                                            }
+                        return StuLuau::Environment::HookReturnState{false, true, 1};
+                    }
 
-                                            return StuLuau::Environment::HookReturnState{true, false, 0};
-                                        });
+                    return StuLuau::Environment::HookReturnState{true, false, 0};
+                });
 
-        envContext->DefineDataModelHook("__index",
-                                        [](const StuLuau::Environment::HookInputState &inCtx) ->
-                                    StuLuau::Environment::HookReturnState {
-                                            if (lua_type(inCtx.L, 2) != ::lua_Type::LUA_TSTRING)
-                                                return StuLuau::Environment::HookReturnState{true, false, 0};
+        envContext->DefineDataModelHook(
+                "__index",
+                [](const StuLuau::Environment::HookInputState &inCtx) -> StuLuau::Environment::HookReturnState {
+                    if (lua_type(inCtx.L, 2) != ::lua_Type::LUA_TSTRING)
+                        return StuLuau::Environment::HookReturnState{true, false, 0};
 
-                                            auto idx = lua_tostring(inCtx.L, 2);
+                    auto idx = lua_tostring(inCtx.L, 2);
 
-                                            if (strcmp(idx, "HttpGet") == 0) {
-                                                lua_getglobal(inCtx.L, "httpget");
-                                                return StuLuau::Environment::HookReturnState{false, false, 1};
-                                            }
+                    if (strcmp(idx, "HttpGet") == 0) {
+                        lua_getglobal(inCtx.L, "httpget");
+                        return StuLuau::Environment::HookReturnState{false, false, 1};
+                    }
 
-                                            return StuLuau::Environment::HookReturnState{true, false, 0};
-                                        });
+                    return StuLuau::Environment::HookReturnState{true, false, 0};
+                });
 
         envContext->DefineInitScript(R"(
+            local getconnections = closures.clonefunction(getconnections)
             local newcclosure = closures.clonefunction(closures.newcclosure)
             local getgenv = closures.clonefunction(uncrbxstu.getgenv)
             local typeof = closures.clonefunction(typeof)
+            local rawget = closures.clonefunction(rawget)
+            local pcall = closures.clonefunction(pcall)
+            local getreg = closures.clonefunction(getreg)
 
             local function getInstanceList(idx: number)
                 if not idx then idx = 0 end
@@ -250,7 +244,7 @@ namespace RbxStu::Scheduling::Jobs {
                 end
 
                 local part = Instance.new("Part")
-                for _, obj in uncrbxstu.getreg() do
+                for _, obj in getreg() do
                     if typeof(obj) == "table" and rawget(obj, "__mode") == "kvs" then
 			            for idx_, inst in obj do
 				            if inst == part then
@@ -305,12 +299,15 @@ namespace RbxStu::Scheduling::Jobs {
                 local cons = getconnections(signal)
 
                 for _, con in cons do
-                    pcall(con.Fire, con, ...)
+                    if typeof(con.Fire) == "function" then
+                        pcall(con.Fire, con, ...)
+                    end
                 end
 
                 task.wait()
             end)
-        )", "InteropFunctionDeclarations");
+        )",
+                                     "InteropFunctionDeclarations");
 
         envContext->DefineInitScript(R"(
             setreadonly(getgenv().debug, false)
@@ -318,7 +315,8 @@ namespace RbxStu::Scheduling::Jobs {
                 getgenv().debug[i] = e
             end
             setreadonly(getgenv().debug, true)
-        )", "DebugRobloxImport");
+        )",
+                                     "DebugRobloxImport");
 
         envContext->DefineInitScript(R"(
             makeunhookable(getgenv)
@@ -380,15 +378,14 @@ namespace RbxStu::Scheduling::Jobs {
                 end
             end))
 
-        )", "UnhookableSecurity");
+        )",
+                                     "UnhookableSecurity");
 
         envContext->PushEnvironment();
 
         executionEngine->SetExecuteReady(true);
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                  std::format("Environment pushed to DataModel {}", RBX
-                      ::
-                      DataModelTypeToString(
-                          dataModel->GetDataModelType())));
+                  std::format("Environment pushed to DataModel {}",
+                              RBX ::DataModelTypeToString(dataModel->GetDataModelType())));
     }
-} // RbxStu::Scheduling::Jobs
+} // namespace RbxStu::Scheduling::Jobs

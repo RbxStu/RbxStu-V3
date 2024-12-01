@@ -13,13 +13,7 @@ namespace RbxStu::Scheduling {
 }
 
 namespace RbxStu::StuLuau {
-    enum class ExecutionSecurity {
-        LocalScript,
-        RobloxScript,
-        Plugin,
-        RobloxPlugin,
-        RobloxExecutor
-    };
+    enum class ExecutionSecurity { LocalScript, RobloxScript, Plugin, RobloxPlugin, RobloxExecutor };
 
     enum class ExecutionEngineStep : std::int32_t {
         YieldStep,
@@ -45,13 +39,22 @@ namespace RbxStu::StuLuau {
 
     struct YieldRequest {
         bool bIsReady;
-        // should be an std::atomic_bool, but thanks to the fun bits of fucking C++ STL it doesn't WORK, thank you for deleting the ONLY constructor I need.
+        // should be an std::atomic_bool, but thanks to the fun bits of fucking C++ STL it doesn't WORK, thank you for
+        // deleting the ONLY constructor I need.
         lua_State *lpResumeTarget;
         RBX::Lua::WeakThreadRef threadRef;
         std::function<YieldResult()> fpCompletionCallback;
         std::shared_future<void> lpRunningTask;
     };
 
+    struct SignalInformation {
+        bool bIsCSignal;
+
+        union {
+            void (*fpCallFunction)(RBX::Signals::ConnectionSlot *);
+            int luaRef;
+        };
+    };
     struct ExecuteRequest {
         bool bGenerateNativeCode;
         bool bCreateNewThread;
@@ -62,11 +65,11 @@ namespace RbxStu::StuLuau {
     class ExecutionEngine final {
         std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> m_executionEngineState;
 
-        std::queue<std::shared_ptr<RbxStu::StuLuau::YieldRequest> > m_yieldQueue;
+        std::queue<std::shared_ptr<RbxStu::StuLuau::YieldRequest>> m_yieldQueue;
         std::queue<RbxStu::StuLuau::ExecuteRequest> m_executeQueue;
         std::shared_ptr<Environment::EnvironmentContext> m_environmentContext;
 
-        std::vector<std::shared_ptr<AssociatedObject> > m_associatedObjects;
+        std::vector<std::shared_ptr<AssociatedObject>> m_associatedObjects;
 
         std::atomic_bool m_bIsReadyStepping;
         bool m_bCanUseCodeGeneration;
@@ -77,8 +80,8 @@ namespace RbxStu::StuLuau {
         RBX::DataModelType m_runningAs;
 
     public:
-        explicit ExecutionEngine(
-            std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation> parentJobInitializationInformation);
+        explicit ExecutionEngine(std::shared_ptr<Scheduling::ExecutionEngineInitializationInformation>
+                                         parentJobInitializationInformation);
 
         void DestroyEngine();
 
@@ -96,24 +99,24 @@ namespace RbxStu::StuLuau {
 
         void ResumeThread(lua_State *L, int nret);
 
-        void YieldThread(lua_State *L,
-                         std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield,
+        void YieldThread(lua_State *L, std::function<void(std::shared_ptr<RbxStu::StuLuau::YieldRequest>)> runForYield,
                          bool bRunInParallel);
 
         void SetEnvironmentContext(const std::shared_ptr<Environment::EnvironmentContext> &shared);
 
         void DispatchSynchronized(std::function<void(lua_State *)> callback);
 
-        void ScheduleExecute(
-            bool bGenerateNativeCode,
-            std::string_view szLuauCode,
-            RbxStu::StuLuau::ExecutionSecurity executeWithSecurity, bool bCreateNewThread
-        );
+        void ScheduleExecute(bool bGenerateNativeCode, std::string_view szLuauCode,
+                             RbxStu::StuLuau::ExecutionSecurity executeWithSecurity, bool bCreateNewThread);
 
         std::shared_ptr<Environment::EnvironmentContext> GetEnvironmentContext();
 
         bool IsDestroyed();
 
         RBX::DataModelType GetDataModelType() const;
+        std::optional<std::shared_ptr<SignalInformation>>
+        GetSignalOriginal(RBX::Signals::ConnectionSlot *connection_slot) const;
+        void SetSignalOriginal(RBX::Signals::ConnectionSlot *connectionSlot,
+                               const std::shared_ptr<SignalInformation> &signalInformation) const;
     };
-} // RbxStu::Luau
+} // namespace RbxStu::StuLuau
