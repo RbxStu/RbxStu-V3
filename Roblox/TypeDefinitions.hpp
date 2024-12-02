@@ -70,8 +70,8 @@ using r_RBX_BasePart_getNetworkOwner = RBX::SystemAddress *(__fastcall *) (void 
                                                                            RBX::SystemAddress *returnSystemAddress);
 
 // other is wrapped in a std::shared_ptr
-using r_RBX_BasePart_fireTouchSignals = void(__fastcall *)(void *basePart, void **other, RBX::TouchEventType type,
-                                                           bool isLocal);
+using r_RBX_World_reportTouchInfo = void(__fastcall *)(void *world, void *primitive0, void *primitive1,
+                                                       RBX::TouchEventType type, bool isLocal);
 
 using r_RBX_Player_findPlayerWithAddress = std::shared_ptr<void> *(
         __fastcall *) (std::shared_ptr<void> *__return, const RBX::SystemAddress *playerAddress, const void *context);

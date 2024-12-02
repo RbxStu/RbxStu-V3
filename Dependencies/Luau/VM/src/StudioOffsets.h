@@ -47,7 +47,7 @@ public:
         RBX_Instance_removeAllChildren,
 
         RBX_BasePart_getNetworkOwner,
-        RBX_BasePart_fireTouchSignals,
+        RBX_World_reportTouchInfo,
 
         RBX_ProximityPrompt_onTriggered,
 
