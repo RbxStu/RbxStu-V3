@@ -201,10 +201,6 @@ namespace RbxStu::StuLuau {
         return RbxStu::StuLuau::LuauSecurity::pInstance;
     }
 
-    RBX::ExtraSpace *LuauSecurity::GetThreadExtraspace(lua_State *L) {
-        return static_cast<RBX::ExtraSpace *>(L->userdata);
-    }
-
     std::int64_t LuauSecurity::ToCapabilitiesFlags(const RbxStu::StuLuau::ExecutionSecurity executionSecurity) {
         std::int64_t qwCapabilities = 0x3FFFFFF00ull; // Base Check (Without it, we are banned from roblox APIs)
 

@@ -531,7 +531,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getcallingscript(lua_State *L) {
-        auto extraspace = LuauSecurity::GetThreadExtraspace(L);
+        auto extraspace = GetThreadExtraspace(L);
 
         try {
             const auto rbxPushInstance = reinterpret_cast<r_RBX_Instance_pushInstance>(

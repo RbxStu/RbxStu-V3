@@ -31,7 +31,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
         // Force hex format.
         lua_rawcheckstack(L, 1);
         lua_pushstring(
-            L, std::format("{}", reinterpret_cast<void *>(LuauSecurity::GetThreadExtraspace(L)->capabilities)).c_str());
+            L, std::format("{}", reinterpret_cast<void *>(GetThreadExtraspace(L)->capabilities)).c_str());
         return 1;
     }
 

@@ -9,14 +9,14 @@
 #include "lstate.h"
 #include "Luau/TypeFunctionRuntime.h"
 
+#define GetThreadExtraspace(L) static_cast<RBX::ExtraSpace *>(L->userdata)
+
 namespace RbxStu::StuLuau {
     class LuauSecurity final {
         static std::shared_ptr<RbxStu::StuLuau::LuauSecurity> pInstance;
 
     public:
         static std::shared_ptr<RbxStu::StuLuau::LuauSecurity> GetSingleton();
-
-        static RBX::ExtraSpace *GetThreadExtraspace(lua_State *L);
 
         std::int64_t ToCapabilitiesFlags(RbxStu::StuLuau::ExecutionSecurity executionSecurity);
 

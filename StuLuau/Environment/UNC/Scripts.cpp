@@ -35,7 +35,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Scripts::getidentity(lua_State *L) {
-        const int32_t currentIdentity = LuauSecurity::GetThreadExtraspace(L)->contextInformation.identity;
+        const int32_t currentIdentity = GetThreadExtraspace(L)->contextInformation.identity;
         lua_pushinteger(L, currentIdentity);
         return 1;
     }
