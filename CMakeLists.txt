@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.7.2)
 cmake_policy(SET CMP0091 NEW)
-project(RbxStuV3 LANGUAGES CXX C)
+project(RbxStuV3)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
@@ -30,11 +30,11 @@ if (build_type STREQUAL release)
     add_link_options(
             /LTCG
             /INCREMENTAL
-            # /DEBUG
+            /DEBUG
             /DYNAMICBASE
             /HIGHENTROPYVA
             /GUARD:CF
-            # /PDB:RbxStuV3.pdb
+            /PDB:RbxStuV3.pdb
             /VERBOSE
     )
 endif ()
