@@ -66,6 +66,8 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
             return "RBX::BasePart::getNetworkOwner";
         case RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals:
             return "RBX::BasePart::fireTouchSignals";
+        case RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered:
+            return "RBX::ProximityPrompt::onTriggered";
         case RbxStuOffsets::OffsetKey::RBXCRASH:
             return "global::RBXCRASH";
     }
