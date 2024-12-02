@@ -14,10 +14,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int generatebytes(lua_State *L);
 
+        static int generatekey(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;
 
         bool PushToGlobals() override { return true; }
 
         const char *GetLibraryName() override { return "crypt"; }
     };
-}
+} // namespace RbxStu::StuLuau::Environment::UNC
