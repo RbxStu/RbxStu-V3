@@ -9,187 +9,174 @@
 #include "Environment/UNC/Closures.hpp"
 #undef LoadString
 
-const static std::map<RbxStu::StuLuau::ExecutionSecurity, std::vector<RBX::Security::CapabilityPermissions> >
-s_CapabilityMap = {
-    {
-        RbxStu::StuLuau::ExecutionSecurity::Plugin,
-        {
-            /*
-             *  PluginSecurity is virtually all capabilities from 1 to 6.
-             */
-            ::RBX::Security::CapabilityPermissions::Plugin,
-            ::RBX::Security::CapabilityPermissions::LocalUser,
-            ::RBX::Security::CapabilityPermissions::WritePlayer,
-            ::RBX::Security::CapabilityPermissions::RobloxEngine,
-            ::RBX::Security::CapabilityPermissions::NotAccessible,
+const static std::map<RbxStu::StuLuau::ExecutionSecurity, std::vector<RBX::Security::CapabilityPermissions>>
+        s_CapabilityMap = {
+                {RbxStu::StuLuau::ExecutionSecurity::Plugin,
+                 {
+                         /*
+                          *  PluginSecurity is virtually all capabilities from 1 to 6.
+                          */
+                         ::RBX::Security::CapabilityPermissions::Plugin,
+                         ::RBX::Security::CapabilityPermissions::LocalUser,
+                         ::RBX::Security::CapabilityPermissions::WritePlayer,
+                         ::RBX::Security::CapabilityPermissions::RobloxEngine,
+                         ::RBX::Security::CapabilityPermissions::NotAccessible,
 
-            ::RBX::Security::CapabilityPermissions::RunClientScript,
-            ::RBX::Security::CapabilityPermissions::RunServerScript,
+                         ::RBX::Security::CapabilityPermissions::RunClientScript,
+                         ::RBX::Security::CapabilityPermissions::RunServerScript,
 
-            ::RBX::Security::CapabilityPermissions::Unassigned,
-            ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
-            ::RBX::Security::CapabilityPermissions::ScriptGlobals,
-            ::RBX::Security::CapabilityPermissions::CreateInstances,
-            ::RBX::Security::CapabilityPermissions::Basic,
-            ::RBX::Security::CapabilityPermissions::Audio,
-            ::RBX::Security::CapabilityPermissions::DataStore,
-            ::RBX::Security::CapabilityPermissions::Network,
-            ::RBX::Security::CapabilityPermissions::Physics,
-            ::RBX::Security::CapabilityPermissions::UI,
-            ::RBX::Security::CapabilityPermissions::CSG,
-            ::RBX::Security::CapabilityPermissions::Chat,
-            ::RBX::Security::CapabilityPermissions::Animation,
-            ::RBX::Security::CapabilityPermissions::Avatar,
-            ::RBX::Security::CapabilityPermissions::RemoteEvent,
-            ::RBX::Security::CapabilityPermissions::LegacySound,
+                         ::RBX::Security::CapabilityPermissions::Unassigned,
+                         ::RBX::Security::CapabilityPermissions::AssetRequire,
+                         ::RBX::Security::CapabilityPermissions::LoadStringCapability,
+                         ::RBX::Security::CapabilityPermissions::ScriptGlobals,
+                         ::RBX::Security::CapabilityPermissions::CreateInstances,
+                         ::RBX::Security::CapabilityPermissions::Basic,
+                         ::RBX::Security::CapabilityPermissions::Audio,
+                         ::RBX::Security::CapabilityPermissions::DataStore,
+                         ::RBX::Security::CapabilityPermissions::Network,
+                         ::RBX::Security::CapabilityPermissions::Physics,
+                         ::RBX::Security::CapabilityPermissions::UI,
+                         ::RBX::Security::CapabilityPermissions::CSG,
+                         ::RBX::Security::CapabilityPermissions::Chat,
+                         ::RBX::Security::CapabilityPermissions::Animation,
+                         ::RBX::Security::CapabilityPermissions::Avatar,
+                         ::RBX::Security::CapabilityPermissions::RemoteEvent,
+                         ::RBX::Security::CapabilityPermissions::LegacySound,
 
-            ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
-        }
-    },
-    {
-        RbxStu::StuLuau::ExecutionSecurity::RobloxPlugin,
-        {
-            /*
-             *  PluginSecurity (Roblox) is virtually all capabilities from 1 to 6.
-             */
-            ::RBX::Security::CapabilityPermissions::Plugin,
-            ::RBX::Security::CapabilityPermissions::LocalUser,
-            ::RBX::Security::CapabilityPermissions::WritePlayer,
-            ::RBX::Security::CapabilityPermissions::RobloxScript,
-            ::RBX::Security::CapabilityPermissions::RobloxEngine,
-            ::RBX::Security::CapabilityPermissions::NotAccessible,
+                         ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
+                 }},
+                {RbxStu::StuLuau::ExecutionSecurity::RobloxPlugin,
+                 {
+                         /*
+                          *  PluginSecurity (Roblox) is virtually all capabilities from 1 to 6.
+                          */
+                         ::RBX::Security::CapabilityPermissions::Plugin,
+                         ::RBX::Security::CapabilityPermissions::LocalUser,
+                         ::RBX::Security::CapabilityPermissions::WritePlayer,
+                         ::RBX::Security::CapabilityPermissions::RobloxScript,
+                         ::RBX::Security::CapabilityPermissions::RobloxEngine,
+                         ::RBX::Security::CapabilityPermissions::NotAccessible,
 
-            ::RBX::Security::CapabilityPermissions::RunClientScript,
-            ::RBX::Security::CapabilityPermissions::RunServerScript,
+                         ::RBX::Security::CapabilityPermissions::RunClientScript,
+                         ::RBX::Security::CapabilityPermissions::RunServerScript,
 
-            ::RBX::Security::CapabilityPermissions::Unassigned,
-            ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
-            ::RBX::Security::CapabilityPermissions::ScriptGlobals,
-            ::RBX::Security::CapabilityPermissions::CreateInstances,
-            ::RBX::Security::CapabilityPermissions::Basic,
-            ::RBX::Security::CapabilityPermissions::Audio,
-            ::RBX::Security::CapabilityPermissions::DataStore,
-            ::RBX::Security::CapabilityPermissions::Network,
-            ::RBX::Security::CapabilityPermissions::Physics,
-            ::RBX::Security::CapabilityPermissions::UI,
-            ::RBX::Security::CapabilityPermissions::CSG,
-            ::RBX::Security::CapabilityPermissions::Chat,
-            ::RBX::Security::CapabilityPermissions::Animation,
-            ::RBX::Security::CapabilityPermissions::Avatar,
-            ::RBX::Security::CapabilityPermissions::RemoteEvent,
-            ::RBX::Security::CapabilityPermissions::LegacySound,
+                         ::RBX::Security::CapabilityPermissions::Unassigned,
+                         ::RBX::Security::CapabilityPermissions::AssetRequire,
+                         ::RBX::Security::CapabilityPermissions::LoadStringCapability,
+                         ::RBX::Security::CapabilityPermissions::ScriptGlobals,
+                         ::RBX::Security::CapabilityPermissions::CreateInstances,
+                         ::RBX::Security::CapabilityPermissions::Basic,
+                         ::RBX::Security::CapabilityPermissions::Audio,
+                         ::RBX::Security::CapabilityPermissions::DataStore,
+                         ::RBX::Security::CapabilityPermissions::Network,
+                         ::RBX::Security::CapabilityPermissions::Physics,
+                         ::RBX::Security::CapabilityPermissions::UI,
+                         ::RBX::Security::CapabilityPermissions::CSG,
+                         ::RBX::Security::CapabilityPermissions::Chat,
+                         ::RBX::Security::CapabilityPermissions::Animation,
+                         ::RBX::Security::CapabilityPermissions::Avatar,
+                         ::RBX::Security::CapabilityPermissions::RemoteEvent,
+                         ::RBX::Security::CapabilityPermissions::LegacySound,
 
-            ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
-        }
-    },
-    {
-        RbxStu::StuLuau::ExecutionSecurity::LocalScript,
-        {
-            /*
-             *  LocalUser is virtually all capabilities from 1 to 3.
-             */
-            ::RBX::Security::CapabilityPermissions::LocalUser,
-            ::RBX::Security::CapabilityPermissions::WritePlayer,
+                         ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
+                 }},
+                {RbxStu::StuLuau::ExecutionSecurity::LocalScript,
+                 {
+                         /*
+                          *  LocalUser is virtually all capabilities from 1 to 3.
+                          */
+                         ::RBX::Security::CapabilityPermissions::LocalUser,
+                         ::RBX::Security::CapabilityPermissions::WritePlayer,
 
-            ::RBX::Security::CapabilityPermissions::RunClientScript,
+                         ::RBX::Security::CapabilityPermissions::RunClientScript,
 
-            ::RBX::Security::CapabilityPermissions::Unassigned,
-            ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
-            ::RBX::Security::CapabilityPermissions::ScriptGlobals,
-            ::RBX::Security::CapabilityPermissions::CreateInstances,
-            ::RBX::Security::CapabilityPermissions::Basic,
-            ::RBX::Security::CapabilityPermissions::Audio,
-            ::RBX::Security::CapabilityPermissions::DataStore,
-            ::RBX::Security::CapabilityPermissions::Network,
-            ::RBX::Security::CapabilityPermissions::Physics,
-            ::RBX::Security::CapabilityPermissions::UI,
-            ::RBX::Security::CapabilityPermissions::CSG,
-            ::RBX::Security::CapabilityPermissions::Chat,
-            ::RBX::Security::CapabilityPermissions::Animation,
-            ::RBX::Security::CapabilityPermissions::Avatar,
-            ::RBX::Security::CapabilityPermissions::RemoteEvent,
-            ::RBX::Security::CapabilityPermissions::LegacySound,
+                         ::RBX::Security::CapabilityPermissions::Unassigned,
+                         ::RBX::Security::CapabilityPermissions::AssetRequire,
+                         ::RBX::Security::CapabilityPermissions::LoadStringCapability,
+                         ::RBX::Security::CapabilityPermissions::ScriptGlobals,
+                         ::RBX::Security::CapabilityPermissions::CreateInstances,
+                         ::RBX::Security::CapabilityPermissions::Basic,
+                         ::RBX::Security::CapabilityPermissions::Audio,
+                         ::RBX::Security::CapabilityPermissions::DataStore,
+                         ::RBX::Security::CapabilityPermissions::Network,
+                         ::RBX::Security::CapabilityPermissions::Physics,
+                         ::RBX::Security::CapabilityPermissions::UI,
+                         ::RBX::Security::CapabilityPermissions::CSG,
+                         ::RBX::Security::CapabilityPermissions::Chat,
+                         ::RBX::Security::CapabilityPermissions::Animation,
+                         ::RBX::Security::CapabilityPermissions::Avatar,
+                         ::RBX::Security::CapabilityPermissions::RemoteEvent,
+                         ::RBX::Security::CapabilityPermissions::LegacySound,
 
-        }
-    },
-    {
-        RbxStu::StuLuau::ExecutionSecurity::RobloxScript,
-        {
-            /*
-             *  LocalUser is virtually all capabilities from 1 to 3.
-             */
-            ::RBX::Security::CapabilityPermissions::LocalUser,
-            ::RBX::Security::CapabilityPermissions::WritePlayer,
-            ::RBX::Security::CapabilityPermissions::RobloxScript,
-            ::RBX::Security::CapabilityPermissions::RobloxEngine,
+                 }},
+                {RbxStu::StuLuau::ExecutionSecurity::RobloxScript,
+                 {
+                         /*
+                          *  LocalUser is virtually all capabilities from 1 to 3.
+                          */
+                         ::RBX::Security::CapabilityPermissions::LocalUser,
+                         ::RBX::Security::CapabilityPermissions::WritePlayer,
+                         ::RBX::Security::CapabilityPermissions::RobloxScript,
+                         ::RBX::Security::CapabilityPermissions::RobloxEngine,
 
-            ::RBX::Security::CapabilityPermissions::RunClientScript,
+                         ::RBX::Security::CapabilityPermissions::RunClientScript,
 
-            ::RBX::Security::CapabilityPermissions::Unassigned,
-            ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
-            ::RBX::Security::CapabilityPermissions::ScriptGlobals,
-            ::RBX::Security::CapabilityPermissions::CreateInstances,
-            ::RBX::Security::CapabilityPermissions::Basic,
-            ::RBX::Security::CapabilityPermissions::Audio,
-            ::RBX::Security::CapabilityPermissions::DataStore,
-            ::RBX::Security::CapabilityPermissions::Network,
-            ::RBX::Security::CapabilityPermissions::Physics,
-            ::RBX::Security::CapabilityPermissions::UI,
-            ::RBX::Security::CapabilityPermissions::CSG,
-            ::RBX::Security::CapabilityPermissions::Chat,
-            ::RBX::Security::CapabilityPermissions::Animation,
-            ::RBX::Security::CapabilityPermissions::Avatar,
-            ::RBX::Security::CapabilityPermissions::RemoteEvent,
-            ::RBX::Security::CapabilityPermissions::LegacySound,
+                         ::RBX::Security::CapabilityPermissions::Unassigned,
+                         ::RBX::Security::CapabilityPermissions::AssetRequire,
+                         ::RBX::Security::CapabilityPermissions::LoadStringCapability,
+                         ::RBX::Security::CapabilityPermissions::ScriptGlobals,
+                         ::RBX::Security::CapabilityPermissions::CreateInstances,
+                         ::RBX::Security::CapabilityPermissions::Basic,
+                         ::RBX::Security::CapabilityPermissions::Audio,
+                         ::RBX::Security::CapabilityPermissions::DataStore,
+                         ::RBX::Security::CapabilityPermissions::Network,
+                         ::RBX::Security::CapabilityPermissions::Physics,
+                         ::RBX::Security::CapabilityPermissions::UI,
+                         ::RBX::Security::CapabilityPermissions::CSG,
+                         ::RBX::Security::CapabilityPermissions::Chat,
+                         ::RBX::Security::CapabilityPermissions::Animation,
+                         ::RBX::Security::CapabilityPermissions::Avatar,
+                         ::RBX::Security::CapabilityPermissions::RemoteEvent,
+                         ::RBX::Security::CapabilityPermissions::LegacySound,
 
-        }
-    },
-    {
-        RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor,
-        {
-            /*
-             *  RobloxExecutor is virtually all capabilities except RESTRICTED (-1, meaning all bits toggled :)).
-             */
+                 }},
+                {RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor,
+                 {/*
+                   *  RobloxExecutor is virtually all capabilities except RESTRICTED (-1, meaning all bits toggled :)).
+                   */
 
-            ::RBX::Security::CapabilityPermissions::Plugin,
-            ::RBX::Security::CapabilityPermissions::LocalUser,
-            ::RBX::Security::CapabilityPermissions::WritePlayer,
-            ::RBX::Security::CapabilityPermissions::RobloxScript,
-            ::RBX::Security::CapabilityPermissions::RobloxEngine,
-            ::RBX::Security::CapabilityPermissions::NotAccessible,
+                  ::RBX::Security::CapabilityPermissions::Plugin,
+                  ::RBX::Security::CapabilityPermissions::LocalUser,
+                  ::RBX::Security::CapabilityPermissions::WritePlayer,
+                  ::RBX::Security::CapabilityPermissions::RobloxScript,
+                  ::RBX::Security::CapabilityPermissions::RobloxEngine,
+                  ::RBX::Security::CapabilityPermissions::NotAccessible,
 
-            ::RBX::Security::CapabilityPermissions::RunClientScript,
-            ::RBX::Security::CapabilityPermissions::RunServerScript,
-            ::RBX::Security::CapabilityPermissions::AccessOutsideWrite,
+                  ::RBX::Security::CapabilityPermissions::RunClientScript,
+                  ::RBX::Security::CapabilityPermissions::RunServerScript,
+                  ::RBX::Security::CapabilityPermissions::AccessOutsideWrite,
 
-            ::RBX::Security::CapabilityPermissions::Unassigned,
-            ::RBX::Security::CapabilityPermissions::AssetRequire,
-            ::RBX::Security::CapabilityPermissions::LoadStringCapability,
-            ::RBX::Security::CapabilityPermissions::ScriptGlobals,
-            ::RBX::Security::CapabilityPermissions::CreateInstances,
-            ::RBX::Security::CapabilityPermissions::Basic,
-            ::RBX::Security::CapabilityPermissions::Audio,
-            ::RBX::Security::CapabilityPermissions::DataStore,
-            ::RBX::Security::CapabilityPermissions::Network,
-            ::RBX::Security::CapabilityPermissions::Physics,
-            ::RBX::Security::CapabilityPermissions::UI,
-            ::RBX::Security::CapabilityPermissions::CSG,
-            ::RBX::Security::CapabilityPermissions::Chat,
-            ::RBX::Security::CapabilityPermissions::Animation,
-            ::RBX::Security::CapabilityPermissions::Avatar,
+                  ::RBX::Security::CapabilityPermissions::Unassigned,
+                  ::RBX::Security::CapabilityPermissions::AssetRequire,
+                  ::RBX::Security::CapabilityPermissions::LoadStringCapability,
+                  ::RBX::Security::CapabilityPermissions::ScriptGlobals,
+                  ::RBX::Security::CapabilityPermissions::CreateInstances,
+                  ::RBX::Security::CapabilityPermissions::Basic,
+                  ::RBX::Security::CapabilityPermissions::Audio,
+                  ::RBX::Security::CapabilityPermissions::DataStore,
+                  ::RBX::Security::CapabilityPermissions::Network,
+                  ::RBX::Security::CapabilityPermissions::Physics,
+                  ::RBX::Security::CapabilityPermissions::UI,
+                  ::RBX::Security::CapabilityPermissions::CSG,
+                  ::RBX::Security::CapabilityPermissions::Chat,
+                  ::RBX::Security::CapabilityPermissions::Animation,
+                  ::RBX::Security::CapabilityPermissions::Avatar,
 
-            ::RBX::Security::CapabilityPermissions::RemoteEvent,
-            ::RBX::Security::CapabilityPermissions::LegacySound,
+                  ::RBX::Security::CapabilityPermissions::RemoteEvent,
+                  ::RBX::Security::CapabilityPermissions::LegacySound,
 
-            ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
-            ::RBX::Security::CapabilityPermissions::Assistant
-        }
-    }
-};
+                  ::RBX::Security::CapabilityPermissions::PluginOrOpenCloud,
+                  ::RBX::Security::CapabilityPermissions::Assistant}}};
 
 namespace RbxStu::StuLuau {
     std::shared_ptr<RbxStu::StuLuau::LuauSecurity> LuauSecurity::pInstance;
@@ -210,8 +197,8 @@ namespace RbxStu::StuLuau {
         return qwCapabilities;
     }
 
-    RBX::Security::Permissions LuauSecurity::GetIdentityFromExecutionSecurity(
-        const RbxStu::StuLuau::ExecutionSecurity executionSecurity) {
+    RBX::Security::Permissions
+    LuauSecurity::GetIdentityFromExecutionSecurity(const RbxStu::StuLuau::ExecutionSecurity executionSecurity) {
         switch (executionSecurity) {
             case RbxStu::StuLuau::ExecutionSecurity::LocalScript:
                 return RBX::Security::Permissions::LocalUserPermission;
@@ -246,19 +233,10 @@ namespace RbxStu::StuLuau {
     }
 
 
-#define MARKED_BIT (1ull << 58ull)
-
-    void LuauSecurity::MarkThread(lua_State *L) {
-        GetThreadExtraspace(L)->capabilities |= MARKED_BIT;
-    }
-
-    bool LuauSecurity::IsMarkedThread(lua_State *L) {
-        return (GetThreadExtraspace(L)->capabilities & MARKED_BIT) == MARKED_BIT;
-    }
-
     bool LuauSecurity::IsOurThread(lua_State *L) {
-        // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is inaccessible.
-        return LuauSecurity::IsMarkedThread(L);
+        // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is
+        // inaccessible.
+        return GetThreadExtraspace(L)->script == nullptr;
     }
 
     static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
@@ -269,7 +247,8 @@ namespace RbxStu::StuLuau {
     }
 
     void LuauSecurity::ElevateClosure(const Closure *closure, const RbxStu::StuLuau::ExecutionSecurity execSecurity) {
-        if (closure->isC) return;
+        if (closure->isC)
+            return;
 
         auto *security = new std::uint64_t[0x1]{0};
         *security = static_cast<std::uint64_t>(this->ToCapabilitiesFlags(execSecurity));
@@ -285,57 +264,23 @@ namespace RbxStu::StuLuau {
             return closure->l.p->linedefined == -1;
 
         /*
-         *  We check if the c.f is our newcclosure stub, for other functions, we just check how close the memory address is to ROBLOXs .text section,
-         *  if it is within the range of .text, then it is likely that it is not our function.
+         *  We check if the c.f is our newcclosure stub, for other functions, we just check how close the memory address
+         * is to ROBLOXs .text section, if it is within the range of .text, then it is likely that it is not our
+         * function.
          */
 
         const auto cClosure = reinterpret_cast<std::uintptr_t>(closure->c.f);
         const auto textSection = hat::process::get_process_module().get_section_data(".text");
 
-        const auto isRobloxFunction = cClosure > reinterpret_cast<std::uintptr_t>(textSection.data()) && cClosure <
-                                      reinterpret_cast<
-                                          std::uintptr_t>(textSection.data() + textSection.size());
+        const auto isRobloxFunction =
+                cClosure > reinterpret_cast<std::uintptr_t>(textSection.data()) &&
+                cClosure < reinterpret_cast<std::uintptr_t>(textSection.data() + textSection.size());
 
         return closure->c.f == RbxStu::StuLuau::Environment::UNC::Closures::newcclosure_stub || !isRobloxFunction;
     }
 
-    static void (__fastcall *ROBLOX_USERTHREAD_CALLBACKORIGINAL)(lua_State *LP, lua_State *L) = nullptr;
-
-    static void __userthread_detour(lua_State *parentL, lua_State *childL) {
-        ROBLOX_USERTHREAD_CALLBACKORIGINAL(parentL, childL); // We are a post-exec hook.
-
-        /*
-         *  If the userdata is nullptr on either of them, then this means we are probably on the initial initialization.
-         *  This means we must ignore the call, as it probably does not concern us at all.
-         */
-
-        if (parentL == nullptr || childL == nullptr) return; // We do not care.
-        if (parentL->userdata == nullptr || childL->userdata == nullptr) return;
-
-        const auto security = LuauSecurity::GetSingleton();
-        if (security->IsOurThread(parentL)) {
-            // Roblox does not maintain our magic for thread permissions, we must override it ourselves.
-            security->MarkThread(childL);
-        }
-    }
-
-    static void ReplaceUserthreadIfNotReplaced(lua_State *L) {
-        // Roblox will obviously use the same function, the address should be consistent with one another.
-
-        if (L->global->cb.userthread == nullptr)
-            return; // ???
-
-        if (ROBLOX_USERTHREAD_CALLBACKORIGINAL == nullptr)
-            ROBLOX_USERTHREAD_CALLBACKORIGINAL = L->global->cb.userthread;
-
-        // Overwrite with our detour.
-        if (L->global->cb.userthread == ROBLOX_USERTHREAD_CALLBACKORIGINAL)
-            L->global->cb.userthread = __userthread_detour;
-    }
-
     void LuauSecurity::SetThreadSecurity(lua_State *L, const ExecutionSecurity executionSecurity,
-                                         const std::int32_t identity,
-                                         const bool markThread) {
+                                         const std::int32_t identity) {
         const auto extraSpace = GetThreadExtraspace(L);
         if (nullptr == extraSpace)
             L->global->cb.userthread(L->global->mainthread, L); // Initialize RBX::ExtraSpace forcefully.
@@ -348,16 +293,8 @@ namespace RbxStu::StuLuau {
         extraSpace->capabilities = executorSecurity;
         extraSpace->contextInformation.identity = static_cast<RBX::Security::Permissions>(identity);
 
-        if (markThread) this->MarkThread(L);
-
-        /*
-         *  Due to the nature of ROBLOX, they don't like to be cool with us. We must override the default userthread callback with a proxy call to be able to properly maintain the marked state on our lua states.
-         */
-
-        ReplaceUserthreadIfNotReplaced(L);
-
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Anonymous,
-                  std::format("Setting thread capabilities to {}; identity: {}; thread: {}", (int)executionSecurity,
-                      identity, (void*)L));
+                  std::format("Setting thread capabilities to {}; identity: {}; thread: {}", (int) executionSecurity,
+                              identity, (void *) L));
     }
-} // RbxStu::StuLuau
+} // namespace RbxStu::StuLuau

@@ -21,7 +21,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto luauSecurity = LuauSecurity::GetSingleton();
         const auto desiredExecutionContext = luauSecurity->GetExecutionSecurityFromIdentity(identity);
 
-        luauSecurity->SetThreadSecurity(L, desiredExecutionContext, identity, luauSecurity->IsMarkedThread(L));
+        luauSecurity->SetThreadSecurity(L, desiredExecutionContext, identity);
 
         Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L)->YieldThread(
             L, [](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {

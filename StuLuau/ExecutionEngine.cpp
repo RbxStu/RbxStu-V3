@@ -111,7 +111,7 @@ namespace RbxStu::StuLuau {
 
         luauSecurity->SetThreadSecurity(
                 nL, executeRequest.executeWithSecurity,
-                luauSecurity->GetIdentityFromExecutionSecurity(executeRequest.executeWithSecurity), true);
+                luauSecurity->GetIdentityFromExecutionSecurity(executeRequest.executeWithSecurity));
 
         const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
                 RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
@@ -161,7 +161,7 @@ namespace RbxStu::StuLuau {
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::ExecutionEngine, "Dispatching synchronized call...");
                     const auto currentDispatch = this->m_synchronizedDispatch.front();
                     LuauSecurity::GetSingleton()->SetThreadSecurity(this->m_pDispatchThread,
-                                                                    currentDispatch.executionSecurity, 8, true);
+                                                                    currentDispatch.executionSecurity, 8);
                     currentDispatch.execute(this->m_pDispatchThread);
 
                     if (this->m_pDispatchThread->status != lua_Status::LUA_OK) {

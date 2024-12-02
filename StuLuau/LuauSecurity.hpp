@@ -24,11 +24,7 @@ namespace RbxStu::StuLuau {
 
         ExecutionSecurity GetExecutionSecurityFromIdentity(int32_t identity);
 
-        void SetThreadSecurity(lua_State *L, ExecutionSecurity executionSecurity, std::int32_t identity, bool markThread);
-
-        void MarkThread(lua_State *L);
-
-        bool IsMarkedThread(lua_State *L);
+        void SetThreadSecurity(lua_State *L, ExecutionSecurity executionSecurity, std::int32_t identity);
 
         bool IsOurThread(lua_State *L);
 
