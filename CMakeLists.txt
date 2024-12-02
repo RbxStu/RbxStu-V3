@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0091 NEW)
 project(RbxStuV3 LANGUAGES CXX C)
 
-enable_language(ASM_MASM)
-
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
 
 add_definitions(-DLUAI_GCMETRICS)   # Force GC metrics on Luau.
@@ -40,8 +38,6 @@ if (build_type STREQUAL release)
             /VERBOSE
     )
 endif ()
-
-file(GLOB ASSEMBLY_FILES ${PROJECT_SOURCE_DIR}/Assembly/*.x64.asm)
 
 add_library(${PROJECT_NAME} SHARED
         Entry.cpp
@@ -134,10 +130,6 @@ add_library(${PROJECT_NAME} SHARED
         StuLuau/Environment/UNC/Debug.hpp
         StuLuau/Environment/UNC/Miscellaneous.cpp
         StuLuau/Environment/UNC/Miscellaneous.hpp
-
-        ${ASSEMBLY_FILES}
-        Assembly/ExternalAssembly.h
-        Assembly/protection.h
 
         Render/Renderable.cpp
         Render/Renderable.hpp

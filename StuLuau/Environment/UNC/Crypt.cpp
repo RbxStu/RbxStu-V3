@@ -27,32 +27,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         luaL_checkstring(L, 1);
         lua_normalisestack(L, 1);
 
-        const auto tsVal = tsvalue(L->top - 1);
-
-        const auto dataSize = tsVal->len;
-        const auto data = tsVal->data;
-
-        if (dataSize > 50000) {
-            executionEngine->YieldThread(
-                    L,
-                    [L, data, dataSize](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-                        std::string encoded{};
-                        CryptoPP::StringSource src(std::string(data, data + dataSize), true,
-                                                   new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded)));
-
-                        yieldRequest->fpCompletionCallback = [encoded, L]() -> YieldResult {
-                            lua_pushlstring(L, encoded.data(), encoded.length());
-                            return {true, 1, {}};
-                        };
-
-                        yieldRequest->bIsReady = true;
-                    },
-                    true);
-            return lua_yield(L, 1);
-        }
+        std::size_t len{};
+        const auto str = lua_tolstring(L, 1, &len);
 
         std::string encoded{};
-        CryptoPP::StringSource src(std::string(data, data + dataSize), true,
+        CryptoPP::StringSource src(std::string(str, len), true,
                                    new CryptoPP::Base64Encoder(new CryptoPP::StringSink(encoded)));
 
         lua_pushlstring(L, encoded.data(), encoded.length());
@@ -64,33 +43,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
         luaL_checkstring(L, 1);
         lua_normalisestack(L, 1);
-        const auto tsVal = tsvalue(L->top - 1);
 
-        const auto dataSize = tsVal->len;
-        const auto data = tsVal->data;
-
-        if (dataSize > 50000) {
-            executionEngine->YieldThread(
-                    L,
-                    [L, data, dataSize](const std::shared_ptr<RbxStu::StuLuau::YieldRequest> &yieldRequest) {
-                        std::string decoded{};
-                        CryptoPP::StringSource src(std::string(data, data + dataSize), true,
-                                                   new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
-
-                        yieldRequest->fpCompletionCallback = [decoded, L]() -> YieldResult {
-                            lua_pushlstring(L, decoded.data(), decoded.length());
-                            return {true, 1, {}};
-                        };
-
-                        yieldRequest->bIsReady = true;
-                    },
-                    true);
-
-            return lua_yield(L, 1);
-        }
+        std::size_t len{};
+        const auto str = lua_tolstring(L, 1, &len);
 
         std::string decoded{};
-        CryptoPP::StringSource src(std::string(data, data + dataSize), true,
+        CryptoPP::StringSource src(std::string(str, len), true,
                                    new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decoded)));
 
         lua_pushlstring(L, decoded.data(), decoded.length());

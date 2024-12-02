@@ -22,6 +22,7 @@
 #include "StuLuau/Environment/UNC/Closures.hpp"
 #include "StuLuau/Environment/UNC/Crypt.hpp"
 #include "StuLuau/Environment/UNC/Debug.hpp"
+#include "StuLuau/Environment/UNC/FileSystem.hpp"
 #include "StuLuau/Environment/UNC/Globals.hpp"
 #include "StuLuau/Environment/UNC/Instances.hpp"
 #include "StuLuau/Environment/UNC/Miscellaneous.hpp"
@@ -130,13 +131,14 @@ namespace RbxStu::Scheduling::Jobs {
         const auto envContext = std::make_shared<StuLuau::Environment::EnvironmentContext>(executionEngine);
         executionEngine->SetEnvironmentContext(envContext);
 
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Crypt>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Cache>());
+        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::FileSystem>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Closures>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Debug>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Globals>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::WebSocket>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Scripts>());
-        envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Crypt>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Miscellaneous>());
         envContext->DefineLibrary(std::make_shared<StuLuau::Environment::UNC::Instances>());
 
@@ -304,7 +306,7 @@ namespace RbxStu::Scheduling::Jobs {
                     end
                 end
 
-                task.wait()
+                -- task.wait()
             end)
         )",
                                      "InteropFunctionDeclarations");

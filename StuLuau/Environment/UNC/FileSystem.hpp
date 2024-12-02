@@ -11,10 +11,30 @@ namespace RbxStu::StuLuau::Environment::UNC {
     public:
         static int writefile(lua_State *L);
 
+        static int appendfile(lua_State *L);
+
+        static int readfile(lua_State *L);
+
+        static int makefolder(lua_State *L);
+
+        static int delfolder(lua_State *L);
+
+        static int delfile(lua_State *L);
+
+        static int isfile(lua_State *L);
+
+        static int isfolder(lua_State *L);
+
+        static int listfiles(lua_State *L);
+
+        static int loadfile(lua_State *L);
+
+        static int dofile(lua_State *L);
+
         const luaL_Reg *GetFunctionRegistry() override;
 
         bool PushToGlobals() override;
 
         const char *GetLibraryName() override;
     };
-} // RbxStu::StuLuau::Environment::UNC
+} // namespace RbxStu::StuLuau::Environment::UNC

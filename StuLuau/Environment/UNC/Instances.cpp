@@ -17,8 +17,6 @@
 #include "lgc.h"
 
 namespace RbxStu::StuLuau::Environment::UNC {
-
-
     class RbxStuConnectionTagger final : public RbxStu::StuLuau::Environment::Interop::TaggedIdentifier {
     public:
         std::string GetTagName() override { return "RbxStuConnection"; }
@@ -86,7 +84,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (!pConnection->m_bIsC) {
                 pConnection->m_pConnection->pFunctionSlot->objRef->objectId = pConnection->m_rpRealFunction.luaRef;
             } else {
-                pConnection->m_pConnection->call_Signal = __CStub;
+                pConnection->m_pConnection->call_Signal = pConnection->m_rpOriginalCFunction;
             }
 
             return 0;
@@ -101,7 +99,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (!pConnection->m_bIsC) {
                 pConnection->m_pConnection->pFunctionSlot->objRef->objectId = pConnection->m_stubRef.luaRef;
             } else {
-                pConnection->m_pConnection->call_Signal = pConnection->m_rpOriginalCFunction;
+                pConnection->m_pConnection->call_Signal = __CStub;
             }
 
             return 0;
@@ -378,7 +376,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
             this->m_bIsC = isC;
         }
     };
-
 
     int Instances::getconnections(lua_State *L) {
         luaL_checktype(L, 1, LUA_TUSERDATA);

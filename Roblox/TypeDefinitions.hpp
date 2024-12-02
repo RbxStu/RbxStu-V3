@@ -542,7 +542,8 @@ namespace RBX {
                                              // C connection
             /*
              *  What follows are a set of pointers read respective from LuauFunctionSlot, all valid pointers after these
-             * point (Before the invalid) are to be called with call_Signal.
+             * point (Before the invalid) are to be called with call_Signal. (pFunctionSlot is self, no need to pass in
+             * only args into callSignal)
              */
         };
     } // namespace Signals
