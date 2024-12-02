@@ -22,8 +22,6 @@ namespace RbxStu::StuLuau {
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Crypt::base64encode(lua_State *L) {
-        const auto executionEngine =
-                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
         luaL_checkstring(L, 1);
         lua_normalisestack(L, 1);
 
@@ -39,8 +37,6 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Crypt::base64decode(lua_State *L) {
-        const auto executionEngine =
-                Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
         luaL_checkstring(L, 1);
         lua_normalisestack(L, 1);
 
