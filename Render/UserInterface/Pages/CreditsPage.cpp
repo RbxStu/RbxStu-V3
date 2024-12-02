@@ -26,6 +26,8 @@ namespace RbxStu::Render::UI::Pages {
                 Collaborator::CreateCollaborator(std::nullopt, "_land_", "landervander", {"ImGui Assistance"}),
                 Collaborator::CreateCollaborator(std::nullopt, "makesuredudedies", "MakeSureDudeDies",
                                                  {"Rendering Hooks Assistance"}),
+                Collaborator::CreateCollaborator(std::nullopt, "joeisgod", "JoeIsGod",
+                                                 {"fireclickdetector", "firetouchinstance"}),
         };
 
         this->m_dottik = Collaborator::CreateCollaborator("Owner", "usrdottik", "SecondNewtonLaw", {});
