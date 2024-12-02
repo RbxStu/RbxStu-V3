@@ -101,6 +101,8 @@ namespace RbxStu {
 
     DefineSectionName(WebsocketCommunication, "RbxStuV3::WebsocketCommunication");
     DefineSectionName(Fast_Flags, "RbxStuV3::FastFlags");
+
+    DefineSectionName(StudioOffsets, "RbxStuV3::StudioOffsets");
 #undef DefineSectionName
 }; // namespace RbxStu
 

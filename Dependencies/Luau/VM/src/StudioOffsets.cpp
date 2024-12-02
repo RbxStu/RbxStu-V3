@@ -5,6 +5,7 @@
 #include "StudioOffsets.h"
 #include "memory"
 #include "shared_mutex"
+#include "../../../../Logger.hpp"
 
 std::shared_ptr<RbxStuOffsets> RbxStuOffsets::ptr;
 std::shared_mutex RbxStuOffsets::__rbxstuoffsets__sharedmutex__;
@@ -69,6 +70,7 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
             return "global::RBXCRASH";
     }
 
+    RbxStuLog(RbxStu::Warning, RbxStu::StudioOffsets, std::format("An offset key {} has no conversion to a string, you may want to fix that!", (uint8_t)(offsetKey)));
     return "unknown";
 };
 
