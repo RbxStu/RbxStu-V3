@@ -70,6 +70,14 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
         return "RBX::BasePart::fireTouchSignals";
     case RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered:
         return "RBX::ProximityPrompt::onTriggered";
+    case RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireClick:
+        return "RBX::ClickDetector::fireClick";
+    case RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireRightClick:
+        return "RBX::ClickDetector::fireRightClick";
+    case RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireMouseHover:
+        return "RBX::ClickDetector::fireMouseHover";
+    case RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireMouseLeave:
+        return "RBX::ClickDetector::fireMouseLeave";
     case RbxStuOffsets::OffsetKey::RBXCRASH:
         return "global::RBXCRASH";
     }
