@@ -186,7 +186,7 @@ void RbxStu::Scanners::RBX::Initialize() {
         for (const auto &match: results) {
             /*
              *  RightMouseClick and MouseClick, whilst having the SAME function signature, literally, have a slight
-             * difference and it mostly relates to their position on the binary. MouseClick will normally have a "lower"
+             * difference, and it mostly relates to their position on the binary. MouseClick will normally have a "lower"
              * position (Closer to ImageBase than RightMouseClick).
              */
 
