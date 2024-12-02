@@ -156,6 +156,10 @@ add_library(${PROJECT_NAME} SHARED
         Render/UserInterface/Pages/CreditsPage.hpp
         StuLuau/Environment/UNC/Instances.cpp
         StuLuau/Environment/UNC/Instances.hpp
+        Roblox/Primitive.cpp
+        Roblox/Primitive.hpp
+        Roblox/World.cpp
+        Roblox/World.hpp
 )
 
 if (build_type STREQUAL release)
