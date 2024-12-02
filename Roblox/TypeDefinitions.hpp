@@ -41,6 +41,9 @@ namespace RbxStu::Concepts {
     concept TypeConstraint = std::is_base_of_v<Base, Derived>;
 }
 
+using r_RBX_ClickDetector_fireClick = void(__fastcall *)(void *clickDetector, float distance, void *player);
+using r_RBX_ClickDetector_fireHover = void(__fastcall *)(void *clickDetector, void *player);
+
 using r_RBX_Instance_pushInstance = void(__fastcall *)(lua_State *L, void *instance);
 using r_RBX_ProximityPrompt_onTriggered = void(__fastcall *)(void *proximityPrompt);
 using r_RBX_ScriptContext_scriptStart = void(__fastcall *)(void *scriptContext, void *baseScript);

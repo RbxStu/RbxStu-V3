@@ -472,13 +472,55 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Instances::fireclickdetector(lua_State *L) {
+        Utilities::checkInstance(L, 1, "ClickDetector");
+        auto fireDistance = luaL_optnumber(L, 2, 0);
+        auto eventName = luaL_optstring(L, 3, "MouseClick");
+
+        lua_getglobal(L, "game");
+        lua_getfield(L, -1, "GetService");
+        lua_pushvalue(L, -2);
+        lua_pushstring(L, "Players");
+        lua_call(L, 2, 1);
+        lua_getfield(L, -1, "LocalPlayer");
+
+        if (strcmp(eventName, "MouseClick") == 0) {
+            const auto fireClick = reinterpret_cast<r_RBX_ClickDetector_fireClick>(
+                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireClick));
+
+            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), fireDistance,
+                      *static_cast<void **>(lua_touserdata(L, -1)));
+        } else if (strcmp(eventName, "RightMouseClick") == 0) {
+            const auto fireClick =
+                    reinterpret_cast<r_RBX_ClickDetector_fireClick>(RbxStuOffsets::GetSingleton()->GetOffset(
+                            RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireRightClick));
+
+            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), fireDistance,
+                      *static_cast<void **>(lua_touserdata(L, -1)));
+        } else if (strcmp(eventName, "MouseHoverEnter") == 0) {
+            const auto fireHover =
+                    reinterpret_cast<r_RBX_ClickDetector_fireHover>(RbxStuOffsets::GetSingleton()->GetOffset(
+                            RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireMouseHover));
+
+            fireHover(*static_cast<void **>(lua_touserdata(L, 1)), *static_cast<void **>(lua_touserdata(L, -1)));
+        } else if (strcmp(eventName, "MouseHoverLeave") == 0) {
+            const auto fireHover =
+                    reinterpret_cast<r_RBX_ClickDetector_fireHover>(RbxStuOffsets::GetSingleton()->GetOffset(
+                            RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireMouseLeave));
+
+            fireHover(*static_cast<void **>(lua_touserdata(L, 1)), *static_cast<void **>(lua_touserdata(L, -1)));
+        }
+
+        return 0;
+    }
+
     const char *Instances::GetLibraryName() { return "instances"; }
 
     bool Instances::PushToGlobals() { return true; }
 
     const luaL_Reg *Instances::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {{"getconnections", getconnections},
-
+                                    {"fireclickdetector", Instances::fireclickdetector},
                                     {nullptr, nullptr}};
 
         return libreg;
