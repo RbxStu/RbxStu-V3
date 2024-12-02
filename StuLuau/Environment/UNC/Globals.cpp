@@ -23,6 +23,7 @@
 #include <lstate.h>
 #include <lstring.h>
 
+#include "Roblox/Primitive.hpp"
 #include "Roblox/Script.hpp"
 #include "StuLuau/Extensions/luauext.hpp"
 #include "StuLuau/LuauSecurity.hpp"
@@ -716,28 +717,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (touchType != 0 && touchType != 1)
             luaL_argerror(L, 3, "touch type must be either Touch (Integer<0>) or TouchEnded (Integer<1>).");
 
-        // -- workspace ref not required
-        // Utilities::GetService(L, "Workspace");
-        // auto world = reinterpret_cast<void *>(lua_touserdata(L, -1));
+        const auto primitive0 = RbxStu::Roblox::Primitive::FromBasePart(*static_cast<void **>(lua_touserdata(L, 1)));
+        const auto primitive1 = RbxStu::Roblox::Primitive::FromBasePart(*static_cast<void **>(lua_touserdata(L, 2)));
 
-        const auto fireTouchSignals = reinterpret_cast<::r_RBX_BasePart_fireTouchSignals>(
-                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals));
+        const auto reportTouchInfo = reinterpret_cast<::r_RBX_World_reportTouchInfo>(
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_World_reportTouchInfo));
 
-        if (fireTouchSignals == nullptr)
+        if (reportTouchInfo == nullptr)
             luaL_error(L, "cannot firetouchinterest; RBX::BasePart::fireTouchSignals was not found during the "
                           "scanning step! If you believe this was caused by an update, contact the developers!");
 
-        /*
-         *  Roblox touch signals are super fun.
-         *  we can just fake we are the server replicating touches, we just need to replicate the
-         *  RBX::fireTouchedRemotely function then, profit!
-         */
+        auto world = primitive0->GetWorld();
 
-        fireTouchSignals(*static_cast<void **>(lua_touserdata(L, 1)), static_cast<void **>(lua_touserdata(L, 2)),
-                         static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), false);
+        if (world->GetRealStructure() == nullptr)
+            world = primitive1->GetWorld();
 
-        fireTouchSignals(*static_cast<void **>(lua_touserdata(L, 2)), static_cast<void **>(lua_touserdata(L, 1)),
-                         static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), false);
+        if (world->GetRealStructure() == nullptr)
+            luaL_error(L, "cannot firetouchinterest: failed to find RBX::World *.");
+
+        reportTouchInfo(world->GetRealStructure(), primitive0->GetRealStructure(), primitive1->GetRealStructure(),
+                        static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), true);
 
         return 0;
     }
