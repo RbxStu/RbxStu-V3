@@ -6,6 +6,27 @@
 
 #include "Security.hpp"
 
+#include <random>
+
+__forceinline const char* generateRandomString(int length) {
+    const char charset[] = "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    char* result = new char[length + 1];
+
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<int> distribution(0, strlen(charset) - 1);
+
+    for (int i = 0; i < length; ++i) {
+        result[i] = charset[distribution(generator)];
+    }
+    result[length] = '\0';
+
+    return result;
+}
+
 std::shared_ptr<RbxStu::Security> RbxStu::Security::pInstance;
 
 std::shared_ptr<RbxStu::Security> RbxStu::Security::GetSingleton() {
@@ -38,13 +59,13 @@ std::string RbxStu::Security::HashBytes(const byte *data, const size_t length) {
 }
 
 const char *RbxStu::Security::GetHashedMemory() const {
-    return this->originalHashedMemory;
+    return this->securityContext->originalHashedMemory;
 }
 
 [[noreturn]] void MemCheckLoop(LPVOID lpBaseOfDll, DWORD SizeOfImage) {
     while (!oxorany(false) == oxorany(true)) {
         auto moduleHash = RbxStu::Security::HashModuleSections(lpBaseOfDll, SizeOfImage);
-        *RbxStu::Security::GetSingleton()->lastRan = std::time(nullptr);
+        *RbxStu::Security::GetSingleton()->securityContext->lastRan = std::time(nullptr);
 
         if (strcmp(moduleHash.c_str(), RbxStu::Security::GetSingleton()->GetHashedMemory()) != 0) {
             std::thread([] {
@@ -115,9 +136,16 @@ void RbxStu::Security::Initialize() {
 
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
-    this->originalHashedMemory = _strdup(moduleHash.c_str());
-    this->lastRan = static_cast<time_t *>(malloc(sizeof(time_t)));
-    *this->lastRan = std::time(nullptr);
+    this->securityContext->filler_1 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_2 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_3 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_4 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_5 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_6 = _strdup(generateRandomString((rand() % 128) + 1));
+
+    this->securityContext->originalHashedMemory = _strdup(moduleHash.c_str());
+    this->securityContext->lastRan = static_cast<time_t *>(malloc(sizeof(time_t)));
+    *this->securityContext->lastRan = std::time(nullptr);
     RbxStuLog(RbxStu::LogType::Information, RbxStu::SecurityName,
               std::format("Our module hashed is: {}", moduleHash));
 

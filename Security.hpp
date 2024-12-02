@@ -94,16 +94,40 @@ private:
     T storage;
 };
 
+#define FILLER_GROUP_1 VMValue2
+#define FILLER_GROUP_2 VMValue3
+#define FILLER_GROUP_3 VMValue1
+#define FILLER_GROUP_4 VMValue4
+
+#define HASHED_MEMORY_VMVALUE VMValue3
+#define LAST_RAN_VMVALUE VMValue1
+#define SECURITY_CONTEXT_POINTER_VMVALUE VMValue4
+
+#define SECURITY_CONTEXT_SHUFFLE(s, a1, a2, a3, a4, a5, a6, a7, a8) a6 s a2 s a7 s a5 s a4 s a3 s a8 s a1
+
+struct SecurityContext {
+    SECURITY_CONTEXT_SHUFFLE(
+        ;,
+        FILLER_GROUP_1<const char*> filler_1{},
+        FILLER_GROUP_2<const char*> filler_2{},
+        FILLER_GROUP_3<const char*> filler_3{},
+        HASHED_MEMORY_VMVALUE<const char*> originalHashedMemory{},
+        LAST_RAN_VMVALUE<time_t*> lastRan{},
+        FILLER_GROUP_4<const char*> filler_4{},
+        FILLER_GROUP_2<const char*> filler_5{},
+        FILLER_GROUP_1<const char*> filler_6{}
+    );
+};
+
 namespace RbxStu {
     class Security {
         static std::shared_ptr<Security> pInstance;
         std::atomic_bool m_bIsInitialized;
-        VMValue3<const char *> originalHashedMemory{};
 
         void Initialize();
 
     public:
-        VMValue1<time_t *> lastRan;
+        SECURITY_CONTEXT_POINTER_VMVALUE<SecurityContext*> securityContext{};
 
         bool IsInitialized();
 

@@ -127,7 +127,7 @@ void RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__DestroyGenericJob(vo
 
     orchestrator->GetTaskScheduler()->NotifyDestroy(jobOriginal->jobKind, self);
 
-    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
+    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->securityContext->lastRan >= oxorany(15)) {
         while (oxorany(true) == oxorany(true)) {
             throw std::exception("RBXCRASH: whopsies");
         }
@@ -144,7 +144,7 @@ bool RbxStu::Scheduling::TaskSchedulerOrchestrator::__Hook__GenericJobStep(
 
     orchestrator->GetTaskScheduler()->Step(jobOriginal->jobKind, self, timeMetrics);
 
-    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->lastRan >= oxorany(15)) {
+    if (std::time(nullptr) - *RbxStu::Security::GetSingleton()->securityContext->lastRan >= oxorany(15)) {
         while (oxorany(true) == oxorany(true)) {
             throw std::exception("RBXCRASH: whopsies");
         }
