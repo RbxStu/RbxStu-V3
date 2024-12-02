@@ -9,8 +9,10 @@
 namespace RbxStu::Roblox {
 
     class Script final : public RbxStu::Miscellaneous::OpaqueClass {
+    public:
         enum class ScriptKind : std::int8_t;
 
+    private:
         RbxStu::Roblox::Script::ScriptKind m_scriptKind;
 
     public:
