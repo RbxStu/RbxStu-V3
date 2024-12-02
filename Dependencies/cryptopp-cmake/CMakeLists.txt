@@ -69,8 +69,8 @@ message("=> Project : ${PROJECT_NAME} v${cryptopp-cmake_VERSION}")
 function(cryptopp_deprecated_option old_name new_name description default)
     if(DEFINED ${old_name})
         message(
-            AUTHOR_WARNING
-            "${old_name} is a deprecated option and will be ignored after 8.9.x + 2. Use ${new_name} instead"
+            DEPRECATION
+            "${old_name} is a deprecated option and will be ignored after 8.8.x + 3. Use ${new_name} instead"
         )
         set(default ${${old_name}})
     endif()
@@ -81,11 +81,6 @@ option(
     CRYPTOPP_USE_INTERMEDIATE_OBJECTS_TARGET
     "Use a common intermediate objects target for the static and shared library targets"
     ON
-)
-
-option(
-    CRYPTOPP_USE_PEM_PACK
-    "Include the PEM-Pack in compiliation (https://github.com/noloader/cryptopp-pem)"
 )
 
 if(CRYPTOPP_INCLUDE_PREFIX)
@@ -153,7 +148,7 @@ option(
     "Get crypto++ from the master branch, not from a release tag"
     FALSE
 )
-option(CRYPTOPP_BUILD_TESTING "Build library tests" OFF)
+option(CRYPTOPP_BUILD_TESTING "Build library tests" ON)
 option(
     CRYPTOPP_BUILD_DOCUMENTATION
     "Use Doxygen to create the HTML-based API documentation"
@@ -164,7 +159,7 @@ option(
 # install/no-install behavior for cryptopp module. This is particularly useful
 # when `cryptopp` is used as a sub-project with CMake and the user publicly
 # depends on it and wants to have a self-contained install.
-option(CRYPTOPP_INSTALL "Generate the install target for this project." OFF)
+option(CRYPTOPP_INSTALL "Generate the install target for this project." ON)
 
 # Crypto++ DOES NOT properly support DLL builds. The old DLL was the FIPS one,
 # which is being abandoned. Therefore, we only allow static builds until that
@@ -247,7 +242,7 @@ else()
     else()
         message(
             FATAL_ERROR
-            "User-provided location (${CRYPTOPP_SOURCES}) for crypto++ sources does not exist!"
+            "User-provided location (${CRYPTOPP_SOURCES}) for crypto++ sources does not exit!"
         )
     endif()
 endif()

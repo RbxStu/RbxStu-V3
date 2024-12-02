@@ -743,7 +743,7 @@ endif()
 # Aach32 and Aarch64               #####
 # ##############################################################################
 
-if(CRYPTOPP_ARMV8 AND NOT MSVC)
+if(CRYPTOPP_ARMV8)
     check_compile_link_option(
       "-DCRYPTOPP_ARM_NEON_HEADER=1"   CRYPTOPP_ARM_NEON_HEADER
       "${TEST_PROG_DIR}/test_arm_neon_header.cpp"
@@ -1040,13 +1040,7 @@ endif()
 if(NOT CRYPTOPP_ARM32 AND NOT CRYPTOPP_ARMV8)
     list(FILTER cryptopp_SOURCES EXCLUDE REGEX "arm_|neon_|_armv4.S")
 endif()
-if(
-    NOT CRYPTOPP_I386
-    AND NOT CRYPTOPP_AMD64
-    AND NOT CRYPTOPP_MINGW32
-    AND NOT CRYPTOPP_MINGW64
-    AND NOT CRYPTOPP_CYGWIN
-)
+if(NOTCRYPTOPP_I386 AND NOT CRYPTOPP_AMD64)
     list(FILTER cryptopp_SOURCES EXCLUDE REGEX "sse_|_sse.cpp|_avx.cpp")
 endif()
 
@@ -1247,7 +1241,7 @@ set_source_files_properties(
 # Compiler: MSVC
 # ------------------------------------------------------------------------------
 if(MSVC AND NOT CRYPTOPP_DISABLE_ASM)
-    if(${CMAKE_GENERATOR_PLATFORM} MATCHES "ARM" OR CRYPTOPP_ARM32 OR CRYPTOPP_ARMV8)
+    if(${CMAKE_GENERATOR_PLATFORM} MATCHES "ARM")
         message(
             STATUS
             "[cryptopp] Disabling ASM because ARM is specified as target platform."
@@ -1274,15 +1268,6 @@ if(MSVC AND NOT CRYPTOPP_DISABLE_ASM)
                 ${cryptopp_SOURCE_DIR}/x64dll.asm
                 ${cryptopp_SOURCE_DIR}/x64masm.asm
             )
-            # Add the 'cpuid64.asm' source file only if it exists. 
-            # This file has been added post-8.9.0
-            if(EXISTS "${cryptopp_SOURCE_DIR}/cpuid64.asm")
-                list(
-                    APPEND
-                    cryptopp_SOURCES_ASM
-                    ${cryptopp_SOURCE_DIR}/cpuid64.asm
-                )
-            endif()
             set_source_files_properties(
                 ${cryptopp_SOURCES_ASM}
                 PROPERTIES COMPILE_DEFINITIONS "_M_X64"
@@ -1391,14 +1376,6 @@ target_compile_definitions(
         $<INSTALL_INTERFACE:CRYPTOPP_INCLUDE_PREFIX=${CRYPTOPP_INCLUDE_PREFIX}>
 )
 cmake_path(GET cryptopp_SOURCE_DIR PARENT_PATH CRYPTOPP_PREFIXED_INCLUDE_DIR)
-if(cryptopp_SOURCE_DIR STREQUAL CRYPTOPP_PREFIXED_INCLUDE_DIR)
-    # Work around a CMake bug when built using certain toolchains, where cmake_path returns the same path.
-    get_filename_component(
-        CRYPTOPP_PREFIXED_INCLUDE_DIR
-        "${cryptopp_SOURCE_DIR}"
-        DIRECTORY
-    )
-endif()
 target_include_directories(
     cryptopp
     PUBLIC
