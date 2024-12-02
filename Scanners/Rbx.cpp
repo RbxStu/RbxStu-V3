@@ -7,9 +7,9 @@
 #include <Analysis/Disassembler.hpp>
 #include <Logger.hpp>
 #include <Utilities.hpp>
+#include <cstdint>
 #include <libhat/Signature.hpp>
 #include <mutex>
-#include <cstdint>
 
 std::shared_ptr<RbxStu::Scanners::RBX> RbxStu::Scanners::RBX::pInstance;
 std::mutex RbxStuScannersRBXGetSingleton;
@@ -108,11 +108,11 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
         // RBX::BasePart
         {RbxStuOffsets::OffsetKey::RBX_BasePart_getNetworkOwner,
          hat::parse_signature("48 8B 81 ? ? ? ? 8B 88 ? ? ? ? 48 8B C2 89 0A C3").value()},
-        {RbxStuOffsets::OffsetKey::RBX_BasePart_fireTouchSignals,
-         hat::parse_signature("48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 4C 89 74 24 ? 55 48 8B EC 48 81 EC ? ? ? ? 45 "
-                              "0F B6 F1 41 0F B6 F0 48 8B DA 48 8B F9 E8 ? ? ? ? 48 85 C0 0F 84 6F 01 00 ? 48 8B CF E8 "
-                              "? ? ? ? 48 8B F8 0F 57 C0 F3 0F 7F 45 ? 48 8B 90 ? ? ? ? 48 85 D2 74 15 8B 42 ?")
-                 .value()},
+
+        // RBX::World
+        {RbxStuOffsets::OffsetKey::RBX_World_reportTouchInfo, // "new overlap in different world", contains RBX::World
+                                                              // from RBX::Primitive offset.
+         hat::parse_signature("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC 30 48 83 79 ?? 00").value()},
 
         // RBX::ProximityPrompt
         {RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered,
@@ -186,8 +186,8 @@ void RbxStu::Scanners::RBX::Initialize() {
         for (const auto &match: results) {
             /*
              *  RightMouseClick and MouseClick, whilst having the SAME function signature, literally, have a slight
-             * difference, and it mostly relates to their position on the binary. MouseClick will normally have a "lower"
-             * position (Closer to ImageBase than RightMouseClick).
+             * difference, and it mostly relates to their position on the binary. MouseClick will normally have a
+             * "lower" position (Closer to ImageBase than RightMouseClick).
              */
 
             if (biggestAddress < reinterpret_cast<std::uintptr_t>(match.get())) {
