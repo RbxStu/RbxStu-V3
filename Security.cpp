@@ -8,7 +8,15 @@
 
 #include <random>
 
-__forceinline const char* generateRandomString(int length) {
+__forceinline int getRandomNumber(const int min, const int max) {
+    std::random_device randomDevice;
+    std::mt19937 generator(randomDevice());
+    std::uniform_int_distribution<> distrib(min, max);
+
+    return distrib(generator);
+}
+
+__forceinline const char* generateRandomString(const int length) {
     const char charset[] = "0123456789"
         "abcdefghijklmnopqrstuvwxyz"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -136,12 +144,12 @@ void RbxStu::Security::Initialize() {
 
     auto moduleHash = HashModuleSections(moduleInfo.lpBaseOfDll, moduleInfo.SizeOfImage);
 
-    this->securityContext->filler_1 = _strdup(generateRandomString((rand() % 128) + 1));
-    this->securityContext->filler_2 = _strdup(generateRandomString((rand() % 128) + 1));
-    this->securityContext->filler_3 = _strdup(generateRandomString((rand() % 128) + 1));
-    this->securityContext->filler_4 = _strdup(generateRandomString((rand() % 128) + 1));
-    this->securityContext->filler_5 = _strdup(generateRandomString((rand() % 128) + 1));
-    this->securityContext->filler_6 = _strdup(generateRandomString((rand() % 128) + 1));
+    this->securityContext->filler_1 = _strdup(generateRandomString(getRandomNumber(64, 128)));
+    this->securityContext->filler_2 = _strdup(generateRandomString(getRandomNumber(64, 128)));
+    this->securityContext->filler_3 = _strdup(generateRandomString(getRandomNumber(64, 128)));
+    this->securityContext->filler_4 = _strdup(generateRandomString(getRandomNumber(64, 128)));
+    this->securityContext->filler_5 = _strdup(generateRandomString(getRandomNumber(64, 128)));
+    this->securityContext->filler_6 = _strdup(generateRandomString(getRandomNumber(64, 128)));
 
     this->securityContext->originalHashedMemory = _strdup(moduleHash.c_str());
     this->securityContext->lastRan = static_cast<time_t *>(malloc(sizeof(time_t)));
