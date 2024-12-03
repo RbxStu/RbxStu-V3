@@ -508,14 +508,14 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto fireClick = reinterpret_cast<r_RBX_ClickDetector_fireClick>(
                     RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireClick));
 
-            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), fireDistance,
+            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), static_cast<float>(fireDistance),
                       *static_cast<void **>(lua_touserdata(L, -1)));
         } else if (strcmp(eventName, "RightMouseClick") == 0) {
             const auto fireClick =
                     reinterpret_cast<r_RBX_ClickDetector_fireClick>(RbxStuOffsets::GetSingleton()->GetOffset(
                             RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireRightClick));
 
-            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), fireDistance,
+            fireClick(*static_cast<void **>(lua_touserdata(L, 1)), static_cast<float>(fireDistance),
                       *static_cast<void **>(lua_touserdata(L, -1)));
         } else if (strcmp(eventName, "MouseHoverEnter") == 0) {
             const auto fireHover =

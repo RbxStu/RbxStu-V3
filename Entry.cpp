@@ -158,7 +158,7 @@ void Entry() {
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread, "-- Initializing Websocket Communication...");
     RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
-    if (RbxStu::FastFlags::FFLagEnablePipeCommunication.GetValue()) {
+    if (RbxStu::FastFlags::FFlagEnablePipeCommunication.GetValue()) {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communication [DEVELOPMENT ONLY]")
 
                 std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe")

@@ -12,10 +12,14 @@ namespace RbxStu::Render::UI::Pages {
         ImGui::Text(">> RbxStu Information");
 
         if (RbxStu::FastFlags::SFlagRbxCrashKey.IsDefined())
-            ImGui::Text("Current RbxStu::RBXCRASH key: '%s' %s", RbxStu::FastFlags::SFlagRbxCrashKey.GetValue().c_str(),
-                        "(Default)");
+            ImGui::Text("Current RbxStu::RBXCRASH key: '%s' (Default)",
+                        RbxStu::FastFlags::SFlagRbxCrashKey.GetValue().c_str());
         else
             ImGui::Text("Current RbxStu::RBXCRASH key: '%s'", RbxStu::FastFlags::SFlagRbxCrashKey.GetValue().c_str());
+
+        this->m_bEnableExperimentalFunctions = FastFlags::FFlagEnableExperimentalLuauFunctions.GetValue();
+        ImGui::Checkbox("Enable Experimental Functions", &this->m_bEnableExperimentalFunctions);
+        FastFlags::FFlagEnableExperimentalLuauFunctions.SetValue(this->m_bEnableExperimentalFunctions);
 
         Renderable::PushSeparator();
 

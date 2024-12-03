@@ -32,7 +32,7 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
     this->websocketPort = RbxStu::FastFlags::IFlagWebsocketPort.GetValue();
 
     std::thread([this, fastFlags] {
-        if (RbxStu::FastFlags::FFLagUseWebsocketServer.GetValue()) {
+        if (RbxStu::FastFlags::FFlagUseWebsocketServer.GetValue()) {
             ix::WebSocketServer server(this->websocketPort);
             server.setOnClientMessageCallback([](const std::shared_ptr<ix::ConnectionState> &connectionState,
                                                  ix::WebSocket &webSocket,

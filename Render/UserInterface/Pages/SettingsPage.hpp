@@ -7,6 +7,7 @@
 
 namespace RbxStu::Render::UI::Pages {
     class SettingsPage final : public RbxStu::Render::Renderable {
+        bool m_bEnableExperimentalFunctions = false;
     public:
         ~SettingsPage() override = default;
 

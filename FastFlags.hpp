@@ -64,12 +64,24 @@ namespace RbxStu {
             }
         }
 
+        template<typename T>
+        void SetFastFlagValue(const std::string &flagName, const T &newValue) {
+            if (!this->isInitialized)
+                return;
+
+
+            if (auto it = this->loadedFlags.find(flagName); it != this->loadedFlags.end())
+                this->loadedFlags.erase(it);
+
+            this->loadedFlags.insert({flagName, newValue});
+        }
+
         void WriteFlags();
     };
 
     template<FastFlagType type, typename T>
     class FastFlagDeclaration final {
-        std::string szFastFlagName = "";
+        std::string szFastFlagName;
         T m_defaultValue;
 
     public:
@@ -82,6 +94,10 @@ namespace RbxStu {
             return RbxStu::FastFlagsManager::GetSingleton()->GetOptionalFastFlagValue<T>(
                            this->szFastFlagName, this->m_defaultValue) != this->m_defaultValue;
         };
+
+        void SetValue(const T &tNewValue) {
+            return RbxStu::FastFlagsManager::GetSingleton()->SetFastFlagValue<T>(this->szFastFlagName, tNewValue);
+        }
 
         [[nodiscard]] T GetValue() const {
             return RbxStu::FastFlagsManager::GetSingleton()->GetOptionalFastFlagValue<T>(this->szFastFlagName,
@@ -96,7 +112,7 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(FFlagIsRobloxInternalEnabled, "FFlagIsRobloxInternalEnabled",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
-        RBXSTU_DEFINEFASTFLAG(FFLagEnablePipeCommunication, "FFLagEnablePipeCommunication",
+        RBXSTU_DEFINEFASTFLAG(FFlagEnablePipeCommunication, "FFLagEnablePipeCommunication",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
         RBXSTU_DEFINEFASTFLAG(FFlagEnableDebugLogs, "FFlagEnableDebugLogs", RbxStu::FastFlagType::FastFlagBoolean, bool,
@@ -105,8 +121,11 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(IFlagWebsocketPort, "IFlagWebsocketPort", RbxStu::FastFlagType::FastFlagInteger, int,
                               7777);
 
-        RBXSTU_DEFINEFASTFLAG(FFLagUseWebsocketServer, "FFLagUseWebsocketServer", RbxStu::FastFlagType::FastFlagBoolean,
+        RBXSTU_DEFINEFASTFLAG(FFlagUseWebsocketServer, "FFLagUseWebsocketServer", RbxStu::FastFlagType::FastFlagBoolean,
                               bool, false);
+
+        RBXSTU_DEFINEFASTFLAG(FFlagEnableExperimentalLuauFunctions, "FFlagEnableExperimentalLuauFunctions",
+                              RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
         RBXSTU_DEFINEFASTFLAG(SFlagRbxCrashKey, "SFlagRbxCrashKey", RbxStu::FastFlagType::FastFlagString, std::string,
                               "__RbxCrash");

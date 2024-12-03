@@ -37,11 +37,8 @@ namespace RbxStu {
     }
 
     void FastFlagsManager::ReloadFlags() {
-        if (!this->isInitialized && !this->FailedToLoadFlags)
-            return;
-
-        RbxStuLog(Information, Fast_Flags, "Reloading FastFlags!");
         std::lock_guard guard(getSingletonMutex);
+        RbxStuLog(Information, Fast_Flags, "Reloading FastFlags!");
 
         this->isInitialized = false;
         this->FailedToLoadFlags = false;
@@ -50,10 +47,6 @@ namespace RbxStu {
     }
 
     void FastFlagsManager::WriteFlags() {
-        // ReSharper disable once CppDFAConstantConditions
-        if (!this->isInitialized && !this->FailedToLoadFlags)
-            return;
-
         const auto DllDirectoryOpt = Utilities::GetDllDir();
         if (!DllDirectoryOpt.has_value()) {
             RbxStuLog(LogType::Error, RbxStu::Fast_Flags, "Couldn't find the DLL Directory to save FastFlags!");
@@ -86,7 +79,6 @@ namespace RbxStu {
         }
 
         const auto out = json.dump(1);
-
         std::ofstream file(fastFlagPath.string(), std::ios::out | std::ios::trunc);
 
         file.clear();
@@ -96,7 +88,7 @@ namespace RbxStu {
     }
 
     void FastFlagsManager::Initialize() {
-        if (isInitialized)
+        if (this->isInitialized)
             return;
 
         const auto DllDirectoryOpt = Utilities::GetDllDir();
@@ -111,7 +103,7 @@ namespace RbxStu {
 
         if (!std::filesystem::exists(FastFlagFilePath)) {
             RbxStuLog(LogType::Information, RbxStu::Fast_Flags, "No fast flags file found, using default settings...");
-            this->FailedToLoadFlags = true;
+            this->isInitialized = true;
             return;
         }
 
@@ -186,6 +178,7 @@ namespace RbxStu {
         for (const auto &fastFlag: this->loadedFlags) {
             RbxStuLog(LogType::Information, RbxStu::Fast_Flags, std::format("- {}", fastFlag.first))
         }
+
         this->isInitialized = true;
     }
 } // namespace RbxStu
