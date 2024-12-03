@@ -237,36 +237,12 @@ namespace RbxStu::Scheduling::Jobs {
             local rawget = closures.clonefunction(rawget)
             local pcall = closures.clonefunction(pcall)
             local getreg = closures.clonefunction(getreg)
-
-            local function getInstanceList(idx: number)
-                if not idx then idx = 0 end
-                if idx > 30 then
-                    -- If this occurs, the DataModel is likely an EDIT or STANDALONE, which means they don't hold a map like this.
-                    return game:GetDescendants()
-                end
-
-                local part = Instance.new("Part")
-                for _, obj in getreg() do
-                    if typeof(obj) == "table" and rawget(obj, "__mode") == "kvs" then
-			            for idx_, inst in obj do
-				            if inst == part then
-					            part:Destroy()
-					            instanceList = obj
-                                return instanceList
-				            end
-			            end
-		            end
-                end
-                part:Destroy()
-
-                task.wait() -- Not much choice, a yield may help us find the instance list
-                return getInstanceList(idx + 1)
-            end
+            local getinstancelist = closures.clonefunction(getinstancelist)
 
             getgenv().getinstances = newcclosure(function()
                 local x = {}
 
-                for _, insn in getInstanceList() do
+                for _, insn in getinstancelist() do
                     if typeof(insn) == "Instance" and insn.Parent then
                         table.insert(x, insn)
                     end
@@ -276,7 +252,7 @@ namespace RbxStu::Scheduling::Jobs {
             end)
             getgenv().getscripts = newcclosure(function()
                 local x = {}
-                for _, insn in getInstanceList() do
+                for _, insn in getinstancelist() do
                     if typeof(insn) == "Instance" and insn:IsA("LuaSourceContainer") then
                         table.insert(x, insn)
                     end
@@ -288,7 +264,7 @@ namespace RbxStu::Scheduling::Jobs {
             getgenv().getnilinstances = newcclosure(function()
                 local x = {}
 
-                for _, insn in getInstanceList() do
+                for _, insn in getinstancelist() do
                     if typeof(insn) == "Instance" and insn.Parent then
                         continue
                     end

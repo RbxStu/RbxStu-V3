@@ -8,6 +8,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
     class Instances final : public RbxStu::StuLuau::Environment::Library {
     public:
         static int getconnections(lua_State *L);
+
+        static int getinstancelist(lua_State *L);
+
         static int fireclickdetector(lua_State *L);
 
         ~Instances() override = default;

@@ -13,6 +13,7 @@
 
 #include "StuLuau/Environment/EnvironmentContext.hpp"
 #include "StuLuau/ExecutionEngine.hpp"
+#include "StuLuau/Extensions/luauext.hpp"
 #include "StuLuau/Interop/NativeObject.hpp"
 #include "lgc.h"
 
@@ -472,6 +473,25 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 1;
     }
 
+    int Instances::getinstancelist(lua_State *L) {
+        lua_normalisestack(L, 0);
+
+        const auto rbxPushInstance =
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+
+        if (rbxPushInstance == nullptr) {
+            RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
+                      "Cannot perform getinstancelist: Failed to find RBX::Instance::pushInstance.");
+            lua_newtable(L);
+            return 1;
+        }
+
+        lua_pushvalue(L, LUA_REGISTRYINDEX);
+        lua_pushlightuserdata(L, rbxPushInstance);
+        lua_rawget(L, -2);
+        return 1;
+    }
+
     int Instances::fireclickdetector(lua_State *L) {
         Utilities::checkInstance(L, 1, "ClickDetector");
         auto fireDistance = luaL_optnumber(L, 2, 0);
@@ -521,6 +541,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     const luaL_Reg *Instances::GetFunctionRegistry() {
         static luaL_Reg libreg[] = {{"getconnections", getconnections},
                                     {"fireclickdetector", Instances::fireclickdetector},
+                                    {"getinstancelist", Instances::getinstancelist},
                                     {nullptr, nullptr}};
 
         return libreg;
