@@ -12,7 +12,11 @@
 #include <utility>
 #include <variant>
 
+#include "Miscellaneous/Initializable.hpp"
+#include "Miscellaneous/ListenableEvent.hpp"
+
 namespace RbxStu {
+    class FastFlagsManager;
     enum FastFlagType final : std::int8_t {
         FastFlagString,
         FastFlagBoolean,
@@ -20,6 +24,11 @@ namespace RbxStu {
         FastFlagInteger,
 
         FastFlagUnknown
+    };
+
+    class OnFlagsReloaded final {
+    public:
+        std::shared_ptr<FastFlagsManager> pManager;
     };
 
     class FastFlagsManager final {
@@ -40,6 +49,9 @@ namespace RbxStu {
                                                     {"SFlag", FastFlagString}};
 
     public:
+        RbxStu::Miscellaneous::ListenableEvent<OnFlagsReloaded, RbxStu::Miscellaneous::EventArgument<OnFlagsReloaded>>
+                OnFastFlagsReloaded;
+
         static std::shared_ptr<FastFlagsManager> GetSingleton();
 
         void Initialize();
@@ -95,8 +107,13 @@ namespace RbxStu {
                            this->szFastFlagName, this->m_defaultValue) != this->m_defaultValue;
         };
 
+
         void SetValue(const T &tNewValue) {
             return RbxStu::FastFlagsManager::GetSingleton()->SetFastFlagValue<T>(this->szFastFlagName, tNewValue);
+        }
+
+        [[nodiscard]] T GetValue(const std::shared_ptr<FastFlagsManager> &pManager) const {
+            return pManager->GetOptionalFastFlagValue<T>(this->szFastFlagName, this->m_defaultValue);
         }
 
         [[nodiscard]] T GetValue() const {

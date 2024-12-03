@@ -44,6 +44,8 @@ namespace RbxStu {
         this->FailedToLoadFlags = false;
         this->loadedFlags.clear();
         this->Initialize();
+        this->OnFastFlagsReloaded.GetFirableObject().Fire(
+                {std::make_unique<OnFlagsReloaded>(FastFlagsManager::instance)});
     }
 
     void FastFlagsManager::WriteFlags() {
