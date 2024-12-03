@@ -306,7 +306,7 @@ namespace RbxStu::Scheduling::Jobs {
                     end
                 end
 
-                -- task.wait()
+                task.wait()
             end)
         )",
                                      "InteropFunctionDeclarations");
