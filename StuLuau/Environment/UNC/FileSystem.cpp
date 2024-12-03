@@ -14,9 +14,9 @@
 #include "StuLuau/LuauSecurity.hpp"
 
 const auto s_bannedExtensions = std::unordered_set<std::string_view>{
-        "exe", "dll", "sys", "py",    "js",  "jsx", "drv", "ws",  "wmf", "dev", "jar", "scr", "swf",
-        "lnk", "vbs", "bin", "class", "shs", "chm", "vxd", "pif", "xlm", "vbe", "scr", "vba", "hlp",
-        "vb",  "vbx", "wsc", "wsh",   "xlv", "bat", "cmd", "ocx", "com", "bin", "wmf",
+        ".exe", ".dll", ".sys", ".py",    ".js",  ".jsx", ".drv", ".ws",  ".wmf", ".dev", ".jar", ".scr", ".swf",
+        ".lnk", ".vbs", ".bin", ".class", ".shs", ".chm", ".vxd", ".pif", ".xlm", ".vbe", ".scr", ".vba", ".hlp",
+        ".vb",  ".vbx", ".wsc", ".wsh",   ".xlv", ".bat", ".cmd", ".ocx", ".com", ".bin", ".wmf",
 };
 
 static std::filesystem::path s_workspaceRoot{};
@@ -89,16 +89,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const std::filesystem::path pathToWrite(std::string(path, pathSize));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
-
-        if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
         if (!IsFileExtensionSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
-
-        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::trunc | std::ios::out);
+        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::ate);
 
         file << std::string(content, contentSize);
         file.flush();
@@ -119,18 +115,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             return 0;
 
         if (!IsFileExtensionSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
+        std::ifstream fileContentReader(GetNormalizedPath(pathToWrite), std::ios::in);
+        std::string originalContent((std::istreambuf_iterator<char>(fileContentReader)),
+                          std::istreambuf_iterator<char>());
 
-        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::ate | std::ios::out);
+        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::ate);
 
-        file << std::string(content, contentSize);
+        const auto contentToAppend = std::string(content, contentSize);
+        const std::string newContent = originalContent + contentToAppend;
+
+        file << newContent;
         file.flush();
         file.close();
 
@@ -146,21 +148,15 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             return 0;
 
-        if (!IsFileExtensionSafe(pathToWrite))
-            return 0;
-
-
+        // Dottik reading using << reads until a white space, this will read the whole file.
         std::ifstream file(GetNormalizedPath(pathToWrite), std::ios::in);
-
-        std::string content{};
-
-        file >> content;
-        file.close();
+        const std::string content((std::istreambuf_iterator<char>(file)),
+                          std::istreambuf_iterator<char>());
 
         lua_pushlstring(L, content.c_str(), content.size());
         return 1;
@@ -175,12 +171,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
         if (std::filesystem::is_directory(pathToWrite))
             return 0;
 
-        std::filesystem::create_directory(pathToWrite);
+        std::filesystem::create_directories(pathToWrite);
 
         return 0;
     }
@@ -194,9 +190,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
-        if (std::filesystem::is_directory(pathToWrite))
+        if (!std::filesystem::is_directory(pathToWrite))
             return 0;
 
         std::filesystem::remove_all(pathToWrite);
@@ -213,7 +209,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            return 0;
+            luaL_argerrorL(L, 1, "Illegal path");
 
         if (!std::filesystem::is_regular_file(pathToWrite))
             return 0;
@@ -231,7 +227,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
-        lua_pushboolean(L, IsPathSafe(pathToWrite) && std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
+        if (!IsPathSafe(pathToWrite))
+            luaL_argerrorL(L, 1, "Illegal path");
+
+        lua_pushboolean(L,  std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
         return 1;
     }
 
@@ -243,7 +242,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
-        lua_pushboolean(L, IsPathSafe(pathToWrite) && std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
+        if (!IsPathSafe(pathToWrite))
+            luaL_argerrorL(L, 1, "Illegal path");
+
+        lua_pushboolean(L,  std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
         return 1;
     }
 
@@ -255,11 +257,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
+        if (!IsPathSafe(pathToWrite))
+            luaL_argerrorL(L, 1, "Illegal path");
+
         lua_newtable(L);
 
-        if (!IsPathSafe(pathToWrite) || !std::filesystem::is_directory(GetNormalizedPath(pathToWrite))) {
+        if (!std::filesystem::is_directory(GetNormalizedPath(pathToWrite)))
             return 1;
-        }
 
         auto idx = 1;
         for (const auto &entry: std::filesystem::directory_iterator(GetNormalizedPath(pathToWrite))) {
@@ -272,14 +276,15 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int FileSystem::loadfile(lua_State *L) {
         luaL_checkstring(L, 1);
-        const auto chunkName = luaL_optstring(L, 2, "=loadfile");
+        const auto chunkName = luaL_optstring(L, 2, "=RbxStuV3");
         lua_normalisestack(L, 1);
 
         lua_pushcclosure(L, RbxStu::StuLuau::Environment::UNC::FileSystem::readfile, nullptr, 0);
         lua_pushvalue(L, 1);
         lua_call(L, 1, 1);
         std::size_t codeSize{};
-        auto code = std::string(lua_tolstring(L, 1, &codeSize), codeSize);
+        const auto codePtr = lua_tolstring(L, -1, &codeSize);
+        auto code = std::string(codePtr, codeSize);
 
         Luau::CompileOptions compileOpts{};
         compileOpts.optimizationLevel = 1;
@@ -298,26 +303,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         return 1;
     }
+
     int FileSystem::dofile(lua_State *L) {
         luaL_checkstring(L, 1);
         lua_pushcclosure(L, RbxStu::StuLuau::Environment::UNC::FileSystem::loadfile, nullptr, 0);
 
         lua_pushvalue(L, 1);
-        lua_call(L, 1, 2);
+        lua_call(L, 1, LUA_MULTRET);
 
-        if (lua_type(L, -2) == ::lua_Type::LUA_TFUNCTION) {
-            lua_pop(L, 1);
-            lua_remove(L, 1); // Remove filename.
-            lua_insert(L, 1);
+        if (lua_type(L, -1) == ::lua_Type::LUA_TFUNCTION) {
+            lua_getglobal(L, "task");
+            lua_getfield(L, -1, "spawn");
+            lua_remove(L, -2); // Remove task table
 
-            auto nL = lua_newthread(L);
-
-            lua_xmove(L, nL, lua_gettop(L) - 1);
-
-            const auto task_defer = reinterpret_cast<RBX::Studio::FunctionTypes::task_defer>(
-                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer));
-
-            task_defer(nL);
+            lua_pushvalue(L, -2);
+            const auto callResults = lua_pcall(L, 1, LUA_MULTRET, 0);
+            if (callResults != LUA_OK) {
+                lua_error(L);
+            }
 
             return 0;
         }
@@ -326,22 +329,22 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     const luaL_Reg *FileSystem::GetFunctionRegistry() {
-        static luaL_Reg closuresLib[] = {
+        static luaL_Reg filesystemLib[] = {
                 {"readfile", RbxStu::StuLuau::Environment::UNC::FileSystem::readfile},
                 {"appendfile", RbxStu::StuLuau::Environment::UNC::FileSystem::appendfile},
                 {"writefile", RbxStu::StuLuau::Environment::UNC::FileSystem::writefile},
                 {"isfile", RbxStu::StuLuau::Environment::UNC::FileSystem::isfile},
-                {"isfile", RbxStu::StuLuau::Environment::UNC::FileSystem::isfolder},
-                {"listfiles", RbxStu::StuLuau::Environment::UNC::FileSystem::makefolder},
+                {"isfolder", RbxStu::StuLuau::Environment::UNC::FileSystem::isfolder},
+                {"listfiles", RbxStu::StuLuau::Environment::UNC::FileSystem::listfiles},
                 {"dofile", RbxStu::StuLuau::Environment::UNC::FileSystem::dofile},
-
+                {"loadfile", RbxStu::StuLuau::Environment::UNC::FileSystem::loadfile},
                 {"delfile", RbxStu::StuLuau::Environment::UNC::FileSystem::delfile},
                 {"delfolder", RbxStu::StuLuau::Environment::UNC::FileSystem::delfolder},
-
                 {"makefolder", RbxStu::StuLuau::Environment::UNC::FileSystem::makefolder},
                 {nullptr, nullptr},
         };
-        return closuresLib;
+
+        return filesystemLib;
     }
 
     bool FileSystem::PushToGlobals() { return true; }
