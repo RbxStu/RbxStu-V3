@@ -28,10 +28,10 @@ std::string RbxStu::ExceptionHandler::LookupModuleByAddress(const void *address)
             if (GetModuleInformation(hProcess, phModules[i], &moduleInfo, sizeof(moduleInfo))) {
                 void *moduleBase = moduleInfo.lpBaseOfDll;
                 if (const std::size_t moduleSize = moduleInfo.SizeOfImage;
-                    address >= static_cast<BYTE *>(moduleBase) && address < static_cast<BYTE *>(moduleBase) +
-                    moduleSize) {
-                    if (WCHAR moduleName[MAX_PATH]; GetModuleFileNameExW(hProcess, phModules[i], moduleName,
-                                                                         sizeof(moduleName) / sizeof(WCHAR))) {
+                    address >= static_cast<BYTE *>(moduleBase) &&
+                    address < static_cast<BYTE *>(moduleBase) + moduleSize) {
+                    if (WCHAR moduleName[MAX_PATH];
+                        GetModuleFileNameExW(hProcess, phModules[i], moduleName, sizeof(moduleName) / sizeof(WCHAR))) {
                         const std::filesystem::path fullPath(moduleName);
                         const std::wstring fileName = fullPath.filename();
                         std::string moduleNameConverted = RbxStu::Utilities::WcharToString(fileName.c_str());
@@ -50,7 +50,7 @@ std::string RbxStu::ExceptionHandler::LookupModuleByAddress(const void *address)
     return name;
 }
 
-std::optional<std::pair<std::string, void *> > RbxStu::ExceptionHandler::LookupAddress(const void *address) {
+std::optional<std::pair<std::string, void *>> RbxStu::ExceptionHandler::LookupAddress(const void *address) {
     HMODULE phModules[1024];
     HANDLE ourProcessHandle = GetCurrentProcess();
     DWORD Needed;
@@ -61,8 +61,8 @@ std::optional<std::pair<std::string, void *> > RbxStu::ExceptionHandler::LookupA
             if (GetModuleInformation(ourProcessHandle, phModules[i], &moduleInfo, sizeof(moduleInfo))) {
                 void *moduleBase = moduleInfo.lpBaseOfDll;
                 std::size_t moduleSize = moduleInfo.SizeOfImage;
-                if (address >= static_cast<BYTE *>(moduleBase) && address < static_cast<BYTE *>(moduleBase) +
-                    moduleSize) {
+                if (address >= static_cast<BYTE *>(moduleBase) &&
+                    address < static_cast<BYTE *>(moduleBase) + moduleSize) {
                     WCHAR moduleName[MAX_PATH];
                     if (GetModuleFileNameExW(ourProcessHandle, phModules[i], moduleName,
                                              sizeof(moduleName) / sizeof(WCHAR))) {
@@ -94,17 +94,15 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
 
     RbxStuLog(RbxStu::LogType::Error, RbxStu::RBXCRASH,
               std::format("Crash Type: {}; Crash Description: {}; Proceeding crash analysis...", crashType,
-                  crashDescription));
+                          crashDescription));
 
     /*
      *  Update this with SEH code, i love SEH!
      */
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH,
-              "-- Obtaining callstack...");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH, "-- Obtaining callstack...");
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH,
-              "-- Walking Stack...");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::RBXCRASH, "-- Walking Stack...");
 
     const auto disassembler = RbxStu::Analysis::Disassembler::GetSingleton();
 
@@ -124,14 +122,12 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
             targetModuleBaseAddress = lookupResults.value().second;
         }
 
-        auto message = std::format("-> sub_{:X}() + {}, belonging to {}",
-                                   reinterpret_cast<std::intptr_t>(functionStart),
-                                   reinterpret_cast<void *>(max(
-                                       reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
-                                       ::intptr_t>(call),
-                                       reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
-                                           functionStart))),
-                                   belongsTo);
+        auto message = std::format(
+                "-> sub_{:X}() + {}, belonging to {}", reinterpret_cast<std::intptr_t>(functionStart),
+                reinterpret_cast<void *>(
+                        max(reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std ::intptr_t>(call),
+                            reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(functionStart))),
+                belongsTo);
 
         if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
@@ -145,10 +141,10 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
 
             // if (hasFramePassed) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
-                      std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(
-                          reinterpret_cast<
-                          std::uintptr_t>(call) -
-                          reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
+                      std::format("{}; Rebased to Module Base: {}", message,
+                                  reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(call) -
+                                                           reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) +
+                                                           base)));
         }
     }
 
@@ -176,14 +172,14 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
             if (count > 3 && !nestedCalls.contains(call)) {
                 nestedCalls.insert(call);
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
-                          std::format(
-                              "sub_{}() + {} is present many times on the call-stack (Possibly a Recursive sub-routine)"
-                              ,
-                              functionStart, reinterpret_cast<void *>(max(
-                                  reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
-                                  ::intptr_t>(call),
-                                  reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
-                                      functionStart)))));
+                          std::format("sub_{}() + {} is present many times on the call-stack (Possibly a Recursive "
+                                      "sub-routine)",
+                                      functionStart,
+                                      reinterpret_cast<void *>(
+                                              max(reinterpret_cast<std::intptr_t>(functionStart) -
+                                                          reinterpret_cast<std ::intptr_t>(call),
+                                                  reinterpret_cast<std::intptr_t>(call) -
+                                                          reinterpret_cast<std::intptr_t>(functionStart)))));
             }
         }
         break;
@@ -195,20 +191,18 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
     while (true) {
         if (callstack.size() < 5) {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
-                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) violation?)");
+                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) "
+                      "violation?)");
         }
 
         break;
     }
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              "-- Stack Trace analysis complete.");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler, "-- Stack Trace analysis complete.");
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
-              "-- RbxStu V3 RBXCRASH -- End");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 RBXCRASH -- End");
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
-              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Emitting Debugging DUMP.");
 
     EXCEPTION_POINTERS exceptionPointers{};
 
@@ -217,13 +211,11 @@ void RbxStu::ExceptionHandler::RBXCRASH(const char *crashType, const char *crash
     exceptionPointers.ContextRecord = &ctx;
 
     EXCEPTION_RECORD exRecord;
-    exRecord.ExceptionAddress =
-            exceptionPointers.ExceptionRecord = &exRecord;
+    exRecord.ExceptionAddress = exceptionPointers.ExceptionRecord = &exRecord;
 
     RbxStu::ExceptionHandler::CreateDump(&exceptionPointers);
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
-              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Emitting Debugging DUMP.");
 
     MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
 }
@@ -233,8 +225,7 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
               "-- RbxStu V3 Structured Exception Handler -- Begin");
 
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              std::format("SEH exception code: '0x{:X}'",
-                  pExceptionPointers->ExceptionRecord->ExceptionCode));
+              std::format("SEH exception code: '0x{:X}'", pExceptionPointers->ExceptionRecord->ExceptionCode));
 
     try {
         std::rethrow_exception(std::current_exception());
@@ -243,11 +234,9 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
                   std::format("C++ exception message: '{}'", ex.what()));
     }
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              "-- Obtaining callstack...");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler, "-- Obtaining callstack...");
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              "-- Walking Stack...");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler, "-- Walking Stack...");
 
     const auto disassembler = RbxStu::Analysis::Disassembler::GetSingleton();
 
@@ -267,14 +256,12 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
             targetModuleBaseAddress = lookupResults.value().second;
         }
 
-        auto message = std::format("-> sub_{:X}() + {}, belonging to {}",
-                                   reinterpret_cast<std::intptr_t>(functionStart),
-                                   reinterpret_cast<void *>(max(
-                                       reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
-                                       ::intptr_t>(call),
-                                       reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
-                                           functionStart))),
-                                   belongsTo);
+        auto message = std::format(
+                "-> sub_{:X}() + {}, belonging to {}", reinterpret_cast<std::intptr_t>(functionStart),
+                reinterpret_cast<void *>(
+                        max(reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std ::intptr_t>(call),
+                            reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(functionStart))),
+                belongsTo);
 
         if (strcmp(belongsTo.c_str(), "Unknown Origin") == 0) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
@@ -288,16 +275,15 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 
             // if (hasFramePassed) {
             RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
-                      std::format("{}; Rebased to Module Base: {}", message, reinterpret_cast<void*>(
-                          reinterpret_cast<
-                          std::uintptr_t>(call) -
-                          reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
+                      std::format("{}; Rebased to Module Base: {}", message,
+                                  reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(call) -
+                                                           reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) +
+                                                           base)));
             // } else {
             //     RbxStuLog(RbxStu::LogType::Information, RbxStu::StructuredExceptionHandler,
             //               std::format(
-            //                   "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll and KERNELBASE.dll ARE THE TRUE STACK TRACE!"
-            //                   , message,
-            //                   reinterpret_cast<void*>(
+            //                   "{}; Rebased to Module Base: {} --------> EXCEPTION HANDLER; FUNCTIONS BEFORE ntdll.dll
+            //                   and KERNELBASE.dll ARE THE TRUE STACK TRACE!" , message, reinterpret_cast<void*>(
             //                       reinterpret_cast<
             //                       std::uintptr_t>(call) -
             //                       reinterpret_cast<std::uintptr_t>(targetModuleBaseAddress) + base)));
@@ -330,14 +316,14 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
             if (count > 3 && !nestedCalls.contains(call)) {
                 nestedCalls.insert(call);
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
-                          std::format(
-                              "sub_{}() + {} is present many times on the call-stack (Possibly a Recursive sub-routine)"
-                              ,
-                              functionStart, reinterpret_cast<void *>(max(
-                                  reinterpret_cast<std::intptr_t>(functionStart) - reinterpret_cast<std
-                                  ::intptr_t>(call),
-                                  reinterpret_cast<std::intptr_t>(call) - reinterpret_cast<std::intptr_t>(
-                                      functionStart)))));
+                          std::format("sub_{}() + {} is present many times on the call-stack (Possibly a Recursive "
+                                      "sub-routine)",
+                                      functionStart,
+                                      reinterpret_cast<void *>(
+                                              max(reinterpret_cast<std::intptr_t>(functionStart) -
+                                                          reinterpret_cast<std ::intptr_t>(call),
+                                                  reinterpret_cast<std::intptr_t>(call) -
+                                                          reinterpret_cast<std::intptr_t>(functionStart)))));
             }
         }
         break;
@@ -349,25 +335,23 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     while (true) {
         if (callstack.size() < 5) {
             RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandlerAnalysis,
-                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) violation?)");
+                      "-- Possibly executing a call into a nullptr (Possibly a DEP (Data-Execution-Protection) "
+                      "violation?)");
         }
 
         break;
     }
 
-    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-              "-- Stack Trace analysis complete.");
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler, "-- Stack Trace analysis complete.");
 
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- End");
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
-              "-- RbxStu V3 -- Emitting Debugging DUMP.");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Emitting Debugging DUMP.");
 
     RbxStu::ExceptionHandler::CreateDump(pExceptionPointers);
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
-              "-- RbxStu V3 -- Dump emitted.");
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Dump emitted.");
 
 
     MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
@@ -378,43 +362,37 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
 void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers) {
     LoadLibraryA("DbgHelp.dll");
 
-    auto name = Utilities::GetDllDir().value().string(); {
+    auto name = Utilities::GetDllDir().value().string();
+    {
         SYSTEMTIME t;
         GetSystemTime(&t);
         name += std::format("/{}_{:4d}{:2d}{:2d}_{:2d}{:2d}{:2d}.dmp",
-                            RbxStu::ExceptionHandler::LookupModuleByAddress(
-                                reinterpret_cast<void *>(
+                            RbxStu::ExceptionHandler::LookupModuleByAddress(reinterpret_cast<void *>(
                                     reinterpret_cast<std::uintptr_t>(GetModuleHandle(nullptr)) + 0x8)),
                             t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
     }
 
-    auto hFile = CreateFileA(name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                             nullptr);
+    auto hFile =
+            CreateFileA(name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
     MINIDUMP_EXCEPTION_INFORMATION ex{};
     ex.ExceptionPointers = pExceptionPointers ? pExceptionPointers : nullptr;
     ex.ThreadId = GetCurrentThreadId();
     ex.ClientPointers = false;
 
-    MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
-                      static_cast<MINIDUMP_TYPE>(::MINIDUMP_TYPE::MiniDumpNormal |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithDataSegs |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithFullMemory |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithHandleData |
-                                                 ::MINIDUMP_TYPE::MiniDumpFilterMemory |
-                                                 ::MINIDUMP_TYPE::MiniDumpScanMemory |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithUnloadedModules |
-                                                 ::MINIDUMP_TYPE::MiniDumpFilterModulePaths |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithProcessThreadData |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithoutOptionalData |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithThreadInfo |
-                                                 ::MINIDUMP_TYPE::MiniDumpWithCodeSegs
+    MiniDumpWriteDump(
+            GetCurrentProcess(), GetCurrentProcessId(), hFile,
+            static_cast<MINIDUMP_TYPE>(
+                    ::MINIDUMP_TYPE::MiniDumpNormal | ::MINIDUMP_TYPE::MiniDumpWithDataSegs |
+                    ::MINIDUMP_TYPE::MiniDumpWithFullMemory | ::MINIDUMP_TYPE::MiniDumpWithHandleData |
+                    ::MINIDUMP_TYPE::MiniDumpFilterMemory | ::MINIDUMP_TYPE::MiniDumpScanMemory |
+                    ::MINIDUMP_TYPE::MiniDumpWithUnloadedModules | ::MINIDUMP_TYPE::MiniDumpFilterModulePaths |
+                    ::MINIDUMP_TYPE::MiniDumpWithProcessThreadData |
+                    ::MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory | ::MINIDUMP_TYPE::MiniDumpWithoutOptionalData |
+                    ::MINIDUMP_TYPE::MiniDumpWithThreadInfo | ::MINIDUMP_TYPE::MiniDumpWithCodeSegs
 
-                      ),
-                      &ex, nullptr,
-                      nullptr
-    );
+                    ),
+            &ex, nullptr, nullptr);
 
     MessageBoxA(nullptr, "Dumping Process for debugging information, please wait a bit...", "Dumpíng Process", MB_OK);
     Sleep(15000);
@@ -424,14 +402,16 @@ void RbxStu::ExceptionHandler::InstallHandler() {
     // insert SEH into exception chain
 
     if (FastFlags::FFlagDisableErrorHandler.GetValue()) {
-        RbxStuLog(Warning, StructuredExceptionHandler, "An fast flag was disabled our error reporting, any crashes cannot be now properly reported!");
+        RbxStuLog(Warning, StructuredExceptionHandler,
+                  "An fast flag was disabled our error reporting, any crashes cannot be now properly reported!");
         return;
     }
 
     if (const auto previousHandler = SetUnhandledExceptionFilter(RbxStu::ExceptionHandler::UnhandledSEH);
         RbxStu::ExceptionHandler::UnhandledSEH == previousHandler) {
         RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
-                  "Attempted to the top level SEH, but the top level SEH was ALREADY our exception handler! Did you by mistake call RbxStu::ExceptionHandler::InstallHandler twice?");
+                  "Attempted to the top level SEH, but the top level SEH was ALREADY our exception handler! Did you by "
+                  "mistake call RbxStu::ExceptionHandler::InstallHandler twice?");
     }
 }
 
