@@ -13,7 +13,7 @@ namespace RbxStu::Render::UI::Pages {
         int m_dwCurrentlySelectedExecutionSecurity;
         std::vector<const char *> m_executionDataModels;
         int m_dwCurrentlySelectedExecutionDataModel;
-
+        bool isFirstRender;
     public:
         ExecutionPage();
 

@@ -21,6 +21,8 @@ namespace RbxStu::Render::UI::Pages {
 
         this->m_dwCurrentlySelectedExecutionDataModel = 0;
         this->m_executionDataModels = {"Client", "Server", "Edit", "Standalone"};
+
+        this->isFirstRender = true;
     }
 
     void ExecutionPage::ExecuteBuffer() {
@@ -77,7 +79,8 @@ namespace RbxStu::Render::UI::Pages {
 
         Renderable::PushSeparator();
 
-        ImGui::InputTextMultiline("", &this->m_executeTextBuffer, ImVec2(pContext->CurrentWindow->Size.x - 17, 200));
+        ImGui::InputTextMultiline("", &this->m_executeTextBuffer,
+                                  ImVec2(isFirstRender ? 400 : pContext->CurrentWindow->Size.x - 17, 200));
 
         if (ImGui::Button("Execute Payload"))
             this->ExecuteBuffer();
@@ -85,8 +88,11 @@ namespace RbxStu::Render::UI::Pages {
         ImGui::Combo("Run On", &this->m_dwCurrentlySelectedExecutionDataModel, this->m_executionDataModels.data(),
                      this->m_executionDataModels.size());
 
-        ImGui::Combo("Execution Security (Run As)", &this->m_dwCurrentlySelectedExecutionSecurity,
+        ImGui::Combo("Execution Security", &this->m_dwCurrentlySelectedExecutionSecurity,
                      this->m_executionSecurities.data(), this->m_executionSecurities.size());
+
+        if (this->isFirstRender)
+            this->isFirstRender = false;
 
         Renderable::Render(pContext); // call base.
     }
