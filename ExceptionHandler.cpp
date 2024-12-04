@@ -406,7 +406,7 @@ void RbxStu::ExceptionHandler::InstallHandler() {
 
     if (FastFlags::FFlagDisableErrorHandler.GetValue()) {
         RbxStuLog(Warning, StructuredExceptionHandler,
-                  "An fast flag was enabled to disable our error reporting, any crashes now cannot be properly "
+                  "An fast flag was enabled to disable our error handler, any crashes now cannot be properly "
                   "reported!");
         return;
     }
