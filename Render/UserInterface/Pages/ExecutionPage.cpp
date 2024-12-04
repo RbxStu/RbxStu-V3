@@ -8,8 +8,8 @@
 
 #include "StuLuau/ExecutionEngine.hpp"
 
-#include <misc/cpp/imgui_stdlib.h>
 #include <Scheduling/TaskScheduler.hpp>
+#include <misc/cpp/imgui_stdlib.h>
 
 namespace RbxStu::Render::UI::Pages {
     ExecutionPage::ExecutionPage() {
@@ -17,32 +17,21 @@ namespace RbxStu::Render::UI::Pages {
         this->m_executeTextBuffer = "-- Welcome to RbxStu V3";
 
         this->m_dwCurrentlySelectedExecutionSecurity = 0;
-        this->m_executionSecurities = {
-            "LocalScript",
-            "RobloxScript",
-            "Plugin",
-            "RobloxPlugin",
-            "RobloxExecutor"
-        };
+        this->m_executionSecurities = {"LocalScript", "RobloxScript", "Plugin", "RobloxPlugin", "RobloxExecutor"};
 
         this->m_dwCurrentlySelectedExecutionDataModel = 0;
-        this->m_executionDataModels = {
-            "Client",
-            "Server",
-            "Edit",
-            "Standalone"
-        };
+        this->m_executionDataModels = {"Client", "Server", "Edit", "Standalone"};
     }
 
     void ExecutionPage::ExecuteBuffer() {
         StuLuau::ExecutionSecurity dwExecutionSecurity{};
         RBX::DataModelType dwTargetDataModel{};
 
-        const auto szCurrentlySelectedIdentity = this->m_executionSecurities[this->
-            m_dwCurrentlySelectedExecutionSecurity];
+        const auto szCurrentlySelectedIdentity =
+                this->m_executionSecurities[this->m_dwCurrentlySelectedExecutionSecurity];
 
-        const auto szCurrentlySelectedDataModel = this->m_executionDataModels[this->
-            m_dwCurrentlySelectedExecutionDataModel];
+        const auto szCurrentlySelectedDataModel =
+                this->m_executionDataModels[this->m_dwCurrentlySelectedExecutionDataModel];
 
         if (strcmp("LocalScript", szCurrentlySelectedIdentity) == 0)
             dwExecutionSecurity = StuLuau::ExecutionSecurity::LocalScript;
@@ -69,7 +58,16 @@ namespace RbxStu::Render::UI::Pages {
         const auto taskScheduler = RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler();
         const auto execEngine = taskScheduler->GetExecutionEngine(dwTargetDataModel);
 
-        if (execEngine == nullptr) return;
+        if (execEngine == nullptr) {
+            const auto printFunc = reinterpret_cast<r_RBX_Console_StandardOut>(
+                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Console_StandardOut));
+            const auto formattedMessage = std::format("Cannot execute on {} DataModel! (DataModel isn't available)",
+                                                      szCurrentlySelectedDataModel)
+                                                  .c_str();
+
+            printFunc(RBX::Console::Warning, formattedMessage);
+            return;
+        };
 
         execEngine->ScheduleExecute(false, this->m_executeTextBuffer, dwExecutionSecurity, true);
     }
@@ -79,18 +77,17 @@ namespace RbxStu::Render::UI::Pages {
 
         Renderable::PushSeparator();
 
-        ImGui::InputTextMultiline("", &this->m_executeTextBuffer,
-                                  ImVec2(400, 200));
+        ImGui::InputTextMultiline("", &this->m_executeTextBuffer, ImVec2(400, 200));
 
         if (ImGui::Button("Execute Payload"))
             this->ExecuteBuffer();
 
-        ImGui::Combo("Run On", &this->m_dwCurrentlySelectedExecutionDataModel,
-                     this->m_executionDataModels.data(), this->m_executionDataModels.size());
+        ImGui::Combo("Run On", &this->m_dwCurrentlySelectedExecutionDataModel, this->m_executionDataModels.data(),
+                     this->m_executionDataModels.size());
 
         ImGui::Combo("Execution Security (Run As)", &this->m_dwCurrentlySelectedExecutionSecurity,
                      this->m_executionSecurities.data(), this->m_executionSecurities.size());
 
         Renderable::Render(pContext); // call base.
     }
-}
+} // namespace RbxStu::Render::UI::Pages

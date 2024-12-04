@@ -51,6 +51,7 @@ public:
 
         RBX_ProximityPrompt_onTriggered,
 
+        RBX_Console_StandardOut,
         RBXCRASH,
 
         RBX_ClickDetector_fireClick,

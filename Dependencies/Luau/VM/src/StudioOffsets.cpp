@@ -78,6 +78,8 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
         return "RBX::ClickDetector::fireMouseHover";
     case RbxStuOffsets::OffsetKey::RBX_ClickDetector_fireMouseLeave:
         return "RBX::ClickDetector::fireMouseLeave";
+    case RbxStuOffsets::OffsetKey::RBX_Console_StandardOut:
+        return "RBX::Console::StandardOut";
     case RbxStuOffsets::OffsetKey::RBXCRASH:
         return "global::RBXCRASH";
     }

@@ -111,7 +111,7 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
 
         // RBX::World
         {RbxStuOffsets::OffsetKey::RBX_World_reportTouchInfo, // "new overlap in different world", contains RBX::World
-                                                              // from RBX::Primitive offset.
+         // from RBX::Primitive offset.
          hat::parse_signature("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC 30 48 83 79 ?? 00").value()},
 
         // RBX::ProximityPrompt
@@ -126,10 +126,18 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
          hat::parse_signature("48 89 5C 24 ? 48 89 7C 24 ? 55 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B FA 48 8B D9 48 8B "
                               "05 ? ? ? ? 48 85 C0 "
                               "74 0A FF D0 84 C0 0F 84 82 03 00 ? E8 ? ? ? ?")
-                 .value()}
+                 .value()},
 
 
-};
+        {RbxStuOffsets::OffsetKey::RBX_Console_StandardOut,
+         hat::parse_signature(
+                 ""
+                 "48 8B C4 48 89 50 ? 4C 89 40 ? 4C 89 48 ? 53 48 83 EC ? 8B D9 4C 8D 40 ? 48 8D 48 ? E8 "
+                 "? ? ? ? 90 33 C0 48 89 44 24 ? 48 C7 44 24 ? ? ? ? ? 48 89 44 24 ? 88 44 24 ? 44 8D 48 ? "
+                 "4C 8D 44 24 ? 48 8D 54 24 ? 8B CB E8 ? ? ? ? 90 48 8B 54 24 ? 48 83 FA 10 72 36 48 FF C2 "
+                 "48 8B 4C 24 ? 48 8B C1 48 81 FA 00 10 00 00 72 1C 48 83 C2 ? 48 8B 49 ? 48 2B C1 48 83 C0 "
+                 "? 48 83 F8 1F 76 07 FF 15 ? ? ? ?")
+                 .value()}};
 
 void RbxStu::Scanners::RBX::Initialize() {
     if (this->m_bIsInitialized)
