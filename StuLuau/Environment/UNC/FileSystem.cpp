@@ -12,6 +12,7 @@
 #include "Luau/Compiler.h"
 #include "StuLuau/Extensions/luauext.hpp"
 #include "StuLuau/LuauSecurity.hpp"
+#include "ldebug.h"
 
 const auto s_bannedExtensions = std::unordered_set<std::string_view>{
         ".exe", ".dll", ".sys", ".py",    ".js",  ".jsx", ".drv", ".ws",  ".wmf", ".dev", ".jar", ".scr", ".swf",
@@ -151,7 +152,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             luaL_argerrorL(L, 1, "Illegal path");
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
-            return 0;
+            luaG_runerrorL(L, "This file doesn't exist");
 
         // Dottik reading using << reads until a white space, this will read the whole file.
         std::ifstream file(GetNormalizedPath(pathToWrite), std::ios::in);
