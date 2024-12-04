@@ -144,6 +144,9 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(FFlagEnableExperimentalLuauFunctions, "FFlagEnableExperimentalLuauFunctions",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
+        RBXSTU_DEFINEFASTFLAG(FFlagDisableErrorHandler, "FFlagDisableErrorHandler",
+                              RbxStu::FastFlagType::FastFlagBoolean, bool, false);
+
         RBXSTU_DEFINEFASTFLAG(SFlagRbxCrashKey, "SFlagRbxCrashKey", RbxStu::FastFlagType::FastFlagString, std::string,
                               "__RbxCrash");
     } // namespace FastFlags

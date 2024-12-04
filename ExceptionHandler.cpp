@@ -6,16 +6,17 @@
 #include "ExceptionHandler.hpp"
 
 #include <MinHook.h>
+#include <Psapi.h>
+#include <Utilities.hpp>
+#include <Windows.h>
 #include <minidumpapiset.h>
 #include <print>
-#include <Psapi.h>
-#include <Windows.h>
 #include <unordered_set>
-#include <Utilities.hpp>
 
+#include "Analysis/Disassembler.hpp"
+#include "FastFlags.hpp"
 #include "Logger.hpp"
 #include "Settings.hpp"
-#include "Analysis/Disassembler.hpp"
 
 std::string RbxStu::ExceptionHandler::LookupModuleByAddress(const void *address) {
     const HANDLE hProcess = GetCurrentProcess();
@@ -421,6 +422,11 @@ void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers
 
 void RbxStu::ExceptionHandler::InstallHandler() {
     // insert SEH into exception chain
+
+    if (FastFlags::FFlagDisableErrorHandler.GetValue()) {
+        RbxStuLog(Warning, StructuredExceptionHandler, "An fast flag was disabled our error reporting, any crashes cannot be now properly reported!");
+        return;
+    }
 
     if (const auto previousHandler = SetUnhandledExceptionFilter(RbxStu::ExceptionHandler::UnhandledSEH);
         RbxStu::ExceptionHandler::UnhandledSEH == previousHandler) {
