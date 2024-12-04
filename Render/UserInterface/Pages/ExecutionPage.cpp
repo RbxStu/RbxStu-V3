@@ -77,7 +77,7 @@ namespace RbxStu::Render::UI::Pages {
 
         Renderable::PushSeparator();
 
-        ImGui::InputTextMultiline("", &this->m_executeTextBuffer, ImVec2(400, 200));
+        ImGui::InputTextMultiline("", &this->m_executeTextBuffer, ImVec2(pContext->CurrentWindow->Size.x - 17, 200));
 
         if (ImGui::Button("Execute Payload"))
             this->ExecuteBuffer();
