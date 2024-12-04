@@ -3,16 +3,17 @@
 //
 
 #pragma once
+#include <Windows.h>
+#include <minidumpapiset.h>
 #include <optional>
 #include <string>
 #include <vector>
-#include <Windows.h>
 
 namespace RbxStu {
     class ExceptionHandler final abstract {
         static long UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointers);
 
-        static void CreateDump(EXCEPTION_POINTERS *pExceptionPointers);
+        static bool CreateDump(EXCEPTION_POINTERS *pExceptionPointers);
 
         static std::string LookupModuleByAddress(const void *address);
 

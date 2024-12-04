@@ -224,6 +224,15 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- Begin");
 
+    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Emitting Debugging Dump.");
+
+    if (RbxStu::ExceptionHandler::CreateDump(pExceptionPointers)) {
+        RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Dump emitted.");
+    } else {
+        RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
+                  "-- RbxStu V3 -- Failed to emit a debug dump.");
+    }
+
     RbxStuLog(RbxStu::LogType::Warning, RbxStu::StructuredExceptionHandler,
               std::format("SEH exception code: '0x{:X}'", pExceptionPointers->ExceptionRecord->ExceptionCode));
 
@@ -347,20 +356,14 @@ long RbxStu::ExceptionHandler::UnhandledSEH(EXCEPTION_POINTERS *pExceptionPointe
     RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler,
               "-- RbxStu V3 Structured Exception Handler -- End");
 
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Emitting Debugging DUMP.");
-
-    RbxStu::ExceptionHandler::CreateDump(pExceptionPointers);
-
-    RbxStuLog(RbxStu::LogType::Error, RbxStu::StructuredExceptionHandler, "-- RbxStu V3 -- Dump emitted.");
-
-
     MessageBoxA(nullptr, "Unhandled exception caught! Check console!", "Error", MB_OK);
     Sleep(10000);
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers) {
-    LoadLibraryA("DbgHelp.dll");
+bool RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers) {
+    if (!LoadLibraryA("DbgHelp.dll"))
+        return false;
 
     auto name = Utilities::GetDllDir().value().string();
     {
@@ -372,15 +375,17 @@ void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers
                             t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond);
     }
 
-    auto hFile =
-            CreateFileA(name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    const auto hFile = CreateFileA(name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
+                                   FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return false;
 
     MINIDUMP_EXCEPTION_INFORMATION ex{};
-    ex.ExceptionPointers = pExceptionPointers ? pExceptionPointers : nullptr;
+    ex.ExceptionPointers = pExceptionPointers;
     ex.ThreadId = GetCurrentThreadId();
     ex.ClientPointers = false;
 
-    MiniDumpWriteDump(
+    const bool results = MiniDumpWriteDump(
             GetCurrentProcess(), GetCurrentProcessId(), hFile,
             static_cast<MINIDUMP_TYPE>(
                     ::MINIDUMP_TYPE::MiniDumpNormal | ::MINIDUMP_TYPE::MiniDumpWithDataSegs |
@@ -389,13 +394,11 @@ void RbxStu::ExceptionHandler::CreateDump(EXCEPTION_POINTERS *pExceptionPointers
                     ::MINIDUMP_TYPE::MiniDumpWithUnloadedModules | ::MINIDUMP_TYPE::MiniDumpFilterModulePaths |
                     ::MINIDUMP_TYPE::MiniDumpWithProcessThreadData |
                     ::MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory | ::MINIDUMP_TYPE::MiniDumpWithoutOptionalData |
-                    ::MINIDUMP_TYPE::MiniDumpWithThreadInfo | ::MINIDUMP_TYPE::MiniDumpWithCodeSegs
-
-                    ),
+                    ::MINIDUMP_TYPE::MiniDumpWithThreadInfo | ::MINIDUMP_TYPE::MiniDumpWithCodeSegs |
+                    ::MINIDUMP_TYPE::MiniDumpWithIndirectlyReferencedMemory),
             &ex, nullptr, nullptr);
 
-    MessageBoxA(nullptr, "Dumping Process for debugging information, please wait a bit...", "Dumpíng Process", MB_OK);
-    Sleep(15000);
+    return results;
 }
 
 void RbxStu::ExceptionHandler::InstallHandler() {
@@ -403,7 +406,8 @@ void RbxStu::ExceptionHandler::InstallHandler() {
 
     if (FastFlags::FFlagDisableErrorHandler.GetValue()) {
         RbxStuLog(Warning, StructuredExceptionHandler,
-                  "An fast flag was enabled to disable our error reporting, any crashes now cannot be properly reported!");
+                  "An fast flag was enabled to disable our error reporting, any crashes now cannot be properly "
+                  "reported!");
         return;
     }
 
