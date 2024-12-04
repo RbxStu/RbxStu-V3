@@ -63,6 +63,17 @@ void RbxStu::Logger::Initialize(const bool bInstantFlush) {
         return;
 
     this->OpenStandard();
+    printf(R"(
+ *******   **               ********   **           **      **  ****
+/**////** /**              **//////   /**          /**     /** */// *
+/**   /** /**      **   **/**        ****** **   **/**     /**/    /*
+/*******  /****** //** ** /*********///**/ /**  /**//**    **    ***
+/**///**  /**///** //***  ////////**  /**  /**  /** //**  **    /// *
+/**  //** /**  /**  **/**        /**  /**  /**  /**  //****    *   /*
+/**   //**/******  ** //** ********   //** //******   //**    / ****
+//     // /////   //   // ////////     //   //////     //      ////
+)");
+
     this->m_dwBufferSize = 0xffff;
     this->m_szMessageBuffer = std::string("");
     this->m_szMessageBuffer.reserve(this->m_dwBufferSize);

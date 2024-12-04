@@ -100,17 +100,6 @@ void Entry() {
     RbxStu::ExceptionHandler::InstallHandler();
     const auto offsets = RbxStuOffsets::GetSingleton();
 
-    printf(R"(
- *******   **               ********   **           **      **  ****
-/**////** /**              **//////   /**          /**     /** */// *
-/**   /** /**      **   **/**        ****** **   **/**     /**/    /*
-/*******  /****** //** ** /*********///**/ /**  /**//**    **    ***
-/**///**  /**///** //***  ////////**  /**  /**  /** //**  **    /// *
-/**  //** /**  /**  **/**        /**  /**  /**  /**  //****    *   /*
-/**   //**/******  ** //** ********   //** //******   //**    / ****
-//     // /////   //   // ////////     //   //////     //      ////
-)");
-
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               "Initializing RbxStu V3 -- The Roblox Studio Modification Tool");
 
