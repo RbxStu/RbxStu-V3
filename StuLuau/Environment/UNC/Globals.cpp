@@ -785,7 +785,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto bytecode = script.GetBytecode();
         if (!bytecode.has_value())
-            luaG_runerrorL(L, "Failed to get bytecode");
+            luaG_runerrorL(L, "Failed to find bytecode");
 
         lua_rawcheckstack(L, 1);
         lua_pushlstring(L, bytecode.value().c_str(), bytecode.value().length());
