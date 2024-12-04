@@ -16,7 +16,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto identity = lua_tointeger(L, 1);
 
         if (identity < 0 || identity > 8)
-            luaL_argerrorL(L, 1, "identity must be between 0 and 8");
+            return 0;
 
         const auto luauSecurity = LuauSecurity::GetSingleton();
         const auto desiredExecutionContext = luauSecurity->GetExecutionSecurityFromIdentity(identity);
