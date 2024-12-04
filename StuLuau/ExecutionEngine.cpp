@@ -124,12 +124,12 @@ namespace RbxStu::StuLuau {
 
         if (luau_load(nL, "=RbxStuV3", bytecode.data(), bytecode.size(), 0) != LUA_OK) {
             const auto error = lua_tostring(nL, -1);
+            const auto printFunc = reinterpret_cast<r_RBX_Console_StandardOut>(
+                    RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Console_StandardOut));
+
+            printFunc(RBX::Console::Error, error);
             RbxStuLog(RbxStu::LogType::Error, RbxStu::ExecutionEngine,
                       std::format("Failed to load bytecode: {}", error));
-            lua_pushcclosure(nL, task_defer, nullptr, 0);
-            lua_getglobal(nL, "error");
-            lua_pushvalue(nL, -2);
-            lua_call(nL, 2, 1);
             lua_pop(nL, 1);
             return;
         }
