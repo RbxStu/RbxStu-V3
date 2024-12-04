@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <optional>
 #include <string>
 #include "Miscellaneous/OpaqueClass.hpp"
 
@@ -20,8 +21,8 @@ namespace RbxStu::Roblox {
         explicit Script(void *pNative, RbxStu::Roblox::Script::ScriptKind kind);
 
         [[nodiscard]] std::string GetScriptHash() const;
-        [[nodiscard]] std::string GetSource() const;
-        [[nodiscard]] std::string GetBytecode() const;
+        [[nodiscard]] std::optional<std::string> GetSource() const;
+        [[nodiscard]] std::optional<std::string> GetBytecode() const;
     };
 
 } // namespace RbxStu::Roblox

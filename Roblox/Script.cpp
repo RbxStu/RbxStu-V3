@@ -9,7 +9,7 @@
 
 #include "Luau/Compiler.h"
 #include "TypeDefinitions.hpp"
-
+#include <Windows.h>
 #include <string>
 
 namespace RbxStu::Roblox {
@@ -27,7 +27,7 @@ namespace RbxStu::Roblox {
                 *reinterpret_cast<std::int64_t *>(reinterpret_cast<std::uintptr_t>(pProtectedString) + 0x20));
     };
 
-    std::string Script::GetSource() const {
+    std::optional<std::string> Script::GetSource() const {
         if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
                     RBX::DataModelType::DataModelType_Edit)) {
             return {};
@@ -36,12 +36,18 @@ namespace RbxStu::Roblox {
         // Source access, required in ONLY in non-Team Create environments.
 
         const auto protectedString =
-                *reinterpret_cast<std::uintptr_t *>(reinterpret_cast<std::uintptr_t>(this->GetRealStructure()) + 0x1B8);
-        return std::string(*reinterpret_cast<char **>(protectedString + 0x10),
-                           *reinterpret_cast<std::int64_t *>(protectedString + 0x20));
+                *reinterpret_cast<uintptr_t *>(reinterpret_cast<uintptr_t>(this->GetRealStructure()) + 0x1B8);
+        if (!protectedString || IsBadReadPtr(reinterpret_cast<void *>(protectedString), 0x10))
+            return std::nullopt;
+
+        const auto stringSize = *reinterpret_cast<int64_t *>(protectedString + 0x20);
+        const auto stringPointer = *reinterpret_cast<const char **>(protectedString + 0x10);
+
+        auto scriptSource = std::string(stringPointer, stringSize);
+        return scriptSource;
     }
 
-    std::string Script::GetBytecode() const {
+    std::optional<std::string> Script::GetBytecode() const {
         if (!RbxStu::Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->IsDataModelActive(
                     RBX::DataModelType::DataModelType_Edit)) {
 
@@ -51,7 +57,9 @@ namespace RbxStu::Roblox {
                      *  Bytecode offset: 0x1C0
                      */
                     const auto protectedString = *reinterpret_cast<void **>(
-                            reinterpret_cast<std::uintptr_t>(this->GetRealStructure()) + 0x1C0);
+                            reinterpret_cast<uintptr_t>(this->GetRealStructure()) + 0x1C0);
+                    if (!protectedString || IsBadReadPtr(protectedString, 0x10))
+                        return std::nullopt;
 
                     return ReadProtectedString(protectedString);
                 }
@@ -61,20 +69,26 @@ namespace RbxStu::Roblox {
                      */
                     const auto protectedString = *reinterpret_cast<void **>(
                             reinterpret_cast<std::uintptr_t>(this->GetRealStructure()) + 0x168);
+                    if (!protectedString || IsBadReadPtr(protectedString, 0x10))
+                        return std::nullopt;
+
                     return ReadProtectedString(protectedString);
                 }
                 case ScriptKind::Script:
                 default:
-                    return {};
+                    return std::nullopt;
             }
 
-            return {};
+            return std::nullopt;
         }
 
         const auto src = this->GetSource();
+        if (!src.has_value())
+            return std::nullopt;
+
         auto opts = Luau::CompileOptions{};
         opts.debugLevel = 2;
         opts.optimizationLevel = 1;
-        return Luau::compile(src, opts);
+        return Luau::compile(src.value(), opts);
     }
 } // namespace RbxStu::Roblox

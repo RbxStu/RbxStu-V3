@@ -784,8 +784,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         const auto bytecode = script.GetBytecode();
+        if (!bytecode.has_value())
+            luaG_runerrorL(L, "Failed to get bytecode");
+
         lua_rawcheckstack(L, 1);
-        lua_pushlstring(L, bytecode.c_str(), bytecode.length());
+        lua_pushlstring(L, bytecode.value().c_str(), bytecode.value().length());
         return 1;
     }
 
@@ -818,9 +821,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         }
 
         const auto bytecode = script.GetBytecode();
+        if (!bytecode.has_value())
+            luaG_runerrorL(L, "Failed to find bytecode");
 
         lua_rawcheckstack(L, 1);
-        if (luau_load(L, "=getscriptclosure", bytecode.c_str(), bytecode.length(), 0) != LUA_OK)
+        if (luau_load(L, "=getscriptclosure", bytecode.value().c_str(), bytecode.value().length(), 0) != LUA_OK)
             lua_error(L);
 
         LuauSecurity::GetSingleton()->ElevateClosure(lua_toclosure(L, -1),
