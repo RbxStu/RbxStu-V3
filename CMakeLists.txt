@@ -23,6 +23,9 @@ if (build_type STREQUAL release)
             /O2
             /Gr
             /GS
+            /GF
+            /GL
+            /MP
             /cgthreads8
             /arch:AVX2
     )
