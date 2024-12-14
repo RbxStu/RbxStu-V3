@@ -30,7 +30,6 @@ namespace RbxStu::Miscellaneous {
     template<typename Y, RbxStu::Concepts::TypeConstraint<EventArgument<Y>> T>
 
     class ListenableEvent final {
-        // address, function [provides a fairly unique manner to map functions]
         std::unordered_map<std::uintptr_t, std::function<void(const T &)>> m_functionList;
 
         std::uintptr_t CreateAttachId() {
