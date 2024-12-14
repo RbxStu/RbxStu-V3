@@ -112,7 +112,7 @@ namespace RbxStu::Roblox {
         // Disable thread access checks for this time, the operation we are doing is safe, but ROBLOX does not trust us.
 
         resume(decryptor.DecodePointerWithOffsetEncryption(pointerOffset.value().encryption), status,
-               &resumptionContext, YieldResult.dwNumberOfReturns, !YieldResult.bIsSuccess,
+               &resumptionContext, YieldResult.bIsSuccess  ? YieldResult.dwNumberOfReturns : 0, !YieldResult.bIsSuccess,
                errorMessage.empty() ? nullptr : errorMessage.c_str());
 
         *lockViolationCrash = old;
