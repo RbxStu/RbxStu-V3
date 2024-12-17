@@ -158,6 +158,155 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return lua_yield(L, 0);
     }
 
+    const std::array<std::string, 5> validMethods = {"get", "post", "put", "patch", "delete"};
+
+    bool isValidHttpMethod(const std::string &method) {
+        return std::ranges::find(validMethods, method) != validMethods.end();
+    }
+
+
+    int Globals::request(lua_State *L) {
+        try {
+            luaL_checktype(L, 1, LUA_TTABLE);
+
+            auto getRequiredString = [L](const char *field) -> std::string {
+                lua_getfield(L, 1, field);
+                if (lua_isnil(L, -1)) {
+                    luaL_argerrorL(L, 1, std::format("Options must have a {} field", field).c_str());
+                }
+                if (!lua_isstring(L, -1)) {
+                    luaL_argerrorL(L, 1, std::format("{} must be a string", field).c_str());
+                }
+                std::string value = _strdup(lua_tostring(L, -1));
+                lua_pop(L, 1);
+                return value;
+            };
+
+            std::string Url = getRequiredString("Url");
+            std::string Method = Utilities::ToLower(getRequiredString("Method"));
+
+            if (!isValidHttpMethod(Method)) {
+                luaL_argerrorL(L, 1, "Method must be one of these 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'");
+            }
+
+            auto Headers = std::map<std::string, std::string, cpr::CaseInsensitiveCompare>();
+            Headers["User-Agent"] = "Roblox/WinInet";
+
+            Headers["RbxStu-Fingerprint"] = Utilities::GetHwid().value();
+
+            lua_getfield(L, 1, "Headers");
+            if (!lua_isnil(L, -1)) {
+                if (!lua_istable(L, -1)) {
+                    luaL_argerrorL(L, 1, "Headers must be a table");
+                }
+
+                lua_pushnil(L);
+                while (lua_next(L, -2) != 0) {
+                    if (!lua_isstring(L, -2) || !lua_isstring(L, -1)) {
+                        luaL_argerrorL(L, 1, "Header key and value must be strings");
+                    }
+
+                    Headers[_strdup(lua_tostring(L, -2))] = _strdup(lua_tostring(L, -1));
+
+                    lua_pop(L, 1);
+                }
+
+                lua_pop(L, 1);
+            }
+
+            cpr::Cookies cookies;
+            lua_getfield(L, 1, "Cookies");
+            if (!lua_isnil(L, -1)) {
+                if (!lua_istable(L, -1)) {
+                    luaL_argerrorL(L, 1, "Cookies must be a table");
+                }
+                lua_pushnil(L);
+                while (lua_next(L, -2) != 0) {
+                    if (!lua_isstring(L, -2) || !lua_isstring(L, -1)) {
+                        luaL_argerrorL(L, 1, "Cookie key and value must be strings");
+                    }
+
+                    cookies.emplace_back(cpr::Cookie{_strdup(lua_tostring(L, -2)), _strdup(lua_tostring(L, -1))});
+
+                    lua_pop(L, 1);
+                }
+
+                lua_pop(L, 1);
+            }
+
+            std::string Body;
+            lua_getfield(L, 1, "Body");
+            if (!lua_isnil(L, -1)) {
+                if (!lua_isstring(L, -1))
+                    luaL_argerrorL(L, 1, "Body must be a string");
+
+                Body = _strdup(lua_tostring(L, -1));
+                lua_pop(L, 1);
+            }
+
+            const auto executionEngine =
+                    Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
+
+            executionEngine->YieldThread(
+                    L,
+                    [&Url, &Method, &Headers, &Body, &cookies, &L](const std::shared_ptr<YieldRequest> &request) {
+                        cpr::Session requestSession;
+                        requestSession.SetUrl(Url);
+                        requestSession.SetHeader(cpr::Header{Headers});
+                        requestSession.SetCookies(cookies);
+                        requestSession.SetBody(Body);
+
+                        cpr::Response response;
+                        if (Method == "get") {
+                            response = requestSession.Get();
+                        } else if (Method == "post") {
+                            response = requestSession.Post();
+                        } else if (Method == "put") {
+                            response = requestSession.Put();
+                        } else if (Method == "patch") {
+                            response = requestSession.Patch();
+                        } else if (Method == "delete") {
+                            response = requestSession.Delete();
+                        }
+
+                        request->fpCompletionCallback = [response, &L]() -> YieldResult {
+                            lua_newtable(L);
+
+                            lua_pushboolean(L, !HttpStatus::IsError(response.status_code) && response.status_code != 0);
+                            lua_setfield(L, -2, "Success");
+
+                            lua_pushinteger(L, response.status_code);
+                            lua_setfield(L, -2, "StatusCode");
+
+                            lua_pushstring(L, response.text.c_str());
+                            lua_setfield(L, -2, "Body");
+
+                            lua_pushstring(L, response.status_line.c_str());
+                            lua_setfield(L, -2, "StatusMessage");
+
+                            lua_newtable(L);
+                            for (const auto &cookie: response.cookies) {
+                                if (cookie.GetName() == "ROBLOSECURITY")
+                                    continue; // Skip roblosecurity if it EVER appears.
+
+                                lua_pushstring(L, cookie.GetValue().c_str());
+                                lua_setfield(L, -2, cookie.GetName().c_str());
+                            }
+                            lua_setfield(L, -2, "Cookies");
+
+                            return YieldResult{true, 1, std::nullopt};
+                        };
+
+                        request->bIsReady = true;
+                    },
+                    true);
+
+            return lua_yield(L, 1);
+        } catch (const std::exception &e) {
+            luaL_error(L, e.what());
+        }
+    }
+
     int Globals::checkcaller(lua_State *L) {
         const auto luauSecurity = LuauSecurity::GetSingleton();
         lua_pushboolean(L, luauSecurity->IsOurThread(L));
@@ -439,7 +588,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
         luaL_checkany(L, 1);
         luaL_checktype(L, 2, ::lua_Type::LUA_TTABLE);
 
-        // There may be more elements on the lua stack, this is stupid, but if we don't we will probably cause issues.
+        // There may be more elements on the lua stack, this is stupid, but if we don't we will probably cause
+        // issues.
         if (lua_gettop(L) != 2)
             lua_pushvalue(L, 2);
 
@@ -498,7 +648,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (rbxPushInstance == nullptr) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
-                      "Cannot perform cloneref: Failed to find RBX::Instance::pushInstance, a stub will be in place.");
+                      "Cannot perform cloneref: Failed to find RBX::Instance::pushInstance, a stub will be in "
+                      "place.");
             lua_pushvalue(L, 1);
             return 1;
         }
@@ -891,7 +1042,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 {"isreadonly", RbxStu::StuLuau::Environment::UNC::Globals::isreadonly},
 
                 {"getsenv", RbxStu::StuLuau::Environment::UNC::Globals::getsenv},
-
+                {"request", RbxStu::StuLuau::Environment::UNC::Globals::request},
                 {nullptr, nullptr}};
 
         return libreg;

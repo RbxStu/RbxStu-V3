@@ -18,6 +18,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int httpget(lua_State *L);
 
+        static int request(lua_State *L);
+
         static int checkcaller(lua_State *L);
 
         static int checkcallstack(lua_State *L);
@@ -86,4 +88,4 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const char *GetLibraryName() override;
     };
-} // RbxStu::StuLuau::Environment::UNC
+} // namespace RbxStu::StuLuau::Environment::UNC
