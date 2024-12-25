@@ -134,7 +134,7 @@ namespace RbxStu::StuLuau {
             return;
         }
 
-        luauSecurity->ElevateClosure(lua_tomutclosure(nL, -1), ExecutionSecurity::RobloxExecutor);
+        luauSecurity->ElevateClosure(lua_tomutclosure(nL, -1), executeRequest.executeWithSecurity);
 
         if (executeRequest.bGenerateNativeCode) {
             Luau::CodeGen::CompilationOptions opts{};
