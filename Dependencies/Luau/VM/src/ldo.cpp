@@ -17,7 +17,9 @@
 
 #include <string.h>
 
-LUAU_FASTFLAGVARIABLE(LuauErrorResumeCleanupArgs, false)
+LUAU_DYNAMIC_FASTFLAGVARIABLE(LuauStackLimit, false)
+// keep max stack allocation request under 1GB
+#define MAX_STACK_SIZE (int(1024 / sizeof(TValue)) * 1024 * 1024)
 
 /*
 ** {======================================================
@@ -119,7 +121,9 @@ private:
 int luaD_rawrunprotected(lua_State* L, Pfunc f, void* ud)
 {
     if (nullptr != RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::luaD_rawrununprotected))
-        return reinterpret_cast<RBX::Studio::FunctionTypes::luaD_rawrununprotected>(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::luaD_rawrununprotected))(L, f, ud);
+        return reinterpret_cast<
+            RBX::Studio::FunctionTypes::luaD_rawrununprotected>(RbxStuOffsets::GetSingleton()
+                                                                    ->GetOffset(RbxStuOffsets::OffsetKey::luaD_rawrununprotected))(L, f, ud);
 
     int status = 0;
 
@@ -160,7 +164,8 @@ int luaD_rawrunprotected(lua_State* L, Pfunc f, void* ud)
 l_noret luaD_throw(lua_State* L, int errcode)
 {
     if (nullptr != RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::luaD_throw))
-        return reinterpret_cast<RBX::Studio::FunctionTypes::luaD_throw>(RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::luaD_throw))(L, errcode);
+        return reinterpret_cast<RBX::Studio::FunctionTypes::luaD_throw>(RbxStuOffsets::GetSingleton()
+                                                                            ->GetOffset(RbxStuOffsets::OffsetKey::luaD_throw))(L, errcode);
 
     throw lua_exception(L, errcode);
 }
@@ -184,6 +189,10 @@ static void correctstack(lua_State* L, TValue* oldstack)
 
 void luaD_reallocstack(lua_State* L, int newsize)
 {
+    // throw 'out of memory' error because space for a custom error message cannot be guaranteed here
+    if (DFFlag::LuauStackLimit && newsize > MAX_STACK_SIZE)
+        luaD_throw(L, LUA_ERRMEM);
+
     TValue* oldstack = L->stack;
     int realsize = newsize + EXTRA_STACK;
     LUAU_ASSERT(L->stack_last - L->stack == L->stacksize - EXTRA_STACK);
@@ -436,11 +445,7 @@ static void resume_handle(lua_State* L, void* ud)
 
 static int resume_error(lua_State* L, const char* msg, int narg)
 {
-    if (FFlag::LuauErrorResumeCleanupArgs)
-        L->top -= narg;
-    else
-        L->top = L->ci->base;
-
+    L->top -= narg;
     setsvalue(L, L->top, luaS_new(L, msg));
     incr_top(L);
     return LUA_ERRRUN;
