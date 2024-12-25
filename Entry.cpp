@@ -101,7 +101,7 @@ void Entry() {
     const auto offsets = RbxStuOffsets::GetSingleton();
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
-              "Initializing RbxStu V3 -- The Roblox Studio Modification Tool");
+              std::format("Initializing RbxStu V3 ({}) -- The Roblox Studio Modification Tool", RBXSTU_VERSION));
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::MainThread,
               std::format("-- RobloxStudioBeta.exe @ {}",
