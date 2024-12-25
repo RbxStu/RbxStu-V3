@@ -5,6 +5,7 @@
 #include "SettingsPage.hpp"
 
 #include "FastFlags.hpp"
+#include "Settings.hpp"
 
 namespace RbxStu::Render::UI::Pages {
     std::shared_ptr<SettingsPage> SettingsPage::m_pInstance;
@@ -54,6 +55,9 @@ namespace RbxStu::Render::UI::Pages {
             FastFlagsManager::GetSingleton()->WriteFlags();
 
         Renderable::PushSeparator();
+
+        ImGui::Text(">> About RbxStu V3");
+        ImGui::Text("   > Version %s", RBXSTU_VERSION);
 
         Renderable::Render(pContext);
     }
