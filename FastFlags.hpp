@@ -129,7 +129,7 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(FFlagIsRobloxInternalEnabled, "FFlagIsRobloxInternalEnabled",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
-        RBXSTU_DEFINEFASTFLAG(FFlagEnablePipeCommunication, "FFLagEnablePipeCommunication",
+        RBXSTU_DEFINEFASTFLAG(FFlagEnablePipeCommunication, "FFlagEnablePipeCommunication",
                               RbxStu::FastFlagType::FastFlagBoolean, bool, false);
 
         RBXSTU_DEFINEFASTFLAG(FFlagEnableDebugLogs, "FFlagEnableDebugLogs", RbxStu::FastFlagType::FastFlagBoolean, bool,
@@ -138,7 +138,7 @@ namespace RbxStu {
         RBXSTU_DEFINEFASTFLAG(IFlagWebsocketPort, "IFlagWebsocketPort", RbxStu::FastFlagType::FastFlagInteger, int,
                               7777);
 
-        RBXSTU_DEFINEFASTFLAG(FFlagUseWebsocketServer, "FFLagUseWebsocketServer", RbxStu::FastFlagType::FastFlagBoolean,
+        RBXSTU_DEFINEFASTFLAG(FFlagUseWebsocketServer, "FFlagUseWebsocketServer", RbxStu::FastFlagType::FastFlagBoolean,
                               bool, false);
 
         RBXSTU_DEFINEFASTFLAG(FFlagEnableExperimentalLuauFunctions, "FFlagEnableExperimentalLuauFunctions",
