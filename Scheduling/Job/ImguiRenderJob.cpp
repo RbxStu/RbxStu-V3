@@ -30,7 +30,7 @@ namespace RbxStu::Scheduling::Jobs {
     static ID3D11Device *g_pDevice = nullptr;
     static ID3D11DeviceContext *g_pContext = nullptr;
     static ID3D11RenderTargetView *g_pRenderTargetView = nullptr;
-    static HWND g_hWnd;
+    static HWND g_hWnd = nullptr;
     static IDXGISwapChain *g_pCurrentSwapchain;
     static bool g_bReleasedView = false;
 
@@ -133,12 +133,14 @@ namespace RbxStu::Scheduling::Jobs {
         RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics,
                   std::format("Reinitializing buffers with HWND and SwapChain {} & {}", (void *) hWnd,
                               (void *) pSwapchain));
+        if (pSwapchain != nullptr)
+            pSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&pBuffer));
+        if (g_pDevice != nullptr)
+            g_pDevice->CreateRenderTargetView(pBuffer, nullptr, &g_pRenderTargetView);
+        if (pBuffer != nullptr)
+            pBuffer->Release();
 
-        pSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void **>(&pBuffer));
-        g_pDevice->CreateRenderTargetView(pBuffer, nullptr, &g_pRenderTargetView);
-        pBuffer->Release();
-
-        if (bSetTarget)
+        if (bSetTarget && g_pContext != nullptr)
             g_pContext->OMSetRenderTargets(1, &g_pRenderTargetView, nullptr);
 
         g_bReleasedView = false;
@@ -207,6 +209,7 @@ namespace RbxStu::Scheduling::Jobs {
         }
 
         if (!g_bInitializedImGuiHook) {
+
             /*
              *  Due to the fact roblox holds multiple hWnd, we must hook the main ancestor of them all to get all
              * required input events. this is kind of nasty, and may result in some bugs down the line, but it is this
@@ -220,6 +223,8 @@ namespace RbxStu::Scheduling::Jobs {
 
             pSelf->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void **>(&g_pDevice));
             g_pDevice->GetImmediateContext(&g_pContext);
+
+            g_pCurrentSwapchain = pSelf;
 
             ImGui::CreateContext();
 
@@ -239,7 +244,7 @@ namespace RbxStu::Scheduling::Jobs {
             vp.TopLeftX = 0;
             vp.TopLeftY = 0;
             g_pContext->RSSetViewports(1, &vp);
-            TransitionHwnd(pSelf, g_hWnd);
+            RbxStuLog(RbxStu::LogType::Debug, RbxStu::Graphics, "Initialized ImGui (via ResizeBuffers)");
             return hr;
         }
 
