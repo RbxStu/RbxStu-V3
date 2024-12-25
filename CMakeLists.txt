@@ -23,16 +23,16 @@ if (build_type STREQUAL release)
             /O2
             /Gr
             /GS
-            /GF
-            /GL
-            /MP
+            # /GF
+            # /GL
+            # /MP
             /cgthreads8
             /arch:AVX2
     )
 
     add_link_options(
             /LTCG
-            /INCREMENTAL
+            # /INCREMENTAL
             /DEBUG
             /DYNAMICBASE
             /HIGHENTROPYVA
