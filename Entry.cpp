@@ -94,6 +94,22 @@ void EnableRobloxInternal() {
 }
 
 void Entry() {
+    if (GetModuleHandleA("RobloxStudioBeta.exe") == nullptr) {
+        MessageBoxA(nullptr, "Buddy, this isn't Roblox Studio.", "You okay?", MB_OK | MB_TOPMOST);
+        return;
+    }
+
+    std::wstring studioPath;
+    if (!RbxStu::Utilities::GetRobloxStudioPath(studioPath))
+        return;
+
+    std::filesystem::path msvcpPath = std::filesystem::path(studioPath).parent_path() / L"msvcp140.dll";
+    if (exists(msvcpPath)) {
+        MessageBoxA(nullptr, "We have detected msvcp140.dll in your roblox studio folder! Please delete it.", "Warning",
+                    MB_OK | MB_TOPMOST);
+        return;
+    }
+
     AllocConsole();
     RbxStu::Logger::GetSingleton()->Initialize(true);
 

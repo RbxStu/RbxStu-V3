@@ -158,6 +158,16 @@ namespace RbxStu {
             lua_remove(L, -2);
         }
 
+        __forceinline static bool GetRobloxStudioPath(std::wstring &path) {
+            if (const HMODULE hModule = GetModuleHandleW(L"RobloxStudioBeta.exe")) {
+                WCHAR modulePath[MAX_PATH];
+                GetModuleFileNameW(hModule, modulePath, MAX_PATH);
+                path = modulePath;
+                return true;
+            }
+            return false;
+        }
+
         __forceinline static std::optional<std::filesystem::path> GetDllDir() {
             HMODULE hModule = nullptr;
 
