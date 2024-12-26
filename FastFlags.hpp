@@ -149,6 +149,8 @@ namespace RbxStu {
 
         RBXSTU_DEFINEFASTFLAG(SFlagRbxCrashKey, "SFlagRbxCrashKey", RbxStu::FastFlagType::FastFlagString, std::string,
                               "__RbxCrash");
+
+        RBXSTU_DEFINEFASTFLAG(FFlagEnableImGui, "FFlagEnableImGui", RbxStu::FastFlagType::FastFlagBoolean, bool, true);
     } // namespace FastFlags
 
 #undef RBXSTU_DEFINEFASTFLAG

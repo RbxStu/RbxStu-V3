@@ -9,6 +9,7 @@
 #include <d3d11.h>
 #include <kiero.h>
 
+#include "FastFlags.hpp"
 #include "Render/UserInterface/UserInterface.hpp"
 #include "backends/imgui_impl_dx11.h"
 #include "backends/imgui_impl_win32.h"
@@ -303,7 +304,8 @@ namespace RbxStu::Scheduling::Jobs {
 
     bool ImguiRenderJob::ShouldStep(RbxStu::Scheduling::JobKind jobKind, void *job,
                                     RBX::TaskScheduler::Job::Stats *jobStats) {
-        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() != RBX::DataModelType_MainMenuStandalone;
+        return RbxStu::Roblox::DataModel::FromJob(job)->GetDataModelType() != RBX::DataModelType_MainMenuStandalone &&
+               RbxStu::FastFlags::FFlagEnableImGui.GetValue();
         // Any DataModel that is not Standalone will be steppable correctly for rendering, else nothing will render to
         // the screen, as there is no Viewport available
     }

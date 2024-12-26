@@ -148,7 +148,7 @@ void Entry() {
     RbxStu::Communication::WebsocketCommunication::GetSingleton();
 
     if (RbxStu::FastFlags::FFlagEnablePipeCommunication.GetValue()) {
-        RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communication [DEVELOPMENT ONLY]")
+        RbxStuLog(RbxStu::LogType::Debug, RbxStu::MainThread, "Launching Pipe Communication [LEGACY FEATURE]")
 
                 std::thread(RbxStu::Communication::PipeCommunication::HandlePipe, "CommunicationPipe")
                         .detach();
@@ -168,6 +168,10 @@ void Entry() {
             tsk.wait();
         }
     }
+
+    RbxStuLog(RbxStu::LogType::Warning, RbxStu::MainThread,
+              std::format("-- ImGui status: {}",
+                          (RbxStu::FastFlags::FFlagEnableImGui.GetValue() ? "Enabled (DX11)" : "Disabled")));
 
     // Test exec.
     /*    while (scheduler->GetExecutionEngine(RBX::DataModelType::DataModelType_PlayClient) == nullptr)
