@@ -732,7 +732,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_World_reportTouchInfo));
 
         if (reportTouchInfo == nullptr)
-            luaL_error(L, "cannot firetouchinterest; RBX::BasePart::fireTouchSignals was not found during the "
+            luaL_error(L, "cannot firetouchinterest; RBX::World::reportTouchInfo was not found during the "
                           "scanning step! If you believe this was caused by an update, contact the developers!");
 
         auto world = primitive0->GetWorld();
@@ -742,6 +742,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (world->GetRealStructure() == nullptr)
             luaL_error(L, "cannot firetouchinterest: failed to find RBX::World *.");
+
+        if (primitive1->GetWorld()->GetRealStructure() != primitive0->GetWorld()->GetRealStructure())
+            luaL_error(L, "cannot firetouchinterest: cannot perform a physics operation on two primitives present in different physics worlds (part1.RBX::World * != part2.RBX::World *).");
+
 
         reportTouchInfo(world->GetRealStructure(), primitive0->GetRealStructure(), primitive1->GetRealStructure(),
                         static_cast<RBX::TouchEventType>(static_cast<std::uint8_t>(touchType)), true);
