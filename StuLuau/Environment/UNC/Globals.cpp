@@ -744,7 +744,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             luaL_error(L, "cannot firetouchinterest: failed to find RBX::World *.");
 
         if (primitive1->GetWorld()->GetRealStructure() != primitive0->GetWorld()->GetRealStructure())
-            luaL_error(L, "cannot firetouchinterest: cannot perform a physics operation on two primitives present in different physics worlds (part1.RBX::World * != part2.RBX::World *).");
+            luaL_error(L, "cannot firetouchinterest: cannot perform a physics operation on two primitives present in "
+                          "different physics worlds (part1.RBX::World * != part2.RBX::World *).");
 
 
         reportTouchInfo(world->GetRealStructure(), primitive0->GetRealStructure(), primitive1->GetRealStructure(),
@@ -754,6 +755,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::fireproximityprompt(lua_State *L) {
+        luaL_checktype(L, 1, lua_Type::LUA_TUSERDATA);
         Utilities::checkInstance(L, 1, "ProximityPrompt");
 
         const auto proximityPrompt = *static_cast<std::uintptr_t **>(lua_touserdata(L, 1));
@@ -768,6 +770,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getscriptbytecode(lua_State *L) {
+        luaL_checktype(L, 1, lua_Type::LUA_TUSERDATA);
         Utilities::checkInstance(L, 1, "LuaSourceContainer");
         auto [isInstance, className] = Utilities::getInstanceType(L, 1);
 
@@ -805,6 +808,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     int Globals::getscriptclosure(lua_State *L) {
+        luaL_checktype(L, 1, lua_Type::LUA_TUSERDATA);
         Utilities::checkInstance(L, 1, "LuaSourceContainer");
         auto [isInstance, className] = Utilities::getInstanceType(L, 1);
 
