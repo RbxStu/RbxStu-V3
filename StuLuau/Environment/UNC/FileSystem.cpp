@@ -12,6 +12,7 @@
 #include "Luau/Compiler.h"
 #include "StuLuau/Extensions/luauext.hpp"
 #include "StuLuau/LuauSecurity.hpp"
+#include "lbuffer.h"
 #include "ldebug.h"
 
 const auto s_bannedExtensions = std::unordered_set<std::string_view>{
@@ -95,7 +96,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!IsFileExtensionSafe(pathToWrite))
             luaL_argerrorL(L, 1, "Illegal path");
 
-        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::ate);
+        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::trunc);
+
+        if (!file.is_open())
+            luaL_error(L, "Failed to open file handle");
 
         file << std::string(content, contentSize);
         file.flush();
@@ -124,16 +128,14 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!IsFileExtensionSafe(pathToWrite))
             luaL_argerrorL(L, 1, "Illegal path");
 
-        std::ifstream fileContentReader(GetNormalizedPath(pathToWrite), std::ios::in);
-        std::string originalContent((std::istreambuf_iterator<char>(fileContentReader)),
-                          std::istreambuf_iterator<char>());
-
         std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::ate);
 
-        const auto contentToAppend = std::string(content, contentSize);
-        const std::string newContent = originalContent + contentToAppend;
+        if (!file.is_open())
+            luaL_error(L, "Failed to open file handle");
 
-        file << newContent;
+        const auto contentToAppend = std::string(content, contentSize);
+
+        file << contentToAppend;
         file.flush();
         file.close();
 
@@ -142,7 +144,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int FileSystem::readfile(lua_State *L) {
         luaL_checkstring(L, 1);
-        lua_normalisestack(L, 1);
+        auto readAsBuffer = luaL_optboolean(L, 2, false);
+        lua_normalisestack(L, 2);
         std::size_t pathSize{};
         const auto path = luaL_tolstring(L, 1, &pathSize);
 
@@ -154,12 +157,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             luaG_runerrorL(L, "This file doesn't exist");
 
-        // Dottik reading using << reads until a white space, this will read the whole file.
-        std::ifstream file(GetNormalizedPath(pathToWrite), std::ios::in);
-        const std::string content((std::istreambuf_iterator<char>(file)),
-                          std::istreambuf_iterator<char>());
+        if (std::filesystem::file_size(GetNormalizedPath(pathToWrite)) >
+            MAX_BUFFER_SIZE) { // MAX_BUFFER_SIZE == MAXSIZE (max string size)
+            luaL_error(L, "File content too big.");
+        }
 
-        lua_pushlstring(L, content.c_str(), content.size());
+        std::ifstream file(GetNormalizedPath(pathToWrite), std::ios::in | (readAsBuffer ? std::ios::binary : 0));
+
+        const std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+        file.close();
+
+        if (readAsBuffer) {
+            const auto bufferData = lua_newbuffer(L, content.size());
+            memcpy(bufferData, content.data(), content.size());
+        } else {
+            lua_pushlstring(L, content.c_str(), content.size());
+        }
+
         return 1;
     }
 
@@ -231,7 +246,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!IsPathSafe(pathToWrite))
             luaL_argerrorL(L, 1, "Illegal path");
 
-        lua_pushboolean(L,  std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
+        lua_pushboolean(L, std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
         return 1;
     }
 
@@ -246,7 +261,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!IsPathSafe(pathToWrite))
             luaL_argerrorL(L, 1, "Illegal path");
 
-        lua_pushboolean(L,  std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
+        lua_pushboolean(L, std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
         return 1;
     }
 
