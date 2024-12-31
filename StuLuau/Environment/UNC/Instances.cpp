@@ -147,6 +147,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                           "pass arguments. Albeit that may change when I implement and differenciate between "
                           "GCable objects.");
 
+                luaL_error(L, "cannot fire a connection across the Luau VM boundary.");    // TODO: Complete cross-LVM firing.
+
                 /*
                  *  The function is declared in another LVM, we have to be excessively careful with how we handle
                  *  parameters onto the signal. We must disallow Table * and userdata (Although we can pushInstance
