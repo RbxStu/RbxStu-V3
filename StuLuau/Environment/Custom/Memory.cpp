@@ -12,7 +12,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
     int Memory::getgc(lua_State *L) {
         const bool addTables = luaL_optboolean(L, 1, false);
         lua_normalisestack(L, 1);
-        luaC_threadbarrier(L);
+        lua_preparepushcollectable(L, 1);
         lua_newtable(L);
 
         typedef struct {
@@ -35,7 +35,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
             if (const auto gcObjType = pGcObj->gch.tt;
                 (gcObjType < LUA_TPROTO && gcObjType >= LUA_TSTRING && gcObjType != LUA_TTABLE) ||
                 gcObjType == LUA_TTABLE && pCtx->accessTables) {
-                luaC_threadbarrier(ctxL);
+                lua_preparepushcollectable(ctxL, 1);
                 ctxL->top->value.gc = pGcObj;
                 ctxL->top->tt = gcObjType;
                 ctxL->top++;
@@ -52,12 +52,16 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
     int Memory::reference_object(lua_State *L) {
         luaL_checkany(L, 1);
+        lua_normalisestack(L, 1);
+        lua_preparepush(L, 1);
         lua_pushinteger(L, lua_ref(L, -1));
         return 1;
     }
 
     int Memory::unreference_object(lua_State *L) {
         luaL_checkinteger(L, 1);
+        lua_normalisestack(L, 1);
+        lua_preparepushcollectable(L, 1);
         lua_getref(L, lua_tointeger(L, 1));
 
         if (lua_type(L, -1) != ::lua_Type::LUA_TNIL)
