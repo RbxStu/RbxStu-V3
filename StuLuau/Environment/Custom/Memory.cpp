@@ -4,12 +4,15 @@
 
 #include "Memory.hpp"
 
+#include "StuLuau/Extensions/luauext.hpp"
 #include "lgc.h"
 #include "lmem.h"
 
 namespace RbxStu::StuLuau::Environment::Custom {
     int Memory::getgc(lua_State *L) {
         const bool addTables = luaL_optboolean(L, 1, false);
+        lua_normalisestack(L, 1);
+        luaC_threadbarrier(L);
         lua_newtable(L);
 
         typedef struct {
@@ -30,8 +33,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
                 return false;
 
             if (const auto gcObjType = pGcObj->gch.tt;
-                (gcObjType == LUA_TFUNCTION || gcObjType == LUA_TUSERDATA || gcObjType == LUA_TBUFFER ||
-                 gcObjType == LUA_TLIGHTUSERDATA) || gcObjType == LUA_TTABLE && pCtx->accessTables) {
+                (gcObjType < LUA_TPROTO && gcObjType >= LUA_TSTRING) || gcObjType == LUA_TTABLE && pCtx->accessTables) {
+                luaC_threadbarrier(ctxL);
                 ctxL->top->value.gc = pGcObj;
                 ctxL->top->tt = gcObjType;
                 ctxL->top++;
@@ -64,21 +67,18 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
     const luaL_Reg *Memory::GetFunctionRegistry() {
         static luaL_Reg memlibreg[] = {
-            {"getgc", RbxStu::StuLuau::Environment::Custom::Memory::getgc},
+                {"getgc", RbxStu::StuLuau::Environment::Custom::Memory::getgc},
 
-            {"reference_object", RbxStu::StuLuau::Environment::Custom::Memory::reference_object},
-            {"unreference_object", RbxStu::StuLuau::Environment::Custom::Memory::unreference_object},
+                {"reference_object", RbxStu::StuLuau::Environment::Custom::Memory::reference_object},
+                {"unreference_object", RbxStu::StuLuau::Environment::Custom::Memory::unreference_object},
 
 
-            {nullptr, nullptr}
-        };
+                {nullptr, nullptr}};
 
         return memlibreg;
     }
 
     bool Memory::PushToGlobals() { return true; }
 
-    const char *Memory::GetLibraryName() {
-        return "memory";
-    }
-}
+    const char *Memory::GetLibraryName() { return "memory"; }
+} // namespace RbxStu::StuLuau::Environment::Custom
