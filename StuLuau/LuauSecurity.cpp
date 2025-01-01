@@ -256,6 +256,17 @@ namespace RbxStu::StuLuau {
         set_proto(closure->l.p, security);
     }
 
+    void LuauSecurity::ElevateClosureWithExplicitCapabilities(const Closure *closure,
+                                                              const std::uintptr_t capabilities) {
+        if (closure->isC)
+            return;
+
+        auto *security = new std::uint64_t[0x1]{0};
+        *security = static_cast<std::uint64_t>(capabilities);
+
+        set_proto(closure->l.p, security);
+    }
+
     bool LuauSecurity::IsOurClosure(Closure *closure) {
         /*
          *  We modify the Luau Closures we push with their line defined to be -1.
