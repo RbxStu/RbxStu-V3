@@ -211,7 +211,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!std::filesystem::is_directory(pathToWrite))
             return 0;
 
-        std::filesystem::remove_all(pathToWrite);
+        std::error_code err{};
+
+        if (!std::filesystem::remove_all(pathToWrite, err))
+            luaL_error(L, "failed to delete folder and all subfolders with error: '%s'", err.message().c_str());
 
         return 0;
     }
@@ -230,7 +233,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!std::filesystem::is_regular_file(pathToWrite))
             return 0;
 
-        std::filesystem::remove(pathToWrite);
+        std::error_code err{};
+
+        if (!std::filesystem::remove(pathToWrite, err))
+            luaL_error(L, "failed to delete file with error: '%s'", err.message().c_str());
 
         return 0;
     }
@@ -314,14 +320,26 @@ namespace RbxStu::StuLuau::Environment::UNC {
             return 2;
         }
 
-        LuauSecurity::GetSingleton()->ElevateClosure(lua_toclosure(L, -1),
-                                                     RbxStu::StuLuau::ExecutionSecurity::RobloxExecutor);
+        lua_setsafeenv(L, LUA_GLOBALSINDEX, false); // Env is no longer safe.
+
+        auto currentCi = L->ci;
+        while (currentCi != L->base_ci) {
+            if (!clvalue(currentCi->func)->isC) {
+                const auto masterProto = clvalue(currentCi->func)->l.p;
+                const auto capabilities = *(std::uintptr_t *) masterProto->userdata;
+                LuauSecurity::GetSingleton()->ElevateClosureWithExplicitCapabilities(
+                        lua_toclosure(L, -1),
+                        capabilities); // Grab the capabilities from the parent closure.
+            }
+            currentCi--;
+        }
 
         return 1;
     }
 
     int FileSystem::dofile(lua_State *L) {
         luaL_checkstring(L, 1);
+        lua_normalisestack(L, 1);
         lua_pushcclosure(L, RbxStu::StuLuau::Environment::UNC::FileSystem::loadfile, nullptr, 0);
 
         lua_pushvalue(L, 1);
@@ -347,10 +365,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
     const luaL_Reg *FileSystem::GetFunctionRegistry() {
         static luaL_Reg filesystemLib[] = {
                 {"readfile", RbxStu::StuLuau::Environment::UNC::FileSystem::readfile},
-                {"appendfile", RbxStu::StuLuau::Environment::UNC::FileSystem::appendfile},
                 {"writefile", RbxStu::StuLuau::Environment::UNC::FileSystem::writefile},
+                {"appendfile", RbxStu::StuLuau::Environment::UNC::FileSystem::appendfile},
                 {"isfile", RbxStu::StuLuau::Environment::UNC::FileSystem::isfile},
                 {"isfolder", RbxStu::StuLuau::Environment::UNC::FileSystem::isfolder},
+
                 {"listfiles", RbxStu::StuLuau::Environment::UNC::FileSystem::listfiles},
                 {"dofile", RbxStu::StuLuau::Environment::UNC::FileSystem::dofile},
                 {"loadfile", RbxStu::StuLuau::Environment::UNC::FileSystem::loadfile},
