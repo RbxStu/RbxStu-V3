@@ -33,7 +33,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
                 return false;
 
             if (const auto gcObjType = pGcObj->gch.tt;
-                (gcObjType < LUA_TPROTO && gcObjType >= LUA_TSTRING) || gcObjType == LUA_TTABLE && pCtx->accessTables) {
+                (gcObjType < LUA_TPROTO && gcObjType >= LUA_TSTRING && gcObjType != LUA_TTABLE) ||
+                gcObjType == LUA_TTABLE && pCtx->accessTables) {
                 luaC_threadbarrier(ctxL);
                 ctxL->top->value.gc = pGcObj;
                 ctxL->top->tt = gcObjType;
