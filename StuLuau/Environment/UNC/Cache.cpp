@@ -8,14 +8,16 @@
 #include <Utilities.hpp>
 
 #include "Globals.hpp"
+#include "StuLuau/Extensions/luauext.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Cache::invalidate(lua_State *L) {
         Utilities::checkInstance(L, 1, "ANY");
+        lua_normalisestack(L, 1);
 
         const auto rawUserdata = *static_cast<void **>(lua_touserdata(L, 1));
-        const auto rbxPushInstance = RbxStuOffsets::GetSingleton()->GetOffset(
-            RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+        const auto rbxPushInstance =
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
 
         if (rbxPushInstance == nullptr) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
@@ -23,6 +25,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             return 0;
         }
 
+        lua_preparepush(L, 4);
         lua_pushlightuserdata(L, rbxPushInstance);
         lua_gettable(L, LUA_REGISTRYINDEX);
 
@@ -35,10 +38,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Cache::replace(lua_State *L) {
         Utilities::checkInstance(L, 1, "ANY");
+        lua_normalisestack(L, 1);
 
         const auto rawUserdata = *static_cast<void **>(lua_touserdata(L, 1));
-        const auto rbxPushInstance = RbxStuOffsets::GetSingleton()->GetOffset(
-            RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+        const auto rbxPushInstance =
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
 
         if (rbxPushInstance == nullptr) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
@@ -46,6 +50,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             return 0;
         }
 
+        lua_preparepush(L, 4);
         lua_pushlightuserdata(L, rbxPushInstance);
         lua_gettable(L, LUA_REGISTRYINDEX);
 
@@ -58,10 +63,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Cache::iscached(lua_State *L) {
         Utilities::checkInstance(L, 1, "ANY");
+        lua_normalisestack(L, 1);
 
         const auto rawUserdata = *static_cast<void **>(lua_touserdata(L, 1));
-        const auto rbxPushInstance = RbxStuOffsets::GetSingleton()->GetOffset(
-            RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
+        const auto rbxPushInstance =
+                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance);
 
         if (rbxPushInstance == nullptr) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
@@ -70,7 +76,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             return 1;
         }
 
-
+        lua_preparepush(L, 3);
         lua_pushlightuserdata(L, rbxPushInstance);
         lua_gettable(L, LUA_REGISTRYINDEX);
 
@@ -83,22 +89,19 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     const luaL_Reg *Cache::GetFunctionRegistry() {
         static luaL_Reg functions[] = {
-            // Defined in global to prevent polluting global with 'invalidate', 'replace' and 'iscached'
-            {"cloneref", RbxStu::StuLuau::Environment::UNC::Globals::cloneref},
-            {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
+                // Defined in global to prevent polluting global with 'invalidate', 'replace' and 'iscached'
+                {"cloneref", RbxStu::StuLuau::Environment::UNC::Globals::cloneref},
+                {"compareinstances", RbxStu::StuLuau::Environment::UNC::Globals::compareinstances},
 
-            {"invalidate", RbxStu::StuLuau::Environment::UNC::Cache::invalidate},
-            {"replace", RbxStu::StuLuau::Environment::UNC::Cache::replace},
-            {"iscached", RbxStu::StuLuau::Environment::UNC::Cache::iscached},
-            {nullptr, nullptr}
-        };
+                {"invalidate", RbxStu::StuLuau::Environment::UNC::Cache::invalidate},
+                {"replace", RbxStu::StuLuau::Environment::UNC::Cache::replace},
+                {"iscached", RbxStu::StuLuau::Environment::UNC::Cache::iscached},
+                {nullptr, nullptr}};
 
         return functions;
     }
 
-    bool Cache::PushToGlobals() {
-        return false;
-    }
+    bool Cache::PushToGlobals() { return false; }
 
     const char *Cache::GetLibraryName() { return "cache"; }
-}
+} // namespace RbxStu::StuLuau::Environment::UNC

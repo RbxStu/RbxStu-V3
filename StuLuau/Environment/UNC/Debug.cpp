@@ -4,14 +4,14 @@
 
 #include "Debug.hpp"
 
+#include "Luau/Bytecode.h"
+#include "StuLuau/Extensions/luauext.hpp"
 #include "lapi.h"
 #include "lfunc.h"
 #include "lgc.h"
 #include "lmem.h"
 #include "lobject.h"
 #include "lstate.h"
-#include "Luau/Bytecode.h"
-#include "StuLuau/Extensions/luauext.hpp"
 
 namespace RbxStu::StuLuau::Environment::UNC {
     int Debug::getconstants(lua_State *L) {
@@ -46,6 +46,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (tval->tt == LUA_TFUNCTION) {
                 lua_pushnil(L);
             } else {
+                if (iscollectable(tval))
+                    luaC_threadbarrier(L);
                 L->top->value = tval->value;
                 L->top->tt = tval->tt;
                 L->top++;
@@ -90,6 +92,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (const auto tValue = &constants[constantIndex - 1]; tValue->tt == LUA_TFUNCTION) {
             lua_pushnil(L); // Closures cannot be obtained.
         } else {
+            if (iscollectable(tValue))
+                luaC_threadbarrier(L);
+
             L->top->tt = tValue->tt;
             L->top->value = tValue->value;
             L->top++;
@@ -146,8 +151,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         if (newConstant->tt != constant->tt)
             luaL_argerror(
-            L, 3, "cannot replace constant when the element you want to replace it with is not of the same type.");
+                    L, 3,
+                    "cannot replace constant when the element you want to replace it with is not of the same type.");
 
+        if (iscollectable(newConstant))
+            luaC_threadbarrier(L);
         constant->tt = newConstant->tt;
         constant->value = newConstant->value;
 
@@ -156,6 +164,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Debug::getinfo(lua_State *L) {
         luaL_checkany(L, 1);
+        lua_normalisestack(L, 1);
         auto infoLevel = 0;
 
         if (lua_isnumber(L, 1)) {
@@ -172,6 +181,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (!lua_getinfo(L, infoLevel, "fulasn", &lDebug))
             luaL_argerror(L, 1, "invalid level");
 
+        lua_preparepushcollectable(L, 2);
         lua_newtable(L);
 
         lua_pushstring(L, lDebug.source);
@@ -239,6 +249,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto proto = closure->l.p->p[index - 1];
 
         lua_newtable(L);
+        lua_preparepushcollectable(L, 1);
         setclvalue(L, L->top, luaF_newLclosure(L, proto->nups, closure->env, proto));
         L->top++;
         lua_rawseti(L, -2, 1);
@@ -269,14 +280,17 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         const auto *cl = lua_toclosure(L, -1);
 
+        lua_preparepushcollectable(L, 1);
         lua_newtable(L);
 
         const auto *mProto = cl->l.p;
 
         for (int i = 0; i < mProto->sizep; i++) {
             Proto *proto = mProto->p[i];
+            lua_preparepushcollectable(L, 1);
             Closure *lclosure = luaF_newLclosure(L, proto->nups, cl->env, proto);
 
+            lua_preparepushcollectable(L, 1);
             setclvalue(L, L->top, lclosure);
             L->top++;
             lua_rawseti(L, -2, i + 1);
@@ -309,6 +323,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         if (stackFrame->base[index - 1].tt != lua_type(L, 3))
             luaL_argerror(L, 2, "type on the stack is different than that you are trying to set!");
 
+        if (iscollectable(luaA_toobject(L, 3))) {
+            lua_preparepushcollectable(L, 1);
+        } else {
+            lua_preparepush(L, 1);
+        }
+
         setobj2s(L, &stackFrame->base[index - 1], luaA_toobject(L, 3));
         return 0;
     }
@@ -330,8 +350,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
             luaL_argerror(L, 1, "Lua function expected.");
 
         if (index == 69420) {
+            lua_preparepushcollectable(L, 1);
             lua_newtable(L);
             for (int i = 0; i < stackFrameSize; i++) {
+                lua_preparepushcollectable(L, 1);
                 setobj2s(L, L->top, &frame->base[i]);
                 L->top++;
 
@@ -341,6 +363,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             if (index < 1 || index > stackFrameSize)
                 luaL_argerror(L, 2, "index out of range");
 
+            lua_preparepushcollectable(L, 1);
             setobj2s(L, L->top, &frame->base[index - 1]);
             L->top++;
         }
@@ -380,8 +403,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         TValue *upvalue = (&upvalue_table[index - 1]);
 
-        upvalue->value = value->value;
+        if (iscollectable(value)) {
+            lua_preparepushcollectable(L, 1);
+        } else {
+            lua_preparepush(L, 1);
+        }
 
+        upvalue->value = value->value;
         upvalue->tt = value->tt;
 
         luaC_barrier(L, cl, value);
@@ -425,6 +453,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto *upval = &upvalueTable[index - 1];
         auto *top = L->top;
 
+        if (iscollectable(upval)) {
+            lua_preparepushcollectable(L, 1);
+        } else {
+            lua_preparepush(L, 1);
+        }
+
         if (upval->tt == ::lua_Type::LUA_TTABLE) {
             lua_pushnil(L);
             return 1;
@@ -466,6 +500,12 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto *upval = (&upvalueTable[i]);
             auto *top = L->top;
 
+            if (iscollectable(upval)) {
+                lua_preparepushcollectable(L, 1);
+            } else {
+                lua_preparepush(L, 1);
+            }
+
             if (upval->tt == ::lua_Type::LUA_TFUNCTION || upval->tt == ::lua_Type::LUA_TTABLE) {
                 lua_pushnil(L);
             } else {
@@ -481,29 +521,23 @@ namespace RbxStu::StuLuau::Environment::UNC {
     }
 
     const luaL_Reg *Debug::GetFunctionRegistry() {
-        const static luaL_Reg funcs[] = {
-            {"getconstants", RbxStu::StuLuau::Environment::UNC::Debug::getconstants},
-            {"getconstant", RbxStu::StuLuau::Environment::UNC::Debug::getconstant},
-            {"setconstant", RbxStu::StuLuau::Environment::UNC::Debug::setconstant},
-            {"getinfo", RbxStu::StuLuau::Environment::UNC::Debug::getinfo},
-            //  {"getproto", RbxStu::StuLuau::Environment::UNC::Debug::getproto},
-            //  {"getprotos", RbxStu::StuLuau::Environment::UNC::Debug::getprotos},
-            {"setstack", RbxStu::StuLuau::Environment::UNC::Debug::setstack},
-            {"getstack", RbxStu::StuLuau::Environment::UNC::Debug::getstack},
-            {"setupvalue", RbxStu::StuLuau::Environment::UNC::Debug::lsetupvalue},
-            {"getupvalue", RbxStu::StuLuau::Environment::UNC::Debug::getupvalue},
-            {"getupvalues", RbxStu::StuLuau::Environment::UNC::Debug::getupvalues},
-            {nullptr, nullptr}
-        };
+        const static luaL_Reg funcs[] = {{"getconstants", RbxStu::StuLuau::Environment::UNC::Debug::getconstants},
+                                         {"getconstant", RbxStu::StuLuau::Environment::UNC::Debug::getconstant},
+                                         {"setconstant", RbxStu::StuLuau::Environment::UNC::Debug::setconstant},
+                                         {"getinfo", RbxStu::StuLuau::Environment::UNC::Debug::getinfo},
+                                         //  {"getproto", RbxStu::StuLuau::Environment::UNC::Debug::getproto},
+                                         //  {"getprotos", RbxStu::StuLuau::Environment::UNC::Debug::getprotos},
+                                         {"setstack", RbxStu::StuLuau::Environment::UNC::Debug::setstack},
+                                         {"getstack", RbxStu::StuLuau::Environment::UNC::Debug::getstack},
+                                         {"setupvalue", RbxStu::StuLuau::Environment::UNC::Debug::lsetupvalue},
+                                         {"getupvalue", RbxStu::StuLuau::Environment::UNC::Debug::getupvalue},
+                                         {"getupvalues", RbxStu::StuLuau::Environment::UNC::Debug::getupvalues},
+                                         {nullptr, nullptr}};
 
         return funcs;
     }
 
-    bool Debug::PushToGlobals() {
-        return false;
-    }
+    bool Debug::PushToGlobals() { return false; }
 
-    const char *Debug::GetLibraryName() {
-        return "debug";
-    }
-}
+    const char *Debug::GetLibraryName() { return "debug"; }
+} // namespace RbxStu::StuLuau::Environment::UNC

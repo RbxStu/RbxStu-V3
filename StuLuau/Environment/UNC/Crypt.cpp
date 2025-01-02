@@ -25,6 +25,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         encoder.Put(reinterpret_cast<const CryptoPP::byte *>(str), len);
         encoder.MessageEnd();
 
+        lua_preparepushcollectable(L, 1);
         lua_pushlstring(L, encoded.c_str(), encoded.length() - 1); // Encoded strings have no \0.
         return 1;
     }
@@ -42,6 +43,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         decoder.MessageEnd();
 
+        lua_preparepushcollectable(L, 1);
         lua_pushlstring(L, decoded.c_str(), decoded.length());
         return 1;
     }
@@ -53,6 +55,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         CryptoPP::SecByteBlock block(bufSize);
         lua_pushlstring(L, reinterpret_cast<char *>(block.BytePtr()), block.size());
 
+        lua_preparepushcollectable(L, 3);
         lua_pushcclosure(L, Crypt::base64encode, nullptr, 0);
         lua_pushvalue(L, 2);
         lua_call(L, 1, 1);
@@ -61,6 +64,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Crypt::generatekey(lua_State *L) {
         lua_normalisestack(L, 0);
+        lua_preparepushcollectable(L, 3);
         lua_pushcclosure(L, Crypt::generatebytes, nullptr, 0);
         lua_pushnumber(L, 32);
         lua_call(L, 1, 1);

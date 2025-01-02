@@ -5,6 +5,7 @@
 #include "Instances.hpp"
 
 #include <Logger.hpp>
+#include <Scanners/Rbx.hpp>
 #include <Scheduling/TaskScheduler.hpp>
 #include <Scheduling/TaskSchedulerOrchestrator.hpp>
 #include <Utilities.hpp>
@@ -147,7 +148,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
                           "pass arguments. Albeit that may change when I implement and differenciate between "
                           "GCable objects.");
 
-                luaL_error(L, "cannot fire a connection across the Luau VM boundary.");    // TODO: Complete cross-LVM firing.
+                luaL_error(L,
+                           "cannot fire a connection across the Luau VM boundary."); // TODO: Complete cross-LVM firing.
 
                 /*
                  *  The function is declared in another LVM, we have to be excessively careful with how we handle
@@ -536,6 +538,24 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 0;
     }
 
+    int getcallbackvalue(lua_State *L) {
+        RbxStu::Utilities::checkInstance(L, 1, "ANY");
+        size_t len{};
+        auto str = lua_tolstring(L, 2, &len);
+        auto dataInstance = lua_touserdata(L, 1);
+
+        auto [_, className] = RbxStu::Utilities::getInstanceType(L, 1);
+
+        auto propertyDescriptor = RbxStu::Scanners::RBX::GetSingleton()->GetPropertyForClass(L, className, str);
+
+        auto vft = *(std::uintptr_t *) propertyDescriptor;
+
+        auto getFunction = *reinterpret_cast<void **>(vft + 0x8);
+
+        printf("%p\n", propertyDescriptor);
+        return 0;
+    }
+
     const char *Instances::GetLibraryName() { return "instances"; }
 
     bool Instances::PushToGlobals() { return true; }
@@ -544,6 +564,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         static luaL_Reg libreg[] = {{"getconnections", getconnections},
                                     {"fireclickdetector", Instances::fireclickdetector},
                                     {"getinstancelist", Instances::getinstancelist},
+                                    {"getcallbackvalue", getcallbackvalue},
                                     {nullptr, nullptr}};
 
         return libreg;
