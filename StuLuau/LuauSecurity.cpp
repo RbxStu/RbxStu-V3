@@ -236,7 +236,7 @@ namespace RbxStu::StuLuau {
     bool LuauSecurity::IsOurThread(lua_State *L) {
         // Return RbxStu V2 impl, we cannot be for sure if the thread is ours if the std::weak_ptr<RBX::Script> is
         // inaccessible.
-        return GetThreadExtraspace(L)->script == nullptr;
+        return L != nullptr && GetThreadExtraspace(L) != nullptr && GetThreadExtraspace(L)->script == nullptr;
     }
 
     static void set_proto(Proto *proto, std::uint64_t *proto_identity) {
