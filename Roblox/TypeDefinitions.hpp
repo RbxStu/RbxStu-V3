@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <memory>
 
 struct lua_State;
 
@@ -507,8 +508,9 @@ namespace RBX {
             struct RBX::Reflection::ClassDescriptor *baseClass;
             char _398[8];
             char _3a0[8];
-            char _3a8[0x18];
-            char _3c0[0x20];
+            char _3a8[0x8];
+            void *innerPropertyDescriptorsStart;
+            void *innerPropertyDescriptorsEnd;
         };
     } // namespace Reflection
     namespace Signals {
