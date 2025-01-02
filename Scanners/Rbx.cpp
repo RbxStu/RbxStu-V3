@@ -11,6 +11,10 @@
 #include <libhat/Signature.hpp>
 #include <mutex>
 
+#include "Analysis/StringMatcher.hpp"
+#include "Analysis/StringSearcher.hpp"
+#include "Analysis/XrefSearcher.hpp"
+
 std::shared_ptr<RbxStu::Scanners::RBX> RbxStu::Scanners::RBX::pInstance;
 std::mutex RbxStuScannersRBXGetSingleton;
 
@@ -317,9 +321,131 @@ void RbxStu::Scanners::RBX::Initialize() {
                                   .count(),
                           this->m_FastFlagMap.size()));
 
+    {
+        auto ktableScanBegin = std::chrono::high_resolution_clock::now();
+        // Trying to call method on object of type: `%s` with incorrect arguments. (Updata AOB when needed)
+        const auto data = hat::process::get_process_module().get_section_data(".text");
+        auto scanResult =
+                hat::find_all_pattern(data.begin(), data.end(),
+                                      hat::compile_signature<"48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC "
+                                                             "30 48 8B DA C7 44 24 ?? FF FF FF FF">());
 
+        for (const auto matches: scanResult) {
+            auto possibleInsns = disassembler->GetInstructions(
+                    matches.get(), reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(matches.get()) - 0x50),
+                    true);
+
+            if (!possibleInsns.has_value())
+                continue;
+            const auto insns = std::move(possibleInsns.value());
+            auto insn = insns->GetInstructionWhichMatches("lea", "rcx, [rip + ", true);
+
+            this->m_RbxNamektable = static_cast<void **>(
+                    const_cast<void *>(disassembler->TranslateRelativeLeaIntoRuntimeAddress(insn.value()).value()));
+        }
+
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+                  std::format("End of scan for RBX::Name::ktable in {}ms! Found RBX::Name::ktable @ {}!",
+                              std::chrono::duration_cast<std ::chrono::milliseconds>(
+                                      std::chrono::high_resolution_clock::now() - ktableScanBegin)
+                                      .count(),
+                              static_cast<void *>(this->m_RbxNamektable)))
+    }
+
+    {
+        const auto classDescriptorScanBegin = std::chrono::high_resolution_clock::now();
+
+        const auto data = hat::process::get_process_module().get_section_data(".text");
+        auto scanResult = hat::find_all_pattern(data.begin(), data.end(),
+                                                hat::compile_signature<"0F 29 44 24 ? 0F 10 4C 24 ? 0F 29 4C ?">());
+
+        for (const auto &result: scanResult) {
+            auto describedName = "";
+            auto leaopstr = "";
+            x86_reg descriptorContainerRegister;
+            void *descriptorPointer = nullptr;
+            { // Step 1/2: get describedName name
+                if (auto possibleInsns = disassembler->GetInstructions(
+                            result.get(),
+                            reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(result.get()) - 0x60), true);
+                    possibleInsns.has_value()) {
+                    auto insns = std::move(possibleInsns.value());
+                    const auto callInstruction = insns->GetInstructionWhichMatches("call", nullptr, true);
+
+                    if (!callInstruction.has_value() ||
+                        !insns->ContainsInstruction("lea", "r8, [rip +", true) // Load string (Name)
+                        || !insns->ContainsInstruction(nullptr, "rdx,", true) ||
+                        !insns->ContainsInstruction("mov", "rcx,", true) // Load data pointer (ClassDescriptor)
+                    ) {
+                        continue;
+                    }
+
+                    auto leaInsn = insns->GetInstructionWhichMatches("lea", "r8, [rip +", true);
+                    describedName = static_cast<const char *>(
+                            disassembler->TranslateRelativeLeaIntoRuntimeAddress(leaInsn.value()).value());
+
+                    auto loadPointerOptional = insns->GetInstructionWhichMatches(
+                            "mov", "rcx,", true); // We must read from which register the data is being moved.
+                    auto loadPointer = loadPointerOptional.value();
+                    descriptorContainerRegister = loadPointer.detail->x86.operands[1].reg;
+                    leaopstr = loadPointer.op_str;
+                } else {
+                    continue;
+                }
+            }
+
+            { // Step 2: dump class descriptor pointer.
+
+                // Walk up the assembly to read `lea ( ? ), [rip + ...]`
+
+                if (auto possibleInsns = disassembler->GetInstructions(
+                            disassembler->GetFunctionStart(result.get()),
+                            reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(result.get()) + 0x60), true);
+                    possibleInsns.has_value()) {
+                    const auto insns = std::move(possibleInsns.value());
+                    if (!insns->ContainsInstruction("lea", ", [rip +", true))
+                        continue; // no lea insn, ignore.
+
+                    for (const auto &insn: insns->GetInstructions()) {
+                        if (strcmp(insn.mnemonic, "lea") == 0) {
+                            // Load effective address found.
+                            if (insn.detail->x86.operands[0].reg == descriptorContainerRegister) {
+                                if (auto addy = disassembler->TranslateRelativeLeaIntoRuntimeAddress(insn);
+                                    addy.has_value()) {
+                                    descriptorPointer = const_cast<void *>(addy.value());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (descriptorPointer == nullptr) {
+                        // printf("DISASSEMBLY FOR %s (MATCHING FOR INSN LEA OPSTR '%s'):\n", describedName, leaopstr);
+                        // printf("%s\n", insns->RenderInstructions().c_str());
+                        continue;
+                    }
+                } else {
+                    // RbxStuLog(RbxStu::LogType::Warning, RbxStu::Scanners_RBX,
+                    //           std::format("Failed to fetch instructions for the given function -- data
+                    //                       {} !",
+                    //                       describedName));
+                }
+            }
+
+            this->m_classDescriptorMap[describedName] =
+                    static_cast<::RBX::Reflection::ClassDescriptor *>(descriptorPointer);
+        }
+
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+                  std::format("End of scan for possible RBX::Reflection::ClassDescriptor in {}ms! Obtained {} "
+                              "described objects!",
+                              std::chrono::duration_cast<std ::chrono::milliseconds>(
+                                      std::chrono::high_resolution_clock::now() - classDescriptorScanBegin)
+                                      .count(),
+                              this->m_classDescriptorMap.size()))
+    }
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
-              std::format("ROBLOX + FastFlags Scanning Completed! Initialization completed in {}ms!",
+              std::format("ROBLOX + FastFlags + ClassDescriptor + RBX::Name::ktable Scanning Completed! Initialization "
+                          "completed in {}ms!",
                           std::chrono::duration_cast<std ::chrono::milliseconds>(
                                   std::chrono::high_resolution_clock::now() - initializationBegin)
                                   .count()));
@@ -330,6 +456,14 @@ void RbxStu::Scanners::RBX::Initialize() {
 
 bool RbxStu::Scanners::RBX::IsInitialized() { return this->m_bIsInitialized; }
 
+std::vector<RBX::Reflection::ClassDescriptor *> RbxStu::Scanners::RBX::GetClassDescriptors() const {
+    auto vec = std::vector<::RBX::Reflection::ClassDescriptor *>();
+    for (const auto &classDescriptor: this->m_classDescriptorMap | std::views::values) {
+        vec.emplace_back(classDescriptor);
+    }
+
+    return vec;
+}
 std::optional<RbxStu::Scanners::RBX::PointerOffsetInformation>
 RbxStu::Scanners::RBX::GetRbxPointerOffset(const RbxStu::Scanners::RBX::PointerOffsets offset) {
     if (!this->m_pointerObfuscation.contains(offset))
