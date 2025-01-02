@@ -564,7 +564,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         static luaL_Reg libreg[] = {{"getconnections", getconnections},
                                     {"fireclickdetector", Instances::fireclickdetector},
                                     {"getinstancelist", Instances::getinstancelist},
-                                    {"getcallbackvalue", getcallbackvalue},
+                                    // {"getcallbackvalue", getcallbackvalue},
                                     {nullptr, nullptr}};
 
         return libreg;
