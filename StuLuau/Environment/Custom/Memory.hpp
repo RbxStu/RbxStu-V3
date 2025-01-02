@@ -14,6 +14,8 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         static int unreference_object(lua_State *L);
 
+        static int get_gc_threshold(lua_State *L);
+
         ~Memory() override = default;
 
         const luaL_Reg *GetFunctionRegistry() override;
