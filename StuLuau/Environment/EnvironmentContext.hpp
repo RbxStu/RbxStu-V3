@@ -8,6 +8,7 @@
 #include <lstate.h>
 #include <memory>
 #include <optional>
+#include <rng.h>
 #include <unordered_set>
 #include <utility>
 
@@ -46,6 +47,11 @@ namespace RbxStu::StuLuau::Environment {
         explicit ReferencedLuauObject(int ref) { this->luaRef = ref; }
 
         ReferencedLuauObject(lua_State *L, int idx) { this->luaRef = lua_ref(L, idx); }
+
+        void UnreferenceObject(lua_State *L) {
+            if (this->luaRef > LUA_REFNIL)
+                lua_unref(L, this->luaRef);
+        }
 
         std::optional<T> GetReferencedObject(lua_State *L) {
             try {

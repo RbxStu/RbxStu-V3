@@ -248,7 +248,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             !environmentContext->IsUnhookable(lua_tomutclosure(L, 1)))
             environmentContext->MakeUnhookable(lua_tomutclosure(L, 1));
 
-        return 1;
+        return 0;
     }
 
     int Closures::hookfunction(lua_State *L) {
@@ -468,6 +468,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         auto hookInfo = environmentContext->m_functionHooks[unhookWhat];
 
+        if (!hookInfo.original.GetReferencedObject(L).has_value())
+            luaL_error(L, "Cannot obtain original function to unhook.");
+
         if (hookInfo.dwHookedType == hookInfo.dwHookWithType) {
             // The hook in this case is a simple replace back to original.
             if (hookInfo.original.GetReferencedObject(L).has_value()) {
@@ -477,6 +480,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                     if (hookInfo.dwHookedType == FunctionKind::NewCClosure) {
                         // newcclosure -> newcclosure hooks mostly go off the grounds of newcclosure index moving.
                         environmentContext->m_newcclosures[unhookWhat] = hookInfo.original;
+                        hookInfo.hookedWith.UnreferenceObject(L);
                     } else {
                         const auto unhookWith = hookInfo.original.GetReferencedObject(L).value();
                         unhookWhat->c.f = [](lua_State *L) { return 0; };
@@ -491,6 +495,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
                         unhookWhat->nupvalues = unhookWith->nupvalues;
                         unhookWhat->c.f = unhookWith->c.f;
                         unhookWhat->c.cont = unhookWith->c.cont;
+
+                        hookInfo.original.UnreferenceObject(L);
+                        hookInfo.hookedWith.UnreferenceObject(L);
                     }
                 } else {
                     // Luau->Luau unhook.
@@ -504,6 +511,9 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
                     unhookWhat->nupvalues = unhookWith->nupvalues;
                     unhookWhat->l.p = unhookWith->l.p;
+
+                    hookInfo.original.UnreferenceObject(L);
+                    hookInfo.hookedWith.UnreferenceObject(L);
                 }
             }
         }
@@ -526,7 +536,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
             unhookWhat->nupvalues = originalFunction->nupvalues;
             unhookWhat->c.f = originalFunction->c.f;
             unhookWhat->c.cont = originalFunction->c.cont;
+
+            hookInfo.original.UnreferenceObject(L);
+            hookInfo.hookedWith.UnreferenceObject(L);
         }
+
 
         if (environmentContext->m_functionHooks.contains(unhookWhat))
             environmentContext->m_functionHooks.erase(unhookWhat);
