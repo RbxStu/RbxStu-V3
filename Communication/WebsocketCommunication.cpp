@@ -35,8 +35,7 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
         if (RbxStu::FastFlags::FFlagUseWebsocketServer.GetValue()) {
             ix::WebSocketServer server(this->websocketPort);
             server.setOnClientMessageCallback([](const std::shared_ptr<ix::ConnectionState> &connectionState,
-                                                 ix::WebSocket &webSocket,
-                                                 const ix::WebSocketMessagePtr &msg) {
+                                                 ix::WebSocket &webSocket, const ix::WebSocketMessagePtr &msg) {
                 if (msg->type == ix::WebSocketMessageType::Message) {
                     const auto handleResults = PacketManager::HandleNewPacket(msg->str);
                     if (handleResults.has_value()) {
@@ -52,17 +51,17 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
                         webSocket.sendText(successJson.dump());
                     }
                 } else if (msg->type == ix::WebSocketMessageType::Open) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                    RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketCommunication,
                               "A client has established connection to our server!");
                 } else if (msg->type == ix::WebSocketMessageType::Close) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                    RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketCommunication,
                               "A client has disconnected from our server!");
                 }
             });
 
             const auto startupResults = server.listen();
             if (!startupResults.first) {
-                RbxStuLog(RbxStu::LogType::Error, RbxStu::WebsocketCommunication,
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::WebsocketCommunication,
                           std::format("Failed to start Websocket server! Error: {}", startupResults.second));
                 return;
             }
@@ -90,10 +89,10 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
                         websocketClient.sendText(successJson.dump());
                     }
                 } else if (msg->type == ix::WebSocketMessageType::Close) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                    RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketCommunication,
                               "Connection to WebSocket server has closed! We will be re-attempting shortly!");
                 } else if (msg->type == ix::WebSocketMessageType::Open) {
-                    RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+                    RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketCommunication,
                               "Successfully connected to WebSocket server!");
                 }
             });
@@ -104,11 +103,11 @@ void RbxStu::Communication::WebsocketCommunication::Initialize() {
             websocketClient.setPingInterval(45);
             websocketClient.setMaxWaitBetweenReconnectionRetries(1000);
 
-            RbxStuLog(LogType::Information, RbxStu::WebsocketCommunication,
+            RbxStuLog(RbxStu::LogType::Information, RbxStu::WebsocketCommunication,
                       std::format("Now trying to connect to WebSocket server at {}", websocketUrl));
 
             if (!websocketClient.connect(5).success) {
-                RbxStuLog(LogType::Error, RbxStu::WebsocketCommunication,
+                RbxStuLog(RbxStu::LogType::Warning, RbxStu::WebsocketCommunication,
                           "Failed to connect to WebSocket server! We will now be retrying in 1 second interval!");
 
                 while (true) {
