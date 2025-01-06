@@ -289,7 +289,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         auto idx = 1;
         for (const auto &entry: std::filesystem::directory_iterator(GetNormalizedPath(pathToWrite))) {
-            lua_pushstring(L, entry.path().string().c_str());
+            lua_pushstring(L, entry.path().lexically_relative(s_workspaceRoot).string().c_str());
             lua_rawseti(L, -2, idx++);
         }
 
