@@ -20,7 +20,9 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         static int getdatamodeltype(lua_State *L);
 
-        static int getuserdatatag(lua_State* L);
+        static int getuserdatatag(lua_State *L);
+
+        static int getscriptfromthread(lua_State *L);
 
         const luaL_Reg *GetFunctionRegistry() override;;
 
