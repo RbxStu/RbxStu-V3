@@ -63,25 +63,6 @@ namespace RbxStu::StuLuau::Environment::Custom {
         return 1;
     }
 
-    int NewGlobals::getscriptfromthread(lua_State *L) {
-        luaL_checktype(L, 1, ::lua_Type::LUA_TTHREAD);
-        lua_normalisestack(L, 1);
-        lua_preparepush(L, 2);
-        lua_pushnil(L);
-        const auto rbxPushInstance = reinterpret_cast<r_RBX_Instance_pushInstance>(
-                RbxStuOffsets::GetSingleton()->GetOffset(RbxStuOffsets::OffsetKey::RBX_Instance_pushInstance));
-
-        if (L->userdata == nullptr)
-            return 1;
-
-        auto extraspace = GetThreadExtraspace(L);
-        if (extraspace->script == nullptr || rbxPushInstance == nullptr)
-            return 1;
-
-        rbxPushInstance(L, static_cast<void *>(&extraspace->script));
-        return 1;
-    }
-
     const luaL_Reg *NewGlobals::GetFunctionRegistry() {
         static luaL_Reg functions[] = {{"setuntouched", NewGlobals::setuntouched},
                                        {"isuntouched", NewGlobals::isuntouched},
@@ -89,7 +70,6 @@ namespace RbxStu::StuLuau::Environment::Custom {
                                        {"getobjectaddress", NewGlobals::getobjectaddress},
                                        {"getdatamodeltype", NewGlobals::getdatamodeltype},
                                        {"getuserdatatag", NewGlobals::getuserdatatag},
-                                       {"getscriptfromthread", NewGlobals::getscriptfromthread},
 
                                        {nullptr, nullptr}};
         return functions;
