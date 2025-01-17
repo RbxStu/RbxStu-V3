@@ -50,8 +50,6 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
         return "RBX::ScriptContext::resume";
     case RbxStuOffsets::OffsetKey::RBX_ScriptContext_getDataModel:
         return "RBX::ScriptContext::getDataModel";
-    case RbxStuOffsets::OffsetKey::RBX_ScriptContext_validateThreadAccess:
-        return "RBX::ScriptContext::validateThreadAccess";
     case RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_spawn:
         return "RBX::ScriptContext::task_spawn";
     case RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer:

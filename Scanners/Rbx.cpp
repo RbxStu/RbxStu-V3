@@ -41,11 +41,7 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
                               "? ? ? ? 8B 0D ? ? ? ? E8 ? ? ? ? 89 44 24 ?")
                  .value()},
         {RbxStuOffsets::OffsetKey::RBX_ScriptContext_getDataModel,
-         hat::parse_signature("48 83 EC ? 48 85 C9 74 72 48 89 7C 24 ? 48 8B 79 ? 48 85 FF 74 22").value()},
-        {RbxStuOffsets::OffsetKey::RBX_ScriptContext_validateThreadAccess,
-         hat::parse_signature(
-                 "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 41 56 41 57 48 83 EC ? 48 8B DA 48 8B E9 80")
-                 .value()},
+         hat::parse_signature("48 83 EC ?? 48 85 C9 74 72").value()},
         {RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_spawn,
          hat::parse_signature(
                  "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B F1 33 FF 48 89 7C 24 ? 4C 8D 4C 24 ? 4C 8D 05 ? ? ? "
@@ -53,8 +49,7 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
                  "33 D2 E8 ? ? ? ? 8B D8 48 8B CE E8 ? ? ? ? 44 8B CB 4C 8D 44 24 ? 48 8D 54 24 ? 48 8B C8 E8 ? ? ? ?")
                  .value()},
         {RbxStuOffsets::OffsetKey::RBX_ScriptContext_task_defer,
-         hat::parse_signature("48 8B C4 48 89 58 ? 55 56 57 41 56 41 57 48 83 EC ? 48 8B E9 33 FF 48 89 78 ? 4C 8D 48 "
-                              "? 4C 8D 05 ? ? ? ? 33 D2 E8 ? ? ? ? 44 8B F0 48 8B CD E8 ? ? ? ? 48 8B D8 40 32 F6")
+         hat::parse_signature("48 8B C4 48 89 58 ?? 55 56 57 41 56 41 57 48 83 EC 70")
                  .value()},
         {RbxStuOffsets::OffsetKey::RBX_ScriptContext_getGlobalState,
          hat::parse_signature("48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 49 8B F8 48 8B F2 48 8B D9 80 ?? ?? ?? ?? ?? "
@@ -121,8 +116,7 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
         // RBX::ProximityPrompt
         {RbxStuOffsets::OffsetKey::RBX_ProximityPrompt_onTriggered,
          hat::parse_signature(
-                 "48 89 5C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 4C 8B F9 E8 ? ? ? ? 48 "
-                 "8B F8 48 85 C0 0F 84 C6 02 00 ? 48 8B 50 ? 48 85 D2 0F 84 D4 02 00 ? 8B 42 ? 85 C0 0F 84 C9 02 00 ?")
+                 "48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC B0 ?? ?? ?? 4C 8B F9 E8")
                  .value()},
 
         // Misc

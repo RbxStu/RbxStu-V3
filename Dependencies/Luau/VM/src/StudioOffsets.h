@@ -37,7 +37,6 @@ public:
 
         RBX_ScriptContext_resume,
         RBX_ScriptContext_getDataModel,
-        RBX_ScriptContext_validateThreadAccess,
         RBX_ScriptContext_task_spawn,
         RBX_ScriptContext_task_defer,
         RBX_ScriptContext_getGlobalState,
