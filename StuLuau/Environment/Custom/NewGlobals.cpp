@@ -75,15 +75,10 @@ namespace RbxStu::StuLuau::Environment::Custom {
             return 1;
 
         auto extraspace = GetThreadExtraspace(L);
-        if (extraspace->script == nullptr || rbxPushInstance)
+        if (extraspace->script == nullptr || rbxPushInstance == nullptr)
             return 1;
 
-
-        lua_pushlightuserdata(L, rbxPushInstance);
-        lua_rawget(L, LUA_REGISTRYINDEX);
-        lua_pushlightuserdata(L, extraspace->script);
-        lua_rawget(L, -2);
-
+        rbxPushInstance(L, static_cast<void *>(&extraspace->script));
         return 1;
     }
 

@@ -4,6 +4,8 @@
 
 #include "Memory.hpp"
 
+#include <set>
+#include <unordered_set>
 #include <vector>
 #include "StuLuau/Extensions/luauext.hpp"
 #include "lapi.h"
@@ -34,7 +36,7 @@ public:
     }
 
     bool CompareTables(Table *tableOne, Table *tableTwo) {
-        return false; // TODO: Add compare tables.
+        return tableOne->sizearray == tableTwo->sizearray && tableOne->node == tableTwo->node;
     }
 
     bool DoesObjectMeetSpecifications(lua_State *L, GCObject *object) override {
@@ -62,11 +64,16 @@ public:
 
         lua_pushnil(L);
 
-        std::vector<GCObject *> values{};
+        std::vector<lua_TValue> keys;
+        std::vector<lua_TValue> values;
 
         while (lua_next(L, -2) != 0) {
-            auto obj = luaA_toobject(L, -1);
-            values.emplace_back(obj->value.gc);
+            auto key = luaA_toobject(L, -2);
+            auto value = luaA_toobject(L, -1);
+            keys.emplace_back(*key);
+            values.emplace_back(*value);
+
+            lua_pop(L, 1);
         }
 
         // TODO: Complete.
@@ -74,35 +81,76 @@ public:
         auto valuesFound = 0;
 
         for (const auto value: this->m_requiredValues) {
-            for (const auto valueFound: values) {
-                if (value->tt != valueFound->gch.tt)
+            for (const auto &valueFound: values) {
+                if (value->tt != valueFound.tt)
                     continue; // Different types, ain't happening chief.
 
+                auto gcobject_1 = value->value.gc;
+                auto gcobject_2 = value->value.gc;
+
                 if (value->tt == ::lua_Type::LUA_TTABLE) {
-                    if (CompareTables(&value->value.gc->h, &valueFound->h))
+                    if (CompareTables(&gcobject_1->h, &gcobject_2->h))
                         valuesFound++;
                 } else if (value->tt == ::lua_Type::LUA_TFUNCTION) {
-                    if (value->value.gc->cl.isC != valueFound->cl.isC)
+                    if (gcobject_1->cl.isC != gcobject_2->cl.isC)
                         continue;
 
-                    if (value->value.gc->cl.isC) {
-                        if (value->value.gc->cl.c.f == valueFound->cl.c.f)
+                    if (gcobject_1->cl.isC) {
+                        if (gcobject_1->cl.c.f == gcobject_2->cl.c.f)
                             valuesFound++;
                     } else {
-                        if (value->value.gc->cl.l.p->sizecode == valueFound->cl.l.p->sizecode ||
-                            memcmp(value->value.gc->cl.l.p->code, valueFound->cl.l.p->code,
-                                   value->value.gc->cl.l.p->sizecode) == 0)
+                        if (gcobject_1->cl.l.p->sizecode == gcobject_2->cl.l.p->sizecode ||
+                            memcmp(gcobject_1->cl.l.p->code, gcobject_2->cl.l.p->code, gcobject_1->cl.l.p->sizecode) ==
+                                    0)
                             valuesFound++;
                     }
                 } else if (value->tt == ::lua_Type::LUA_TUSERDATA) {
                     // Cannot compare other than by pointer addy.
-                    if (value->value.gc->u.data == valueFound->u.data)
+                    if (gcobject_1->u.data == gcobject_2->u.data)
                         valuesFound++;
                 } else if (value->tt == ::lua_Type::LUA_TBUFFER) {
-                    if (value->value.gc->buf.len != valueFound->buf.len)
+                    if (gcobject_1->buf.len != gcobject_2->buf.len)
                         continue;
 
-                    if (memcmp(value->value.gc->buf.data, valueFound->buf.data, value->value.gc->buf.len) == 0)
+                    if (memcmp(gcobject_1->buf.data, gcobject_2->buf.data, gcobject_1->buf.len) == 0)
+                        valuesFound++;
+                }
+            }
+        }
+
+        for (const auto key: this->m_requiredKeys) {
+            for (const auto &keyFound: keys) {
+                if (key->tt != keyFound.tt)
+                    continue; // Different types, ain't happening chief.
+
+                auto gcobject_1 = key->value.gc;
+                auto gcobject_2 = key->value.gc;
+
+                if (key->tt == ::lua_Type::LUA_TTABLE) {
+                    if (CompareTables(&gcobject_1->h, &gcobject_2->h))
+                        valuesFound++;
+                } else if (key->tt == ::lua_Type::LUA_TFUNCTION) {
+                    if (gcobject_1->cl.isC != gcobject_2->cl.isC)
+                        continue;
+
+                    if (gcobject_1->cl.isC) {
+                        if (gcobject_1->cl.c.f == gcobject_2->cl.c.f)
+                            valuesFound++;
+                    } else {
+                        if (gcobject_1->cl.l.p->sizecode == gcobject_2->cl.l.p->sizecode ||
+                            memcmp(gcobject_1->cl.l.p->code, gcobject_2->cl.l.p->code, gcobject_1->cl.l.p->sizecode) ==
+                                    0)
+                            valuesFound++;
+                    }
+                } else if (key->tt == ::lua_Type::LUA_TUSERDATA) {
+                    // Cannot compare other than by pointer addy.
+                    if (gcobject_1->u.data == gcobject_2->u.data)
+                        valuesFound++;
+                } else if (key->tt == ::lua_Type::LUA_TBUFFER) {
+                    if (gcobject_1->buf.len != gcobject_2->buf.len)
+                        continue;
+
+                    if (memcmp(gcobject_1->buf.data, gcobject_2->buf.data, gcobject_1->buf.len) == 0)
                         valuesFound++;
                 }
             }
@@ -120,7 +168,7 @@ namespace RbxStu::StuLuau::Environment::Custom {
 
         luaL_checktype(L, 2, ::lua_Type::LUA_TTABLE);
         auto returnFirst = luaL_optboolean(L, 3, false);
-        GCFilterParameters params{};
+        // GCFilterParameters params{};
 
         return 0;
     }
