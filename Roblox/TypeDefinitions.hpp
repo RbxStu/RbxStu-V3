@@ -43,6 +43,7 @@ namespace RbxStu::Concepts {
     concept TypeConstraint = std::is_base_of_v<Base, Derived>;
 }
 
+using r_RBX_DataModel_offsetPointerWrapper = void *(__fastcall*)(void *dataModel);
 using r_RBX_ClickDetector_fireClick = void(__fastcall *)(void *clickDetector, float distance, void *player);
 using r_RBX_ClickDetector_fireHover = void(__fastcall *)(void *clickDetector, void *player);
 
