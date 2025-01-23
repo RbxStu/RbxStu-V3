@@ -135,7 +135,12 @@ static __inline std::map<RbxStuOffsets::OffsetKey, hat::signature> SignatureMap{
                  "4C 8D 44 24 ? 48 8D 54 24 ? 8B CB E8 ? ? ? ? 90 48 8B 54 24 ? 48 83 FA 10 72 36 48 FF C2 "
                  "48 8B 4C 24 ? 48 8B C1 48 81 FA 00 10 00 00 72 1C 48 83 C2 ? 48 8B 49 ? 48 2B C1 48 83 C0 "
                  "? 48 83 F8 1F 76 07 FF 15 ? ? ? ?")
-                 .value()}};
+                 .value()},
+    {RbxStuOffsets::OffsetKey::RBX_DataModel_offsetPointerWrapper,
+        hat::parse_signature("40 57 48 83 EC 20 48 8B F9 48 85 C9 74 ?? 48 8B 49").value()
+    }
+
+};
 
 void RbxStu::Scanners::RBX::Initialize() {
     if (this->m_bIsInitialized)
@@ -216,42 +221,81 @@ void RbxStu::Scanners::RBX::Initialize() {
     {
         RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
                   "Scanning for pointer offsets (Offsets used by callers to functions, de-offsetted at callee)...");
+        {
+            if (auto insns = rbxStuDissassembler->GetInstructions(
+                           foundSignatures["RBX::ScriptContext::resume"],
+                           reinterpret_cast<void *>(
+                                   reinterpret_cast<std::uintptr_t>(foundSignatures["RBX::ScriptContext::resume"]) - 0xFF),
+                           true);
+                   insns.has_value()) {
+                auto instructions = std::move(insns.value());
 
+                if (!instructions->ContainsInstruction("lea", "rbx, [rdi -", true)) {
+                    RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                              "Failed to find instruction lea rbx, [rdi - ...] to crack RBX::ScriptContext::resume pointer "
+                              "offsetting.");
+                    throw std::exception(
+                            "Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+                }
 
-        if (auto insns = rbxStuDissassembler->GetInstructions(
-                    foundSignatures["RBX::ScriptContext::resume"],
-                    reinterpret_cast<void *>(
-                            reinterpret_cast<std::uintptr_t>(foundSignatures["RBX::ScriptContext::resume"]) - 0xFF),
-                    true);
-            insns.has_value()) {
-            auto instructions = std::move(insns.value());
+                const auto insn = instructions->GetInstructionWhichMatches("lea", "rbx, [rdi -", true);
+                const auto instruction = insn.value();
+                RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+                          std::format("Found pointer offset for RBX::ScriptContext as {:#x}",
+                                      instruction.detail->x86.operands[1].mem.disp));
 
-            if (!instructions->ContainsInstruction("lea", "rbx, [rdi -", true)) {
-                RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
-                          "Failed to find instruction lea rbx, [rdi - ...] to crack RBX::ScriptContext::resume pointer "
-                          "offsetting.");
-                throw std::exception(
-                        "Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
-            }
+                const auto disposition = instruction.detail->x86.operands[1].mem.disp;
 
-            const auto insn = instructions->GetInstructionWhichMatches("lea", "rbx, [rdi -", true);
-            const auto instruction = insn.value();
-            RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
-                      std::format("Found pointer offset for RBX::ScriptContext as {:#x}",
-                                  instruction.detail->x86.operands[1].mem.disp));
-
-            const auto disposition = instruction.detail->x86.operands[1].mem.disp;
-
-            this->m_pointerObfuscation[PointerOffsets::RBX_ScriptContext_resume] = {
+                this->m_pointerObfuscation[PointerOffsets::RBX_ScriptContext_resume] = {
                     // We must invert the pointer, why? Because it's the contrary operation for the caller that the
                     // callee does.
                     disposition < 0 ? ::RBX::PointerEncryptionType::SUB : ::RBX::PointerEncryptionType::ADD,
                     disposition};
-        } else {
-            RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
-                      "Cannot get instructions for RBX::ScriptContext::resume!");
-            throw std::exception("Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+                   } else {
+                       RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                                 "Cannot get instructions for RBX::ScriptContext::resume!");
+                       throw std::exception("Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+                   }
         }
+
+        {
+            //
+            if (auto insns = rbxStuDissassembler->GetInstructions(
+                           foundSignatures["RBX::ScriptContext::resume"],
+                           reinterpret_cast<void *>(
+                                   reinterpret_cast<std::uintptr_t>(foundSignatures["RBX::ScriptContext::resume"]) - 0xFF),
+                           true);
+                   insns.has_value()) {
+                auto instructions = std::move(insns.value());
+
+                if (!instructions->ContainsInstruction("lea", "rbx, [rdi -", true)) {
+                    RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                              "Failed to find instruction lea rbx, [rdi - ...] to crack RBX::ScriptContext::resume pointer "
+                              "offsetting.");
+                    throw std::exception(
+                            "Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+                }
+
+                const auto insn = instructions->GetInstructionWhichMatches("lea", "rbx, [rdi -", true);
+                const auto instruction = insn.value();
+                RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,
+                          std::format("Found pointer offset for RBX::ScriptContext as {:#x}",
+                                      instruction.detail->x86.operands[1].mem.disp));
+
+                const auto disposition = instruction.detail->x86.operands[1].mem.disp;
+
+                this->m_pointerObfuscation[PointerOffsets::RBX_ScriptContext_resume] = {
+                    // We must invert the pointer, why? Because it's the contrary operation for the caller that the
+                    // callee does.
+                    disposition < 0 ? ::RBX::PointerEncryptionType::SUB : ::RBX::PointerEncryptionType::ADD,
+                    disposition};
+                   } else {
+                       RbxStuLog(RbxStu::LogType::Error, RbxStu::Scanners_RBX,
+                                 "Cannot get instructions for RBX::ScriptContext::resume!");
+                       throw std::exception("Cannot proceed: Failed to dump pointer offset for RBX::ScriptContext! (Required)");
+                   }
+        }
+
     }
 
     RbxStuLog(RbxStu::LogType::Information, RbxStu::Scanners_RBX,

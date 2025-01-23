@@ -80,6 +80,9 @@ __declspec(dllexport) std::string_view OffsetKeyToString(const RbxStuOffsets::Of
         return "RBX::Console::StandardOut";
     case RbxStuOffsets::OffsetKey::RBXCRASH:
         return "global::RBXCRASH";
+
+    case RbxStuOffsets::OffsetKey::RBX_DataModel_offsetPointerWrapper:
+        return "RBX::DataModel::offsetPointerWrapper";
     }
 
     RbxStuLog(

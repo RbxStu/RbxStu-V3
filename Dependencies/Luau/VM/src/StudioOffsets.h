@@ -48,6 +48,8 @@ public:
         RBX_BasePart_getNetworkOwner,
         RBX_World_reportTouchInfo,
 
+        RBX_DataModel_offsetPointerWrapper,
+
         RBX_ProximityPrompt_onTriggered,
 
         RBX_Console_StandardOut,
