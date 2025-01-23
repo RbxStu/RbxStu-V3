@@ -43,7 +43,7 @@ namespace RbxStu::Scheduling::Jobs {
                 if (engineDataModel->GetDataModelType() == dataModel->GetDataModelType() &&
                     engineDataModel->GetRbxPointer() != dataModel->GetRbxPointer()) {
                     RbxStuLog(RbxStu::LogType::Debug, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob,
-                              std::format("DataModel re-initialized to {} from {}", (void *) dataModel->GetRbxPointer(),
+                              std::format("DataModel re-initialized to {} from {} in this tick, skipping next step...", (void *) dataModel->GetRbxPointer(),
                                           (void *) engineDataModel->GetRbxPointer()));
 
                     // DataModel has re-initialized.
@@ -71,6 +71,7 @@ namespace RbxStu::Scheduling::Jobs {
                                             RbxStu::Scheduling::TaskScheduler *scheduler) {
         const auto dataModel = RbxStu::Roblox::DataModel::FromJob(job);
         const auto engine = scheduler->GetExecutionEngine(dataModel->GetDataModelType());
+        RbxStuLog(RbxStu::LogType::Information, RbxStu::Scheduling_Jobs_InitializeExecutionEngineJob, std::format("Initializing ExecutionEngine on DataModel {}; Job address {}", (void*)dataModel->GetRbxPointer(), job));
 
         /*
          *  We make a few assumptions here:

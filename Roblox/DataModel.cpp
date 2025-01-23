@@ -4,6 +4,8 @@
 
 #include "DataModel.hpp"
 #include <Utilities.hpp>
+
+#include "ScriptContext.hpp"
 #include "TypeDefinitions.hpp"
 
 namespace RbxStu::Roblox {
@@ -41,12 +43,12 @@ namespace RbxStu::Roblox {
 
     void DataModel::SetDataModelLock(const bool newState) const {
         // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
-        *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6B8) = newState;
+        *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6C0) = newState;
     }
 
     bool DataModel::GetDataModelLock() const {
         // find write-lock = %s, present in RBX::ScriptContext::validateThreadAccess
-        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6B8);
+        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x6C0);
     }
 
     std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromPointer(void *dataModel) {
@@ -54,6 +56,12 @@ namespace RbxStu::Roblox {
     }
 
     std::shared_ptr<RbxStu::Roblox::DataModel> DataModel::FromJob(void *robloxJob) {
+        // {
+        //     auto waiting = RbxStu::Roblox::ScriptContext::FromWaitingHybridScriptsJob(robloxJob);
+        //     if (waiting != nullptr) {
+        //         return DataModel::FromPointer(waiting->GetDataModel());
+        //     }
+        // }
         /*
          * Jobs always have a pointer to a fake Datamodel and that fake data model has pointer to a real Datamodel
          * Offset Explanation:
@@ -78,7 +86,7 @@ namespace RbxStu::Roblox {
         if (!this->CheckPointer()) return false;
 
         // find RBX::ScriptContext::validateThreadAccess, bottom dereference with a comparison to 0 in two variables is the offset you're after.
-        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x418);
+        return *reinterpret_cast<bool *>(reinterpret_cast<std::uintptr_t>(this->GetRbxPointer()) + 0x420);
     }
 
     bool DataModel::IsDataModelOpen() const {
@@ -86,7 +94,7 @@ namespace RbxStu::Roblox {
 
         // Check for strings mentioning a closed DataModel to update offset
         return this->GetDataModelType() != RBX::DataModelType_Null && *reinterpret_cast<bool *>(
-                   reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x561);
+                   reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x571);
     }
 
     bool DataModel::CheckPointer() const {
@@ -97,6 +105,14 @@ namespace RbxStu::Roblox {
     RBX::DataModelType DataModel::GetDataModelType() const {
         if (!this->CheckPointer()) return RBX::DataModelType_Null;
 
-        return *reinterpret_cast<RBX::DataModelType *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x2D8);
+        /*
+         *  How to update offset:
+         *      - Find RBX::DataModel::getStudioGameStateType via string
+         *      - Find a call that utilises RBX::DataModel::getDataModel
+         *      - Utilise the subtraction present on - 0x1A0 and sum it with the offset that getStudioGameStateType uses.
+         */
+
+        return static_cast<RBX::DataModelType>(
+                *reinterpret_cast<std::int32_t *>(reinterpret_cast<uintptr_t>(this->GetRbxPointer()) + 0x2E0 /*0x1A0 + 0x480*/));
     }
 } // RbxStu::Roblox

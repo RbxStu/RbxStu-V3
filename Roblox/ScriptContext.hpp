@@ -32,6 +32,8 @@ namespace RbxStu::Roblox {
 
         lua_State *GetGlobalState();
 
+        void * GetDataModel() const;
+
         void ResumeThread(RBX::Lua::WeakThreadRef *resumptionContext, const StuLuau::YieldResult &YieldResult) const;
     };
 } // RbxStu::Roblox

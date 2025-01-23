@@ -51,6 +51,10 @@ namespace RbxStu::Roblox {
         constexpr auto script = 0ull;
         return getGlobalState(this->m_pScriptContext, &identity, &script);
     }
+    void *ScriptContext::GetDataModel() const {
+        const auto self = this->GetRbxPointer();
+        return *reinterpret_cast<void**>(reinterpret_cast<std::uintptr_t>(self) + 0x50);
+    }
 
     void ScriptContext::ResumeThread(
             RBX::Lua::WeakThreadRef *resumptionContext,

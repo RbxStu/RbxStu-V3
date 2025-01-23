@@ -4,9 +4,10 @@
 
 #pragma once
 #include <cstdint>
+#include <format>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
 
 struct lua_State;
 
@@ -627,7 +628,7 @@ namespace RBX {
             return "Null";
         }
 
-        return "unknown";
+        return std::format("unknown ({})", num);
     }
 
     struct DataModel {

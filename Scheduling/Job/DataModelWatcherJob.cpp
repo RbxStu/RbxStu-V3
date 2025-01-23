@@ -37,6 +37,8 @@ namespace RbxStu::Scheduling::Jobs {
             RBX::DataModelType::DataModelType_PlayServer
         };
 
+        auto currentDataModel = Roblox::DataModel::FromJob(job);
+
         for (const auto dataModel: dataModels) {
             auto execEngine = taskScheduler->GetExecutionEngine(dataModel);
 
@@ -44,11 +46,10 @@ namespace RbxStu::Scheduling::Jobs {
                 continue;
             }
             if (m_dataModelPointerMap[dataModel] !=
-                execEngine->GetInitializationInformation()->dataModel->GetRbxPointer()) {
+                execEngine->GetInitializationInformation()->dataModel->GetRbxPointer() && currentDataModel->GetDataModelType() == dataModel) {
                 RbxStuLog(RbxStu::LogType::Warning, RbxStu::Scheduling_Jobs_DataModelWatcherJob,
                           std::format("DataModel change detected for {} -- Resetting ExecutionEngine", RBX::
                               DataModelTypeToString(dataModel)));
-                taskScheduler->ResetExecutionEngine(dataModel);
                 continue;
             }
 
