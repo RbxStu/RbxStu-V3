@@ -276,8 +276,8 @@ namespace RbxStu::StuLuau {
 
         /*
          *  We check if the c.f is our newcclosure stub, for other functions, we just check how close the memory address
-         * is to ROBLOXs .text section, if it is within the range of .text, then it is likely that it is not our
-         * function.
+         *  is to ROBLOXs .text section, if it is within the range of .text, then it is likely that it is not our
+         *  function.
          */
 
         const auto cClosure = reinterpret_cast<std::uintptr_t>(closure->c.f);
