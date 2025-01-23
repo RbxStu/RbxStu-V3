@@ -6,7 +6,7 @@
 
 #define RBXSTU_REBASE_STACKTRACE_ON_SEH true
 #define RBXSTU_DLL_NAME "RbxStuV3"
-#define RBXSTU_VERSION "v0.1.3-alpha"
+#define RBXSTU_VERSION "v0.1.4-alpha"
 
 // Begin declspec macros.
 #define RBXSTU_EXPORT __declspec(dllexport)
