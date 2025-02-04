@@ -18,8 +18,9 @@
 const auto s_bannedExtensions = std::unordered_set<std::string_view>{
         ".exe", ".dll", ".sys", ".py",    ".js",  ".jsx", ".drv", ".ws",  ".wmf", ".dev", ".jar", ".scr", ".swf",
         ".lnk", ".vbs", ".bin", ".class", ".shs", ".chm", ".vxd", ".pif", ".xlm", ".vbe", ".scr", ".vba", ".hlp",
-        ".vb",  ".vbx", ".wsc", ".wsh",   ".xlv", ".bat", ".cmd", ".ocx", ".com", ".bin", ".wmf",
-};
+        ".vb",  ".vbx", ".wsc", ".wsh",   ".xlv", ".bat", ".cmd", ".ocx", ".com", ".bin", ".wmf", ".pyw", ".iso",
+        ".ps1"
+}; // TODO: https://github.com/dobin/badfiles/blob/main/info.yaml
 
 static std::filesystem::path s_workspaceRoot{};
 
@@ -30,21 +31,7 @@ static bool IsFileExtensionSafe(std::filesystem::path path) {
 static bool IsWorkspaceAvailable() { return !s_workspaceRoot.empty() && std::filesystem::exists(s_workspaceRoot); }
 
 static bool IsPathSafe(const std::filesystem::path &path) {
-    /*
-     *  In play, it is super simple, we have approximately three approaches towards handling this scenario.
-     *      - Approach 0: Grab the base path we want to check subdirectory off, and simply compare it using strstr to
-     * the path we want to check if it is a subdirectory of.
-     *      - Approach 1: Evaluate the path using an API and check for the subdirectory.
-     *      - Approach 2: Check if the path is not a subdirectory of workspace.
-     *
-     *  Might I remind we only need to check if the path is SAFE, we do not care about extensions on this function. The
-     * ONLY need in this function is to check for the paths' validity.
-     *
-     */
-
     if (!IsWorkspaceAvailable()) {
-        // initialize workspace.
-        // Calculate workspace path.
         const auto currentDirectory = RbxStu::Utilities::GetDllDir();
         if (currentDirectory->empty()) {
             RbxStuLog(RbxStu::LogType::Error, RbxStu::Anonymous,
@@ -61,13 +48,7 @@ static bool IsPathSafe(const std::filesystem::path &path) {
 
     const auto absolutePath = std::filesystem::absolute(s_workspaceRoot / path).lexically_normal();
 
-    if (!absolutePath.string().contains(s_workspaceRoot.string()))
-        return false; // Path does not contain workspace.
-
-    if (absolutePath.string().contains(".."))
-        return false;
-
-    return true;
+    return absolutePath.string().starts_with(s_workspaceRoot.string());
 }
 
 static std::filesystem::path GetNormalizedPath(const std::filesystem::path &path) {
@@ -91,10 +72,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const std::filesystem::path pathToWrite(std::string(path, pathSize));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (!IsFileExtensionSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Illegal extension '" + RbxStu::Utilities::ToLower(pathToWrite.extension().string()) + "'").c_str());
 
         std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::trunc);
 
@@ -120,15 +101,15 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
-            return 0;
+            luaG_runerrorL(L, "This file doesn't exist");
 
         if (!IsFileExtensionSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Illegal extension '" + RbxStu::Utilities::ToLower(pathToWrite.extension().string()) + "'").c_str());
 
-        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::ate);
+        std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::app);
 
         if (!file.is_open())
             luaL_error(L, "Failed to open file handle");
@@ -152,7 +133,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             luaG_runerrorL(L, "This file doesn't exist");
@@ -187,7 +168,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (std::filesystem::is_directory(pathToWrite))
             return 0;
@@ -206,10 +187,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (!std::filesystem::is_directory(pathToWrite))
-            return 0;
+            luaG_runerrorL(L, "This folder doesn't exist");
 
         std::error_code err{};
 
@@ -228,10 +209,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         if (!std::filesystem::is_regular_file(pathToWrite))
-            return 0;
+            luaG_runerrorL(L, "This file doesn't exist");
 
         std::error_code err{};
 
@@ -250,7 +231,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         lua_pushboolean(L, std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
         return 1;
@@ -265,7 +246,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         lua_pushboolean(L, std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
         return 1;
@@ -277,10 +258,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         std::size_t pathSize{};
         const auto path = luaL_tolstring(L, 1, &pathSize);
 
-        const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
+            const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, "Illegal path");
+            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
 
         lua_newtable(L);
 
