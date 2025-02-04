@@ -26,6 +26,8 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
         static int identifyexecutor(lua_State *L);
 
+        static int getexecutorname(lua_State *L);
+
         static int lz4compress(lua_State *L);
 
         static int lz4decompress(lua_State *L);

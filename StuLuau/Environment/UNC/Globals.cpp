@@ -200,6 +200,11 @@ namespace RbxStu::StuLuau::Environment::UNC {
         return 2;
     }
 
+    int Globals::getexecutorname(lua_State *L) {
+        lua_pushstring(L, "RbxStu");
+        return 2;
+    }
+
     int Globals::lz4compress(lua_State *L) {
         const auto executionEngine =
                 Scheduling::TaskSchedulerOrchestrator::GetSingleton()->GetTaskScheduler()->GetExecutionEngine(L);
@@ -880,7 +885,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
                 {"getreg", RbxStu::StuLuau::Environment::UNC::Globals::getreg},
 
                 {"identifyexecutor", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
-                {"getexecutorname", RbxStu::StuLuau::Environment::UNC::Globals::identifyexecutor},
+                {"getexecutorname", RbxStu::StuLuau::Environment::UNC::Globals::getexecutorname},
 
                 {"lz4compress", RbxStu::StuLuau::Environment::UNC::Globals::lz4compress},
                 {"lz4decompress", RbxStu::StuLuau::Environment::UNC::Globals::lz4decompress},
