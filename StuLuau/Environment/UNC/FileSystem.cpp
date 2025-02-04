@@ -72,10 +72,10 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const std::filesystem::path pathToWrite(std::string(path, pathSize));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (!IsFileExtensionSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Illegal extension '" + RbxStu::Utilities::ToLower(pathToWrite.extension().string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Illegal extension '{}'", RbxStu::Utilities::ToLower(pathToWrite.extension().string())).c_str());
 
         std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::trunc);
 
@@ -101,13 +101,13 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             luaG_runerrorL(L, "This file doesn't exist");
 
         if (!IsFileExtensionSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Illegal extension '" + RbxStu::Utilities::ToLower(pathToWrite.extension().string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Illegal extension '{}'", RbxStu::Utilities::ToLower(pathToWrite.extension().string())).c_str());
 
         std::ofstream file(GetNormalizedPath(pathToWrite), std::ios::binary | std::ios::app);
 
@@ -133,7 +133,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (!std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)))
             luaG_runerrorL(L, "This file doesn't exist");
@@ -168,7 +168,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (std::filesystem::is_directory(pathToWrite))
             return 0;
@@ -187,7 +187,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (!std::filesystem::is_directory(pathToWrite))
             luaG_runerrorL(L, "This folder doesn't exist");
@@ -209,7 +209,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = GetNormalizedPath(std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         if (!std::filesystem::is_regular_file(pathToWrite))
             luaG_runerrorL(L, "This file doesn't exist");
@@ -231,7 +231,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         lua_pushboolean(L, std::filesystem::is_regular_file(GetNormalizedPath(pathToWrite)));
         return 1;
@@ -246,7 +246,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
         const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         lua_pushboolean(L, std::filesystem::is_directory(GetNormalizedPath(pathToWrite)));
         return 1;
@@ -261,7 +261,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
             const auto pathToWrite = (std::filesystem::path(std::string(path, pathSize)));
 
         if (!IsPathSafe(pathToWrite))
-            luaL_argerrorL(L, 1, ("Escaping workspace folder '" + RbxStu::Utilities::ToLower(pathToWrite.string()) + "'").c_str());
+            luaL_argerrorL(L, 1, std::format("Escaping workspace folder '{}'", RbxStu::Utilities::ToLower(pathToWrite.string())).c_str());
 
         lua_newtable(L);
 
