@@ -202,7 +202,7 @@ namespace RbxStu::StuLuau::Environment::UNC {
 
     int Globals::getexecutorname(lua_State *L) {
         lua_pushstring(L, "RbxStu");
-        return 2;
+        return 1;
     }
 
     int Globals::lz4compress(lua_State *L) {
